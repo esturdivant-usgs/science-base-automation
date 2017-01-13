@@ -33,25 +33,28 @@ Begin either by uploading an XML file to the File section, which SB will use to 
 It is also possible for the script to automatically create the SB page from an XML file. If desired, that file should be checked for errors using MP and placed in the top directory. 
 
 3. Modify parameters in configuration script.
-Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments.
+
+- Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments. 
 Input variables that must be updated before running: 
 
-- useremail (SB username)
-- landing_link (URL for SB landing page)
-- parentdir (path to top directory) OSX/Windows variations
-- dr_doi (data release DOI)
+	- useremail (SB username)
+	- landing_link (URL for SB landing page)
+	- parentdir (path to top directory) OSX/Windows variations
+	- dr_doi (data release DOI)
+
 Specify which fields will be “inherited” between pages in the following optional lists:
 
-- landing_fields_from_xml – landing page fields that will populate from the top XML
-- subparent_inherits – fields that aggregate pages copy (inherit) from the landing page
-- data_inherits – fields that data pages inherit from their immediate parent page
+	- landing_fields_from_xml – landing page fields that will populate from the top XML
+	- subparent_inherits – fields that aggregate pages copy (inherit) from the landing page
+	- data_inherits – fields that data pages inherit from their immediate parent page
+
 Choose which processes to conduct. The default values will suit most purposes, but these fields allow you to tune the processes to save time. 
 
-- update_landing_page
-- replace_subpages 
-- update_subpages 
-- update_XML 
-- update_data 
+	- update_landing_page
+	- replace_subpages 
+	- update_subpages 
+	- update_XML 
+	- update_data 
 
 4. Install python modules (lxml, pysb).
 sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. Install lxml and pysb using pip and git.
@@ -59,12 +62,14 @@ sb_automation was written and tested in Python 2.7 on both OSX and Windows. Pyth
 	easy_install pip
 	pip install lxml 
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+	
 Using Conda (install Anaconda or Miniconda; requires Git)
 On OSX, in Terminal:
 
 	conda create -n sciencebase python=2.7 lxml 
 	source activate sciencebase
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+	
 On Windows, in cmd: 
 
 	conda create -n sciencebase python=2.7 lxml
@@ -76,6 +81,7 @@ In your bash console:
 
 	cd [script_dir = path to script]
 	python sb_automation.py
+	
 From Finder: Right click and run with your python launcher of choice. 
 In your Python IDE of choice: Open the script and run it line by line or however you choose. 
 
@@ -93,19 +99,19 @@ In your Python IDE of choice: Open the script and run it line by line or however
 ## Background
 
 ### Terms
-landing page: the top-level ScienceBase page of the data release. The DOI will direct here. Corresponds to the local top directory.
-top directory: the top local directory housing all files in the data release. Corresponds to the SB landing page.
-data pages: the final page/s in a page chain that holds the data files. 
-[aggregate] pages: the mid-level pages that organize data pages
-parent and child [pages or directories]: relational terms for page at any level of the hierarchy. Parent always contains the child. Corresponds to __ and __ directories
-item: SB JSON item. The JSON-formatted version of a given page.
-field: One piece of a SB page. Fields include title, citation, body… Field values will be displayed under the headings on a SB page. Examples:
-citation – Recommended citation for the data release. ScienceBase will automatically populate using the XML, but this may not agree with our format. 
-body = abstract. The summary will automatically be created from body.
-purpose
-previewImage – aka. browse graphic. SB will automatically use an image file uploaded to the page. 
-summary – this is automatically populated based on the body.
-element: One piece of an XML file. XML holds nested elements that are specified by tags. Also a class in lxml. Elements can be referenced by the tags and the values are the text __ property of the element. 
+- landing page: the top-level ScienceBase page of the data release. The DOI will direct here. Corresponds to the local top directory.
+- top directory: the top local directory housing all files in the data release. Corresponds to the SB landing page.
+- data pages: the final page/s in a page chain that holds the data files. 
+- [aggregate] pages: the mid-level pages that organize data pages
+- parent and child [pages or directories]: relational terms for page at any level of the hierarchy. Parent always contains the child. Corresponds to __ and __ directories
+- item: SB JSON item. The JSON-formatted version of a given page.
+- field: One piece of a SB page. Fields include title, citation, body… Field values will be displayed under the headings on a SB page. Examples:
+- citation – Recommended citation for the data release. ScienceBase will automatically populate using the XML, but this may not agree with our format. 
+- body = abstract. The summary will automatically be created from body.
+- purpose
+- previewImage – aka. browse graphic. SB will automatically use an image file uploaded to the page. 
+- summary – this is automatically populated based on the body.
+- element: One piece of an XML file. XML holds nested elements that are specified by tags. Also a class in lxml. Elements can be referenced by the tags and the values are the text __ property of the element. 
 
 ### Directory structure
 Each directory will become a ScienceBase page within your data release. The directories will maintain their hierarchy. Each (error-free) XML file will populate a ScienceBase page. If a directory contains a single XML file, the corresponding ScienceBase page will be populated with that XML file. If the directory contains multiple XML files, each XML will become a child page linked on the page corresponding to its parent directory. ScienceBase pages that correspond to directories will use the directory name as their title. ScienceBase pages that correspond to XML files will use the Title in the metadata (Identity Information > Citation > Citation Information > Title) as their title. Pages that correspond to directories with a single XML file will still use the directory name rather than the metadata title. Here is an example of how a local file structure will become a ScienceBase page structure:
