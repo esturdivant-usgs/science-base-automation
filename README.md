@@ -35,6 +35,7 @@ It is also possible for the script to automatically create the SB page from an X
 3. Modify parameters in configuration script.
 
 - Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments. 
+
 Input variables that must be updated before running: 
 
 	- useremail (SB username)
@@ -57,7 +58,9 @@ Choose which processes to conduct. The default values will suit most purposes, b
 	- update_data 
 
 4. Install python modules (lxml, pysb).
-sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. Install lxml and pysb using pip and git.
+
+sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
+Install lxml and pysb using pip and git:
 
 	easy_install pip
 	pip install lxml 
