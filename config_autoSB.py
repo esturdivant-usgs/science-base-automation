@@ -26,7 +26,7 @@ Input variables
 # SB username (should be entire USGS email):
 useremail = 'esturdivant@usgs.gov'
 # SB password. If commented out, you will be prompted for your password each time you run the script.
-password = "Losfedes!2015"
+#password = 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page
 landing_link = "https://www.sciencebase.gov/catalog/item/580a2b32e4b0f497e7906380" # testing page
