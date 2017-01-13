@@ -1,3 +1,0 @@
-OWSLib==0.8.13
-requests
--e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
