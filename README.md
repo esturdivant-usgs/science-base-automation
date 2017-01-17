@@ -21,43 +21,40 @@ Given a local top directory with metadata and data files in sub-directories and 
 - The script will overwrite XML files. In the future, it may include a means to archive the original XML files. 
 
 ## How to execute, from the top:
-1. Set up a local directory structure for your data release. 
+### 1. Set up a local directory structure for your data release. 
 See below for an explanation of how SB pages will mimic the directory structure.
 Each directory name will become the title of a ScienceBase page except for the top directory/landing page. 
 Ensure there is one and only one XML file for each desired SB page. These XML files should pass MP error checking. 
 NOTE: The script will overwrite XML files. You may want to save a separate archive of the original XML files. 
 
-2. Set up a ScienceBase landing page. 
+### 2. Set up a ScienceBase landing page. 
 Create the data release landing page before running the script. 
 Begin either by uploading an XML file to the File section, which SB will use to automatically populate fields or go straight to working manually with the page. Make manual revisions, such as to the citation, the body, the purpose, etc. If desired, create a preview image by uploading an image to the File section; this will automatically be used as the preview image. You can choose any of these fields to be copied over to child pages (including the preview image). 
 It is also possible for the script to automatically create the SB page from an XML file. If desired, that file should be checked for errors using MP and placed in the top directory. 
 
-3. Modify parameters in configuration script.
+### 3. Modify parameters in configuration script.
 
-- Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments. 
+Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments. 
 
-Input variables that must be updated before running: 
-
+- Input variables that must be updated before running: 
 	- useremail (SB username)
 	- landing_link (URL for SB landing page)
 	- parentdir (path to top directory) OSX/Windows variations
 	- dr_doi (data release DOI)
 
-Specify which fields will be “inherited” between pages in the following optional lists:
-
+- Specify which fields will be “inherited” between pages in the following optional lists:
 	- landing_fields_from_xml – landing page fields that will populate from the top XML
 	- subparent_inherits – fields that aggregate pages copy (inherit) from the landing page
 	- data_inherits – fields that data pages inherit from their immediate parent page
 
-Choose which processes to conduct. The default values will suit most purposes, but these fields allow you to tune the processes to save time. 
-
+- Choose which processes to conduct. The default values will suit most purposes, but these fields allow you to tune the processes to save time. 
 	- update_landing_page
 	- replace_subpages 
 	- update_subpages 
 	- update_XML 
 	- update_data 
 
-4. Install python modules (lxml, pysb).
+### 4. Install python modules (lxml, pysb).
 
 sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
 Install lxml and pysb using pip and git:
@@ -79,7 +76,7 @@ On Windows, in cmd:
 	activate sciencebase
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
-5. Run script sb_automation.py! 
+### 5. Run script sb_automation.py! 
 In your bash console: 
 
 	cd [script_dir = path to script]
