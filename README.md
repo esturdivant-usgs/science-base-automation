@@ -79,7 +79,7 @@ On Windows, in cmd:
 ### 5. Run script sb_automation.py! 
 In your bash console: 
 
-	cd [script_dir = path to script]
+	cd path\to\science-base-automation
 	python sb_automation.py
 	
 From Finder: Right click and run with your python launcher of choice. 
