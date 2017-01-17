@@ -57,6 +57,7 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 ### 4. Install python modules (lxml, pysb).
 
 sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
+
 Install lxml and pysb using pip and git:
 
 	easy_install pip
@@ -64,13 +65,14 @@ Install lxml and pysb using pip and git:
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 	
 Using Conda (install Anaconda or Miniconda; requires Git)
-On OSX, in Terminal:
+
+- On OSX, in Terminal:
 
 	conda create -n sciencebase python=2.7 lxml 
 	source activate sciencebase
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 	
-On Windows, in cmd: 
+- On Windows, in cmd: 
 
 	conda create -n sciencebase python=2.7 lxml
 	activate sciencebase
@@ -83,6 +85,7 @@ In your bash console:
 	python sb_automation.py
 	
 From Finder: Right click and run with your python launcher of choice. 
+
 In your Python IDE of choice: Open the script and run it line by line or however you choose. 
 
 ## What the script does:
