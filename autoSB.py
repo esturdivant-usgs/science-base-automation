@@ -64,7 +64,7 @@ def map_newvals2xml(xml_file, new_values):
 	if 'doi' in new_values.keys():
 		# get DOI values (as issue and URL)
 		doi_issue = "DOI:{}".format(new_values['doi'])
-		doi_url = "https://dx.doi.org/{}".format(new_values['doi'])
+		doi_url = "https://doi.org/{}".format(new_values['doi'])
 		# add new DOI values as {DOI:XXXXX:{'./idinfo/.../issue':0}}
 		val2xml[doi_issue] = {seriesid:0, lwork_serID:0}
 		val2xml[doi_url] = {citelink: 0, lwork_link: 0, networkr: 2}
