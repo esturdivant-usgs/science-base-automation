@@ -15,10 +15,9 @@ import glob
 from lxml import etree
 import json
 import pickle
-import fileinput
 import datetime
 
-__all__ = ['get_title_from_data', 'map_newvals2xml', 'replace_http_in_xml', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+__all__ = ['get_title_from_data', 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
 
 
 #%% Functions
@@ -89,17 +88,13 @@ def map_newvals2xml(xml_file, new_values):
 	val2xml[now_str] = {metadate: 0}
 	return val2xml
 
-def replace_http_in_xml(xml_file, findval='http:', replaceval='https:'):
-	# 	f1 = open(xml_file, 'r')
-	# 	f2 = open(xml_file+'.tmp', 'w')
-	# 	for line in f1:
-	# 		f2.write(line.replace(findval, replaceval))
-	# 	f1.close()
-	# 	f2.close()
-	with fileinput.FileInput(xml_file+'.tmp', inplace=True, backup='.bak') as file:
-		for line in file:
-			print(line.replace(replaceval, findval), end='')
-	return xml_file
+def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
+    with open(fname, 'r') as f1:
+        with open(fname+'.tmp', 'w') as f2:
+            for line in f1:
+                f2.write(line.replace(findstr, replacestr))
+    os.rename(fname+'.tmp', fname)
+    return fname
 
 def update_xml(xml_file, new_values):
 	# update XML file to include new child ID and DOI

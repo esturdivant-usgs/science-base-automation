@@ -170,6 +170,7 @@ for (root, dirs, files) in os.walk(parentdir):
 			print("TITLE: {}".format(data_title))
 			data_item = find_or_create_child(sb, parentid, data_title, skip_search=True, inheritedfields=False, verbose=False) # Create (or find) data page based on title
 			if update_XML: # Update XML file to include new child ID and DOI
+				find_and_replace_text(xml_file) # Replace 'http:' with 'https:'
 				new_values['child_id'] = data_item['id']
 				update_xml(xml_file, new_values)
 			if update_data: # Upload data files (FIXME: currently only shapefile) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
