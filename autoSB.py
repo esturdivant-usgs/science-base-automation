@@ -15,6 +15,10 @@ import glob
 from lxml import etree
 import json
 import pickle
+import fileinput
+
+__all__ = ['get_title_from_data', 'map_newvals2xml', 'replace_http_in_xml', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+
 
 #%% Functions
 ###################################################
@@ -29,7 +33,7 @@ def get_title_from_data(xml_file, metadata_root=False):
 			metadata_root=tree.getroot()
 		title = metadata_root.findall('./idinfo/citation/citeinfo/title')[0].text # Get title of child from XML
 		return title
-	except Exception, e:
+	except Exception as e:
 		print >> sys.stderr, "Exception while trying to parse XML file ({}): {}".format(xml_file, e)
 		return False
 
@@ -65,6 +69,18 @@ def map_newvals2xml(xml_file, new_values):
 		val2xml[new_values['edition']] = {'./idinfo/citation/citeinfo/edition':0}
 	return val2xml
 
+def replace_http_in_xml(xml_file, findval='http:', replaceval='https:'):
+	# 	f1 = open(xml_file, 'r')
+	# 	f2 = open(xml_file+'.tmp', 'w')
+	# 	for line in f1:
+	# 		f2.write(line.replace(findval, replaceval))
+	# 	f1.close()
+	# 	f2.close()
+	with fileinput.FileInput(xml_file+'.tmp', inplace=True, backup='.bak') as file:
+		for line in file:
+			print(line.replace(replaceval, findval), end='')
+	return xml_file
+
 def update_xml(xml_file, new_values):
 	# update XML file to include new child ID and DOI
 	try:
@@ -87,7 +103,7 @@ def update_xml(xml_file, new_values):
 					pass
 		tree.write(xml_file) # Overwrite XML file with new XML
 		return xml_file
-	except Exception, e:
+	except Exception as e:
 		print >> sys.stderr, "Exception while trying to parse XML file: {}".format(e)
 		return False
 
@@ -176,7 +192,7 @@ def find_or_create_child(sb, parent, child_title, skip_search=False, inheritedfi
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print "{} found!".format(child_title)
+				print("{} found!".format(child_title))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -199,7 +215,7 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 		item['facets'] = []
 		item=sb.updateSbItem(item)
 		if verbose:
-			print 'All files and facets removed from page "{}".'.format(item['title'])
+			print('All files and facets removed from page "{}".'.format(item['title']))
 	# List files pertaining to shapefile for upload
 	shp_exts = ['.cpg','.dbf','.prj','.sbn','.sbx','.shp','.shx','dbf.xml','.shp.xml']
 	up_files = []
@@ -375,6 +391,7 @@ def remove_all_files(sb, pageid, verbose=False):
 
 def update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON):
 	# Populate metadata from SB pages
+	# 1/17/17: no evidence that this fxn is being used
 	xmllist = glob.glob(os.path.join(parentdir,'*.xml'))
 	for f in os.listdir(parentdir):
 		if f.lower().endswith(('xml')):
@@ -397,13 +414,14 @@ def update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON):
 
 def Update_XMLfromSB(sb, useremail, parentdir, fname_dir2id='dir_to_id.json', fname_id2json='id_to_json.json'): 
 	# read data
+	# 1/17/17: no evidence that this fxn is being used
 	with open(os.path.join(parentdir,fname_dir2id), 'r') as f:
 		dict_DIRtoID = json.load(f)
 	with open(os.path.join(parentdir,fname_id2json), 'r') as f:
 		dict_IDtoJSON = json.load(f)
 		# log into ScienceBase
 	if not sb.is_logged_in():
-		print 'Logging back in...'
+		print('Logging back in...')
 		sb = pysb.SbSession(env).loginc(useremail)
 	# Populate XML with SB values
 	dict_IDtoJSON = update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
@@ -438,7 +456,7 @@ def delete_all_children(sb, parentid):
 	for cid in cids:
 		try:
 			delete_all_children(sb, cid)
-		except Exception, e:
+		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 	sb.delete_items(cids)
 	if len(cids) > 0:
@@ -465,7 +483,7 @@ def universal_inherit(sb, top_id, inheritedfields, verbose=False):
 		inherit_SBfields(sb, citem)
 		try:
 			universal_inherit(sb, cid, inheritedfields, verbose)
-		except Exception, e:
+		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 	return True
 
@@ -477,7 +495,7 @@ def apply_topdown(sb, top_id, function, verbose=False):
 		function(sb, citem)
 		try:
 			apply_topdown(sb, cid, function)
-		except Exception, e:
+		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 	return True
 
@@ -485,7 +503,7 @@ def apply_bottomup(sb, top_id, function, verbose=False):
 	for cid in sb.get_child_ids(top_id):
 		try:
 			apply_bottomup(sb, cid, function)
-		except Exception, e:
+		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 		citem = sb.get_item(cid)
 		if verbose: 
