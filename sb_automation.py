@@ -155,24 +155,23 @@ if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
 
-new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 for (root, dirs, files) in os.walk(parentdir):
 	for d in dirs:
 		xmllist = glob.glob(os.path.join(root,d,'*.xml'))
 		for xml_file in xmllist:
 			# Get values
-			parentid, parent_link, parent_item = flexibly_get_item(sb, dict_DIRtoID[d])
-			if not dr_doi: # Get DOI link from parent_item
+			if not 'dr_doi' in locals(): # Get DOI from parent_item
+				parent_item = flexibly_get_item(sb, dict_DIRtoID[d])
 				dr_doi = get_DOI_from_item(parent_item)
 			# Create (or find) new data page based on title in XML
+			parentid = dict_DIRtoID[d]
 			data_title = get_title_from_data(xml_file) # get title from XML
-			print("TITLE: {}".format(data_title))
-			data_item = find_or_create_child(sb, parentid, data_title, skip_search=True, inheritedfields=False, verbose=False) # Create (or find) data page based on title
+			data_item = find_or_create_child(sb, parentid, data_title, skip_search=True, verbose=True) # Create (or find) data page based on title
+			# Make updates
 			if update_XML: # Update XML file to include new child ID and DOI
 				find_and_replace_text(xml_file) # Replace 'http:' with 'https:'
-				new_values['child_id'] = data_item['id']
-				update_xml(xml_file, new_values)
+				update_xml(xml_file, {'landing_id':landing_item['id'], 'doi':dr_doi, 'child_id':data_item['id']})
 			if update_data: # Upload data files (FIXME: currently only shapefile) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=True)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.

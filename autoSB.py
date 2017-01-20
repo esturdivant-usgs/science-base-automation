@@ -165,7 +165,7 @@ def log_in(username=False):
 		sb = pysb.SbSession(env=None).loginc(username)
 	return sb
 
-def flexibly_get_item(sb, mystery_id):
+def flexibly_get_item(sb, mystery_id, output='item'):
 	# Given input of either ID or JSON, return ID, link, and JSON item
 	if type(mystery_id) is str or type(mystery_id) is unicode:
 		item_id = mystery_id
@@ -173,8 +173,13 @@ def flexibly_get_item(sb, mystery_id):
 	elif type(mystery_id) is dict:
 		item = mystery_id
 		item_id = item['id']
-	item_link = item['link']['url']
-	return item_id, item_link, item
+	if output.lower() == 'id':
+		return item_id
+	elif output.lower() == 'url':
+		item_link = item['link']['url']
+		return item_link
+	else:
+		return item
 
 def get_DOI_from_item(item):
 	# Get DOI link from parent_item
@@ -196,19 +201,18 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 				child_item[field] = parent_item[field]
 			except KeyError:
 				print("KeyError in inherit_SBfields(). Field '{}' not inherited.".format(field))
-				#pass
+				pass
 		child_item = sb.updateSbItem(child_item)
 	return child_item
 
-def find_or_create_child(sb, parent, child_title, skip_search=False, inheritedfields=False, verbose=False):
+def find_or_create_child(sb, parentid, child_title, skip_search=False, verbose=False):
 	# Find or create new child page
 	#if not skip_search:
-	parentid, parent_link, parent_item = flexibly_get_item(sb, parent)
 	for child_id in sb.get_child_ids(parentid): # Check if child page already exists
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print("{} found!".format(child_title))
+				print("Page with title '{}' was located.".format(child_title))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -216,9 +220,7 @@ def find_or_create_child(sb, parent, child_title, skip_search=False, inheritedfi
 		child_item['title'] = child_title
 		child_item = sb.create_item(child_item)
 		if verbose:
-			print("Creating page {} because it was not found in page {}.".format(child_title, parentid))
-	if inheritedfields:
-		child_item = inherit_SBfields(sb, child_item, inheritedfields)
+			print("Creating page '{}' because it was not found in page {}.".format(child_title, parentid))
 	return child_item
 
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
