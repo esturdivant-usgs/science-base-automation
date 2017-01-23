@@ -17,7 +17,7 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+__all__ = ['get_title_from_data', 'add_element_to_xml' 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
 
 
 #%% Functions
@@ -36,6 +36,35 @@ def get_title_from_data(xml_file, metadata_root=False):
 	except Exception as e:
 		print >> sys.stderr, "Exception while trying to parse XML file ({}): {}".format(xml_file, e)
 		return False
+
+def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
+	# Appends element 'new_elem' to 'containertag' in XML file.
+	# in_metadata accepts either xmlfile or root element of parsed metadata.
+	# new_elem accepts either lxml._Element or XML string
+	# Whether in_metadata is a filename or an element, get metadata_root
+    if type(in_metadata) is etree._Element:
+        metadata_root = in_metadata
+        xml_file =False
+    elif type(in_metadata) is str:
+        xml_file = in_metadata
+        tree = etree.parse(xml_file) # parse metadata using etree
+        metadata_root=tree.getroot()
+    else:
+        print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+    # If new element is still a string convert it to an XML element
+    if type(new_elem) is str:
+        new_elem = etree.fromstring(new_elem)
+    elif not type(new_elem) is etree._Element:
+        raise TypeError("'new_elem' takes either strings or elements.")
+	# Append new_elem to containertag element
+    elem = metadata_root.findall(containertag)[0]
+    elem.append(new_elem) # append new tag to container element
+	# Either overwrite XML file with new XML or return the updated metadata_root
+	if type(xml_file) is str:
+        tree.write(xml_file)
+        return xml_file
+    else:
+        return metadata_root
 
 def map_newvals2xml(xml_file, new_values):
 	# Create dictionary that maps new values to values that will be used to locate the XML element
@@ -99,29 +128,38 @@ def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
 def update_xml(xml_file, new_values):
 	# update XML file to include new child ID and DOI
 	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
+	# Parse metadata
 	try:
 		tree = etree.parse(xml_file) # parse metadata using etree
-		metadata_root=tree.getroot()
-		elem2newvalue = map_newvals2xml(xml_file, new_values)
-		for newval,elemfind in elem2newvalue.items(): # Update elements with new ID text
-			for fstr,i in elemfind.items():
-				try:
-					metadata_root.findall(fstr)[i].text = newval
-				except IndexError:
-					try:
-						container, tag = os.path.split(fstr)
-						elem = metadata_root.findall(container)[0]
-						elem.append(etree.Element(tag))
-						metadata_root.findall(fstr)[i].text = newval
-					except:
-						pass
-				except:
-					pass
-		tree.write(xml_file) # Overwrite XML file with new XML
-		return xml_file
+	except etree.XMLSyntaxError as e:
+		print "XML Syntax Error while trying to parse XML file: {}".format(e)
+		return False
 	except Exception as e:
 		print "Exception while trying to parse XML file: {}".format(e)
 		return False
+	# Work through metadata elements
+	metadata_root=tree.getroot()
+	elem2newvalue = map_newvals2xml(xml_file, new_values)
+	for newval,elemfind in elem2newvalue.items(): # Update elements with new ID text
+		# Add or update the values of each element
+		for fstr,i in elemfind.items():
+			try:
+				metadata_root.findall(fstr)[i].text = newval
+			except IndexError: # if the element does not yet exist, create the element
+				try:
+					container, tag = os.path.split(fstr)
+					elem = metadata_root.findall(container)[0]
+					elem.append(etree.Element(tag))
+					metadata_root.findall(fstr)[i].text = newval
+				except:
+					pass
+			except:
+				pass
+	if "metadata_additions" in globals():
+		[add_element_to_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
+	# Overwrite XML file with new XML
+	tree.write(xml_file)
+	return xml_file
 
 def json_from_xml():
 	#FIXME: Currently hard-wired; will need to adapted to match metadata scheme.
@@ -185,13 +223,16 @@ def get_DOI_from_item(item):
 	# Get DOI link from parent_item
 	doi = False
 	i = 0
+	try:
+		weblinks = item['webLinks']
+	except:
+		print("No 'webLinks' in JSON for {}.".format(item['id']))
+		return False
+		break()
 	while not doi:
-		doi = item['webLinks'][i]['uri']
-		if 'doi' in doi.lower():
-			doi = doi[-16:]
-		else:
-			doi = False
-			i += 1
+		doi = doi[-16:] if 'doi' in weblinks[i]['uri'].lower() else False
+		i += 1
+	return doi
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 	if inheritedfields:
@@ -205,9 +246,8 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 		child_item = sb.updateSbItem(child_item)
 	return child_item
 
-def find_or_create_child(sb, parentid, child_title, skip_search=False, verbose=False):
+def find_or_create_child(sb, parentid, child_title, verbose=False):
 	# Find or create new child page
-	#if not skip_search:
 	for child_id in sb.get_child_ids(parentid): # Check if child page already exists
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
@@ -343,7 +383,7 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 		dr_doi = get_DOI_from_item(parent_item)
 	# Create (or find) new child page based on data title
 	child_title = get_title_from_data(xml_file)
-	child_item = find_or_create_child(sb, parentid, child_title, True)
+	child_item = find_or_create_child(sb, parentid, child_title, verbose=True)
 	# Update XML file to include new child ID and DOI
 	update_xml(xml_file, child_item['id'],dr_doi,parent_link) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 	# Upload shapefile files (including xml)

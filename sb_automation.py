@@ -161,9 +161,7 @@ for (root, dirs, files) in os.walk(parentdir):
 		xmllist = glob.glob(os.path.join(root,d,'*.xml'))
 		for xml_file in xmllist:
 			# Get values
-			if not 'dr_doi' in locals(): # Get DOI from parent_item
-				parent_item = flexibly_get_item(sb, dict_DIRtoID[d])
-				dr_doi = get_DOI_from_item(parent_item)
+			dr_doi = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, dict_DIRtoID[d]))
 			# Create (or find) new data page based on title in XML
 			parentid = dict_DIRtoID[d]
 			data_title = get_title_from_data(xml_file) # get title from XML
