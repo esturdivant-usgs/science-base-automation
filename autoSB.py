@@ -15,9 +15,9 @@ import glob
 from lxml import etree
 import json
 import pickle
-import fileinput
+import datetime
 
-__all__ = ['get_title_from_data', 'map_newvals2xml', 'replace_http_in_xml', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+__all__ = ['get_title_from_data', 'add_element_to_xml' 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
 
 
 #%% Functions
@@ -37,75 +37,129 @@ def get_title_from_data(xml_file, metadata_root=False):
 		print >> sys.stderr, "Exception while trying to parse XML file ({}): {}".format(xml_file, e)
 		return False
 
+def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
+	# Appends element 'new_elem' to 'containertag' in XML file.
+	# in_metadata accepts either xmlfile or root element of parsed metadata.
+	# new_elem accepts either lxml._Element or XML string
+	# Whether in_metadata is a filename or an element, get metadata_root
+    if type(in_metadata) is etree._Element:
+        metadata_root = in_metadata
+        xml_file =False
+    elif type(in_metadata) is str:
+        xml_file = in_metadata
+        tree = etree.parse(xml_file) # parse metadata using etree
+        metadata_root=tree.getroot()
+    else:
+        print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+    # If new element is still a string convert it to an XML element
+    if type(new_elem) is str:
+        new_elem = etree.fromstring(new_elem)
+    elif not type(new_elem) is etree._Element:
+        raise TypeError("'new_elem' takes either strings or elements.")
+	# Append new_elem to containertag element
+    elem = metadata_root.findall(containertag)[0]
+    elem.append(new_elem) # append new tag to container element
+	# Either overwrite XML file with new XML or return the updated metadata_root
+	if type(xml_file) is str:
+        tree.write(xml_file)
+        return xml_file
+    else:
+        return metadata_root
+
 def map_newvals2xml(xml_file, new_values):
 	# Create dictionary that maps new values to values that will be used to locate the XML element
 	"""
 	To update XML elements with new text:
-		for newval,elemfind in val2xml.iteritems():
-			for fstr,i in elemfind.iteritems():
-				metadata_root.findall(fstr)[i].text = newval
-	Currently hard-wired; will need to adapted to match metadata scheme.
+		for newval, elemfind in val2xml.items():
+			for elempath, i in elemfind.items():
+				metadata_root.findall(elempath)[i].text = newval
+	Currently hard-wired; will need to be adapted to match metadata scheme.
 	Alternative: Search for 'xxx' in XML and replace with relevant value. Requires that values that need to be replaced have 'xxx'
 	from VeeAnn:
-	citeinfo/onlink 1. DOI link; 2. link to data page; 3. link to data direct download (if possible)
-	lworkcit/onlink 1. DOI link; 2. link to landing page
-	distinfo/.../networkr 1. link to landing page; 2. link to data direct download (if possible); 3. DOI link (optional)
+	citeinfo/onlink citelink 1. DOI link; 2. child page URL; 3. data direct download URL (if possible)
+	lworkcit/onlink lwork_link 1. DOI link; 2. link to landing page (optional)
+	distinfo/.../networkr networkr 1. data direct download; 2. child page URL; 3. landing page URL (not necessary)
 	"""
-	val2xml = {}
+	val2xml = {} # initialize storage dictionary
+	# Hard-wire path in metadata to each element
+	seriesid = './idinfo/citation/citeinfo/serinfo/issue' # Citation / Series / Issue Identification
+	citelink = './idinfo/citation/citeinfo/onlink' # Citation / Online Linkage
+	lwork_link = './idinfo/citation/citeinfo/lworkcit/citeinfo/onlink' # Larger Work / Online Linkage
+	lwork_serID = './idinfo/citation/citeinfo/lworkcit/citeinfo/serinfo/issue' # Larger Work / Series / Issue Identification
+	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
+	edition = './idinfo/citation/citeinfo/edition' # Citation / Edition
+	metadate = './metainfo/metd' # Metadata Date
+	# DOI values
 	if 'doi' in new_values.keys():
+		# get DOI values (as issue and URL)
 		doi_issue = "DOI:{}".format(new_values['doi'])
-		doi_url = "https://dx.doi.org/{}".format(new_values['doi'])
-		val2xml[doi_issue] = {'./idinfo/citation/citeinfo/serinfo/issue':0,
-				'./idinfo/citation/citeinfo/lworkcit/citeinfo/serinfo/issue':0}
-		val2xml[doi_url] = {'./idinfo/citation/citeinfo/onlink':0,
-				'./idinfo/citation/citeinfo/lworkcit/citeinfo/onlink':0,
-			   './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr':2}
-	if 'landing_link' in new_values.keys():
-		val2xml[new_values['landing_link']] = {'./idinfo/citation/citeinfo/lworkcit/citeinfo/onlink':1,
-			'./distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr':0}
-	if 'directdownload_link' in new_values.keys():
-		val2xml[new_values['directdownload_link']] = {'./idinfo/citation/citeinfo/onlink':2, './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr':1}
+		doi_url = "https://doi.org/{}".format(new_values['doi'])
+		# add new DOI values as {DOI:XXXXX:{'./idinfo/.../issue':0}}
+		val2xml[doi_issue] = {seriesid:0, lwork_serID:0}
+		val2xml[doi_url] = {citelink: 0, lwork_link: 0, networkr: 2}
+	# Landing URL
+	if 'landing_id' in new_values.keys():
+		landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(landing_id)
+		val2xml[landing_link] = {lwork_link: 1, networkr: 0}
+	# Data page URL
+	if 'child_id' in new_values.keys():
+		# get URLs
+		page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
+		directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
+		# add values
+		val2xml[directdownload_link] = {citelink:2, networkr:1}
+		val2xml[page_url] = {citelink: 1, networkr: 1}
+	# Edition
 	if 'edition' in new_values.keys():
-		val2xml[new_values['edition']] = {'./idinfo/citation/citeinfo/edition':0}
+		val2xml[new_values['edition']] = {edition:0}
+	# Date and time of update
+	now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+	val2xml[now_str] = {metadate: 0}
 	return val2xml
 
-def replace_http_in_xml(xml_file, findval='http:', replaceval='https:'):
-	# 	f1 = open(xml_file, 'r')
-	# 	f2 = open(xml_file+'.tmp', 'w')
-	# 	for line in f1:
-	# 		f2.write(line.replace(findval, replaceval))
-	# 	f1.close()
-	# 	f2.close()
-	with fileinput.FileInput(xml_file+'.tmp', inplace=True, backup='.bak') as file:
-		for line in file:
-			print(line.replace(replaceval, findval), end='')
-	return xml_file
+def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
+    with open(fname, 'r') as f1:
+        with open(fname+'.tmp', 'w') as f2:
+            for line in f1:
+                f2.write(line.replace(findstr, replacestr))
+    os.rename(fname+'.tmp', fname)
+    return fname
 
 def update_xml(xml_file, new_values):
 	# update XML file to include new child ID and DOI
+	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
+	# Parse metadata
 	try:
 		tree = etree.parse(xml_file) # parse metadata using etree
-		metadata_root=tree.getroot()
-		elem2newvalue = map_newvals2xml(xml_file, new_values)
-		for newval,elemfind in elem2newvalue.iteritems(): # Update elements with new ID text
-			for fstr,i in elemfind.iteritems():
+	except etree.XMLSyntaxError as e:
+		print "XML Syntax Error while trying to parse XML file: {}".format(e)
+		return False
+	except Exception as e:
+		print "Exception while trying to parse XML file: {}".format(e)
+		return False
+	# Work through metadata elements
+	metadata_root=tree.getroot()
+	elem2newvalue = map_newvals2xml(xml_file, new_values)
+	for newval,elemfind in elem2newvalue.items(): # Update elements with new ID text
+		# Add or update the values of each element
+		for fstr,i in elemfind.items():
+			try:
+				metadata_root.findall(fstr)[i].text = newval
+			except IndexError: # if the element does not yet exist, create the element
 				try:
+					container, tag = os.path.split(fstr)
+					elem = metadata_root.findall(container)[0]
+					elem.append(etree.Element(tag))
 					metadata_root.findall(fstr)[i].text = newval
-				except IndexError:
-					try:
-						container, tag = os.path.split(fstr)
-						elem = metadata_root.findall(container)[0]
-						elem.append(etree.Element(tag))
-						metadata_root.findall(fstr)[i].text = newval
-					except:
-						pass
 				except:
 					pass
-		tree.write(xml_file) # Overwrite XML file with new XML
-		return xml_file
-	except Exception as e:
-		print >> sys.stderr, "Exception while trying to parse XML file: {}".format(e)
-		return False
+			except:
+				pass
+	if "metadata_additions" in globals():
+		[add_element_to_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
+	# Overwrite XML file with new XML
+	tree.write(xml_file)
+	return xml_file
 
 def json_from_xml():
 	#FIXME: Currently hard-wired; will need to adapted to match metadata scheme.
@@ -124,7 +178,7 @@ def get_fields_from_xml(sb, item, xml_file, sbfields, metadata_root=False):
 	dict_sb_from_xml = json_from_xml() # return dict for locating values in XML
 	for field in sbfields:
 		elemfind = dict_sb_from_xml[field]
-		for fstr,i in elemfind.iteritems():
+		for fstr,i in elemfind.items():
 			try:
 				item[field] = metadata_root.findall(fstr)[i].text
 			except:
@@ -149,7 +203,7 @@ def log_in(username=False):
 		sb = pysb.SbSession(env=None).loginc(username)
 	return sb
 
-def flexibly_get_item(sb, mystery_id):
+def flexibly_get_item(sb, mystery_id, output='item'):
 	# Given input of either ID or JSON, return ID, link, and JSON item
 	if type(mystery_id) is str or type(mystery_id) is unicode:
 		item_id = mystery_id
@@ -157,20 +211,28 @@ def flexibly_get_item(sb, mystery_id):
 	elif type(mystery_id) is dict:
 		item = mystery_id
 		item_id = item['id']
-	item_link = item['link']['url']
-	return item_id, item_link, item
+	if output.lower() == 'id':
+		return item_id
+	elif output.lower() == 'url':
+		item_link = item['link']['url']
+		return item_link
+	else:
+		return item
 
 def get_DOI_from_item(item):
 	# Get DOI link from parent_item
 	doi = False
 	i = 0
+	try:
+		weblinks = item['webLinks']
+	except:
+		print("No 'webLinks' in JSON for {}.".format(item['id']))
+		return False
+		break()
 	while not doi:
-		doi = item['webLinks'][i]['uri']
-		if 'doi' in doi.lower():
-			doi = doi[-16:]
-		else:
-			doi = False
-			i += 1
+		doi = doi[-16:] if 'doi' in weblinks[i]['uri'].lower() else False
+		i += 1
+	return doi
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 	if inheritedfields:
@@ -180,19 +242,17 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 				child_item[field] = parent_item[field]
 			except KeyError:
 				print("KeyError in inherit_SBfields(). Field '{}' not inherited.".format(field))
-				#pass
+				pass
 		child_item = sb.updateSbItem(child_item)
 	return child_item
 
-def find_or_create_child(sb, parent, child_title, skip_search=False, inheritedfields=False, verbose=False):
+def find_or_create_child(sb, parentid, child_title, verbose=False):
 	# Find or create new child page
-	#if not skip_search:
-	parentid, parent_link, parent_item = flexibly_get_item(sb, parent)
 	for child_id in sb.get_child_ids(parentid): # Check if child page already exists
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print("{} found!".format(child_title))
+				print("Page with title '{}' was located.".format(child_title))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -200,9 +260,7 @@ def find_or_create_child(sb, parent, child_title, skip_search=False, inheritedfi
 		child_item['title'] = child_title
 		child_item = sb.create_item(child_item)
 		if verbose:
-			print("Creating page {} because it was not found in page {}.".format(child_title, parentid))
-	if inheritedfields:
-		child_item = inherit_SBfields(sb, child_item, inheritedfields)
+			print("Creating page '{}' because it was not found in page {}.".format(child_title, parentid))
 	return child_item
 
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
@@ -325,7 +383,7 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 		dr_doi = get_DOI_from_item(parent_item)
 	# Create (or find) new child page based on data title
 	child_title = get_title_from_data(xml_file)
-	child_item = find_or_create_child(sb, parentid, child_title, True)
+	child_item = find_or_create_child(sb, parentid, child_title, verbose=True)
 	# Update XML file to include new child ID and DOI
 	update_xml(xml_file, child_item['id'],dr_doi,parent_link) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 	# Upload shapefile files (including xml)
@@ -365,7 +423,7 @@ def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID
 
 def update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent_inherits, dict_PARtoCHILDS):
 	# Populate data pages
-	for xmlpath, pageid in dict_DIRtoID.iteritems():
+	for xmlpath, pageid in dict_DIRtoID.items():
 		if len(os.path.split(xmlpath)) > 1: # If dict key is XML file
 			item = update_datapage(sb, pageid, xmlpath, inheritedfields=data_inherits, replace=True)
 		else: # If it's not an XML file, then it must be a directory
@@ -412,7 +470,7 @@ def update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON):
 		dict_IDtoJSON[child_item['id']] = child_item
 	return dict_IDtoJSON
 
-def Update_XMLfromSB(sb, useremail, parentdir, fname_dir2id='dir_to_id.json', fname_id2json='id_to_json.json'): 
+def Update_XMLfromSB(sb, useremail, parentdir, fname_dir2id='dir_to_id.json', fname_id2json='id_to_json.json'):
 	# read data
 	# 1/17/17: no evidence that this fxn is being used
 	with open(os.path.join(parentdir,fname_dir2id), 'r') as f:
@@ -478,7 +536,7 @@ def remove_all_child_pages(useremail=False, landing_link=False):
 def universal_inherit(sb, top_id, inheritedfields, verbose=False):
 	for cid in sb.get_child_ids(top_id):
 		citem = sb.get_item(cid)
-		if verbose: 
+		if verbose:
 			print('Inheriting fields for "{}" from its parent page'.format(citem['title']))
 		inherit_SBfields(sb, citem)
 		try:
@@ -490,7 +548,7 @@ def universal_inherit(sb, top_id, inheritedfields, verbose=False):
 def apply_topdown(sb, top_id, function, verbose=False):
 	for cid in sb.get_child_ids(top_id):
 		citem = sb.get_item(cid)
-		if verbose: 
+		if verbose:
 			print('Applying {} to page "{}"'.format(function, citem['title']))
 		function(sb, citem)
 		try:
@@ -506,8 +564,7 @@ def apply_bottomup(sb, top_id, function, verbose=False):
 		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 		citem = sb.get_item(cid)
-		if verbose: 
+		if verbose:
 			print('Applying {} to page "{}"'.format(function, citem['title']))
 		function(sb, citem)
 	return True
-

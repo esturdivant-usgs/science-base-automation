@@ -36,15 +36,16 @@ from config_autoSB import *
 sb = log_in(useremail)
 """
 #%% Find landing page
-if landing_link:
-	landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
-elif landing_id:
-	landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(landing_id)
+if not "landing_id" in locals():
+	try:
+		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
+	except:
+		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified.')
 # get JSON item for parent page
 landing_item = sb.get_item(landing_id)
 #print("CITATION: {}".format(landing_item['citation'])) # print to QC citation
 # make dictionary of ID and URL values to update in XML
-new_values = {'new_id':landing_item['id'], 'doi':dr_doi, 'landing_link':landing_link}
+new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 
 """
 Work with landing page and XML
@@ -138,6 +139,11 @@ else: # Import pre-created dictionaries if all SB pages exist
 	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
 		dict_PARtoCHILDS = pickle.load(f)
 
+"""
+Create and populate data pages
+Inputs: parent directory, landing page ID
+For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
+"""
 if not sb.is_logged_in():
 	print('Logging back in...')
 	try:
@@ -145,24 +151,25 @@ if not sb.is_logged_in():
 	except NameError:
 		sb = pysb.SbSession(env=None).loginc(useremail)
 
-# Create and populate data pages
+if not "dict_DIRtoID" in locals():
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+		dict_DIRtoID = json.load(f)
+
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 for (root, dirs, files) in os.walk(parentdir):
 	for d in dirs:
 		xmllist = glob.glob(os.path.join(root,d,'*.xml'))
 		for xml_file in xmllist:
 			# Get values
-			parentid, parent_link, parent_item = flexibly_get_item(sb, dict_DIRtoID[d])
-			if not dr_doi: # Get DOI link from parent_item
-				dr_doi = get_DOI_from_item(parent_item)
+			dr_doi = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, dict_DIRtoID[d]))
 			# Create (or find) new data page based on title in XML
+			parentid = dict_DIRtoID[d]
 			data_title = get_title_from_data(xml_file) # get title from XML
-			print("TITLE: {}".format(data_title))
-			data_item = find_or_create_child(sb, parentid, data_title, True) # Create (or find) data page
+			data_item = find_or_create_child(sb, parentid, data_title, skip_search=True, verbose=True) # Create (or find) data page based on title
+			# Make updates
 			if update_XML: # Update XML file to include new child ID and DOI
-				new_values['directdownload_link'] = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(data_item['id'])
-				new_values['new_id'] = data_item['id']
-				update_xml(xml_file, new_values)
+				find_and_replace_text(xml_file) # Replace 'http:' with 'https:'
+				update_xml(xml_file, {'landing_id':landing_item['id'], 'doi':dr_doi, 'child_id':data_item['id']})
 			if update_data: # Upload data files (FIXME: currently only shapefile) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=True)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.

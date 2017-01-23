@@ -48,12 +48,12 @@ dr_doi = "10.5066/F74X55X7"
 #-----------------------
 #   OPTIONAL
 #-----------------------
-# SB fields that will be populated from the XML file in the top directory, assuming an error-free XML is present. Note that body = abstract. The Summary item on SB will automatically be created from body. Default: []. Suggestion: run only the landing page population with landing_fields_from_xml = ['citation','body','purpose']. Then manually revise the landing page and then run the entire script with landing_fields_from_xml = [].
-landing_fields_from_xml = []
-# SB fields that will be copied (inherited) from the landing page to aggregate pages. Defaults: citation, body (which SB automatically harvests for the summary), purpose.
+# SB fields that will be copied (inherited) from the landing page to sub-pages (subparents), which are different from data pages. Defaults: citation, contacts, body (which SB automatically harvests for the summary), purpose.
 subparent_inherits = ['citation','contacts','body','purpose']
 # SB fields data pages inherit from their immediate parent page. All other fields will be automatically populated from the XML. Defaults: citation, body.
 data_inherits = ['citation','contacts', 'body']
+# SB fields that will be populated from the XML file in the top directory, assuming an error-free XML is present. Note that body = abstract. The Summary item on SB will automatically be created from body. Default: []. Suggestion: run only the landing page population with landing_fields_from_xml = ['citation','body','purpose']. Then manually revise the landing page and then run the entire script with landing_fields_from_xml = [].
+landing_fields_from_xml = []
 
 #-----------------------
 # Time-saving options
@@ -64,6 +64,25 @@ update_XML = True # default: True. False to save time if XML already has the mos
 update_data = True # default: True. False to save time if up-to-date data files have already been uploaded.
 add_preview_image_to_all = False # default: False. True to put the same preview image (file specified above) on every page in the data release.
 replace_subpages = False # default: False. True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
+
+# --------------------
+# Additions to metadata
+# --------------------
+# Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element. Example of a new cross reference:
+# new_crossref = """
+#     <crossref><citeinfo>
+#         <origin>AUTHOR</origin>
+#         <pubdate>YEAR</pubdate>
+#         <title>TITLE</title>
+#         <serinfo><sername>Open-File Report</sername><issue>ISSUE</issue></serinfo>
+#         <pubinfo>
+#         <pubplace>Reston, VA</pubplace>
+#         <publish>U.S. Geological Survey</publish>
+#         </pubinfo>
+#         <onlink>URL</onlink>
+#     </citeinfo></crossref>
+#     """
+# metadata_additions = {'./idinfo':new_crossref}
 
 """
 Initialize
