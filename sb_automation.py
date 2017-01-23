@@ -40,7 +40,7 @@ if not "landing_id" in locals():
 	try:
 		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
 	except:
-		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified.')
+		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
 # get JSON item for parent page
 landing_item = sb.get_item(landing_id)
 #print("CITATION: {}".format(landing_item['citation'])) # print to QC citation

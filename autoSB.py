@@ -58,7 +58,37 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
         raise TypeError("'new_elem' takes either strings or elements.")
 	# Append new_elem to containertag element
     elem = metadata_root.findall(containertag)[0]
-    elem.append(new_elem) # append new tag to container element
+	elem.append(new_elem) # append new tag to container element
+	# Either overwrite XML file with new XML or return the updated metadata_root
+	if type(xml_file) is str:
+        tree.write(xml_file)
+        return xml_file
+    else:
+        return metadata_root
+
+def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
+	# Overwrites the first element in containertag corresponding to the tag of new_elem
+	# in_metadata accepts either xml file or root element of parsed metadata.
+	# new_elem accepts either lxml._Element or XML string
+	# Whether in_metadata is a filename or an element, get metadata_root
+    if type(in_metadata) is etree._Element:
+        metadata_root = in_metadata
+        xml_file =False
+    elif type(in_metadata) is str:
+        xml_file = in_metadata
+        tree = etree.parse(xml_file) # parse metadata using etree
+        metadata_root=tree.getroot()
+    else:
+        print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+    # If new element is still a string convert it to an XML element
+    if type(new_elem) is str:
+        new_elem = etree.fromstring(new_elem)
+    elif not type(new_elem) is etree._Element:
+        raise TypeError("'new_elem' takes either strings or elements.")
+	# Replace element with new_elem
+    elem = metadata_root.findall(containertag)[0]
+    old_elem = elem.findall(new_elem.tag)[0]
+	elem.replace(old_elem, new_elem)
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
         tree.write(xml_file)
@@ -157,6 +187,8 @@ def update_xml(xml_file, new_values):
 				pass
 	if "metadata_additions" in globals():
 		[add_element_to_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
+	if "metadata_replacements" in globals():
+		[replace_element_in_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
 	# Overwrite XML file with new XML
 	tree.write(xml_file)
 	return xml_file

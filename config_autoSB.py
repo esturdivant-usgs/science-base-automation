@@ -33,8 +33,7 @@ useremail = 'esturdivant@usgs.gov'
 landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page
 landing_link = "https://www.sciencebase.gov/catalog/item/580a2b32e4b0f497e7906380" # testing page
 # Path to local top directory of data release (equivalent to landing page):
-# If this is a server, it should be mounted and visible in your Volumes. Then it is referenced by '/Volumes/__volume_name__'
-# The volume name should be the name of the directory on the server, rather than the server itself. Check this by looking at the volumes mounted on your computer. In
+# If this is a server, it should be mounted and visible in your Volumes. Then it is referenced by '/Volumes/[volume name]' The volume name should be the name of the directory on the server, rather than the server itself. Check this by looking at the volumes mounted on your computer.
 parentdir = r'/Users/esturdivant/Desktop/SE_ATLANTIC' # OSX
 parentdir = "c:/Users/esturdivant/Desktop/SE_ATLANTIC" # WINDOWS
 parentdir = r"/Users/emilysturdivant/Documents/USGS/Test Data Release" # brigitta
@@ -58,31 +57,51 @@ landing_fields_from_xml = []
 #-----------------------
 # Time-saving options
 #-----------------------
-update_landing_page = False # default: True. True if values on the landing page should be updated from XML file in the parent directory
 update_subpages = True # default: True. False to save time if SB pages already exist
 update_XML = True # default: True. False to save time if XML already has the most up-to-date values.
 update_data = True # default: True. False to save time if up-to-date data files have already been uploaded.
 add_preview_image_to_all = False # default: False. True to put the same preview image (file specified above) on every page in the data release.
+update_landing_page = False # default: True. True if values on the landing page should be updated from XML file in the parent directory
 replace_subpages = False # default: False. True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
 
 # --------------------
 # Additions to metadata
 # --------------------
 # Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element. Example of a new cross reference:
-# new_crossref = """
-#     <crossref><citeinfo>
-#         <origin>AUTHOR</origin>
-#         <pubdate>YEAR</pubdate>
-#         <title>TITLE</title>
-#         <serinfo><sername>Open-File Report</sername><issue>ISSUE</issue></serinfo>
-#         <pubinfo>
-#         <pubplace>Reston, VA</pubplace>
-#         <publish>U.S. Geological Survey</publish>
-#         </pubinfo>
-#         <onlink>URL</onlink>
-#     </citeinfo></crossref>
-#     """
-# metadata_additions = {'./idinfo':new_crossref}
+new_crossref = """
+    <crossref><citeinfo>
+        <origin>AUTHOR</origin>
+        <pubdate>YEAR</pubdate>
+        <title>TITLE</title>
+        <serinfo><sername>Open-File Report</sername><issue>ISSUE</issue></serinfo>
+        <pubinfo>
+        <pubplace>Reston, VA</pubplace>
+        <publish>U.S. Geological Survey</publish>
+        </pubinfo>
+        <onlink>URL</onlink>
+    </citeinfo></crossref>
+    """
+new_distrib = """
+    <distrib>
+		<cntinfo>
+			<cntorgp>
+				<cntorg>U.S. Geological Survey</cntorg>
+			</cntorgp>
+			<cntaddr>
+				<addrtype>mailing and physical address</addrtype>
+				<address>384 Woods Hole Road</address>
+				<city>Woods Hole</city>
+				<state>MA</state>
+				<postal>02543-1598</postal>
+				<country>USA</country>
+			</cntaddr>
+			<cntvoice>508-548-8700</cntvoice>
+			<cntfax>508-457-2310</cntfax>
+		</cntinfo>
+	</distrib>
+    """
+metadata_additions = {'./idinfo':new_crossref}
+metadata_replacements = {'./distinfo':new_distrib}
 
 """
 Initialize
