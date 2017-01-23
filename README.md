@@ -53,6 +53,9 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- update_subpages 
 	- update_XML 
 	- update_data 
+	
+- Optional...
+	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
 
 ### 4. Install python modules (lxml, pysb).
 
@@ -94,10 +97,14 @@ In your Python IDE of choice: Open the script and run it line by line or however
 - Loops through the sub-directories to create or find a matching SB page. 
 	- For each sub-directory, it checks for a matching child page (child title==directory name and parent page=parent directory). If the child does not already exist, it creates a new page. For each page (regardless of whether it already existed), it copies fields from the landing page, as indicated in the input parameters. 
 
-- Loops through the XML files to create or find a data page. For each XML file (excluding the landing page XML), it creates (or finds) a data page, revises the XML to include the URL of the data page, the DOI, and the URL of the landing page, uploads the shapefile files to the new page, and copies fields from the parent page to the data page as indicated in the input parameters.
+- Loops through the XML files to create or find a data page. For each XML file (excluding the landing page XML), it:
+	- creates (or finds) a data page, 
+	- revises the XML to: include DOI and URLs for the landing page, data page, and direct data download; replaces any instance of 'http:' with 'https:'; adds a new element (such as new cross reference) to the XML
+	- uploads the shapefile files to the new page, 
+	- copies fields from the parent page to the data page as indicated in the input parameters.
 
 - Sets bounding box coordinates for parents based on the spatial extent of the data in their child pages. 
-	- During processing it stores values in three dictionaries, which are then saved in the top directory as a time-saving measure for future processing. 
+- During processing it stores values in three dictionaries, which are then saved in the top directory as a time-saving measure for future processing. 
 
 ## Background
 
@@ -105,15 +112,15 @@ In your Python IDE of choice: Open the script and run it line by line or however
 - landing page: the top-level ScienceBase page of the data release. The DOI will direct here. Corresponds to the local top directory.
 - top directory: the top local directory housing all files in the data release. Corresponds to the SB landing page.
 - data pages: the final page/s in a page chain that holds the data files. 
-- [aggregate] pages: the mid-level pages that organize data pages
-- parent and child [pages or directories]: relational terms for page at any level of the hierarchy. Parent always contains the child. Corresponds to __ and __ directories
+- [aggregate]/subparent pages: the mid-level pages that organize data pages
+- parent and child [pages or directories]: relational terms for page at any level of the hierarchy. Parent always contains the child.
 - item: SB JSON item. The JSON-formatted version of a given page.
-- field: One piece of a SB page. Fields include title, citation, body… Field values will be displayed under the headings on a SB page. Examples:
-- citation – Recommended citation for the data release. ScienceBase will automatically populate using the XML, but this may not agree with our format. 
-- body = abstract. The summary will automatically be created from body.
-- purpose
-- previewImage – aka. browse graphic. SB will automatically use an image file uploaded to the page. 
-- summary – this is automatically populated based on the body.
+- field: One component of a SB page. Fields include title, citation, body… Field values will be displayed under the headings on a SB page. Examples:
+	- citation – Recommended citation for the data release. ScienceBase will automatically populate using the XML, but this may not agree with our format. 
+	- body = abstract. The summary will automatically be created from body.
+	- purpose
+	- previewImage – a.k.a. browse graphic. SB will automatically use an image file uploaded to the page. 
+	- summary – this is automatically populated based on the body.
 - element: One piece of an XML file. XML holds nested elements that are specified by tags. Also a class in lxml. Elements can be referenced by the tags and the values are the text __ property of the element. 
 
 ### Directory structure
