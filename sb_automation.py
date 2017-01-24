@@ -99,7 +99,7 @@ if update_subpages:
 		for dirname in dirs:
 			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
 			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
-			subpage = find_or_create_child(sb, parent_id, dirname, verbose=True) # get JSON for subpage based on parent ID and dirname
+			subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
 			subpage = inherit_SBfields(sb, subpage, subparent_inherits)
 			if 'previewImage' in subparent_inherits and "imagefile" in locals():
 				subpage = sb.upload_file_to_item(subpage, imagefile)
@@ -117,21 +117,18 @@ else: # Import pre-created dictionaries if all SB pages exist
 
 """
 Create and populate data pages
-Inputs: parent directory, landing page ID
+Inputs: parent directory, landing page ID, dictionary of new values (new_values)
 For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 """
-if not sb.is_logged_in():
-	print('Logging back in...')
-	try:
-		sb = pysb.SbSession(env=None).login(useremail,password)
-	except NameError:
-		sb = pysb.SbSession(env=None).loginc(useremail)
+sb = log_in(useremail)
 
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
 
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
+if verbose:
+	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
 for (root, dirs, files) in os.walk(parentdir):
 	for d in dirs:
 		xmllist = glob.glob(os.path.join(root,d,'*.xml'))
@@ -141,14 +138,15 @@ for (root, dirs, files) in os.walk(parentdir):
 			# Create (or find) new data page based on title in XML
 			parentid = dict_DIRtoID[d]
 			data_title = get_title_from_data(xml_file) # get title from XML
-			data_item = find_or_create_child(sb, parentid, data_title, verbose=True) # Create (or find) data page based on title
+			data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
 			# Make updates
 			if update_XML: # Update XML file to include new child ID and DOI
 				find_and_replace_text(xml_file) # Replace 'http:' with 'https:'
 				new_values['child_id'] = data_item['id']
-				update_xml(xml_file, new_values)
-			if update_data: # Upload data files (FIXME: currently only shapefile) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
-				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=True)
+				update_xml(xml_file, new_values, verbose=verbose)
+			if update_data: # Upload data files (FIXME: currently only shapefile)
+				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
+				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
 				sb.replace_file(xml_file, data_item) # This function does not work well.
 			# Pass parent fields on to child
@@ -169,7 +167,7 @@ for (root, dirs, files) in os.walk(parentdir):
 
 #%% BOUNDING BOX
 print("\nGetting extent of child data for parent pages...")
-set_parent_extent(sb, landing_id, verbose=True)
+set_parent_extent(sb, landing_id, verbose=verbose)
 
 # Preview Image
 if add_preview_image_to_all:
