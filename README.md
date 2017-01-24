@@ -44,13 +44,14 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- landing_fields_from_xml – landing page fields that will populate from the top XML
 	- subparent_inherits – fields that aggregate pages copy (inherit) from the landing page
 	- data_inherits – fields that data pages inherit from their immediate parent page
+	- landing_fields_from_xml – landing page fields that will populate from the top XML
 
 - Choose which processes to conduct. The default values will suit most purposes, but these fields allow you to tune the processes to save time. 
-	- replace_subpages 
 	- update_subpages 
 	- update_XML 
 	- update_data 
 	- update_landing_page
+	- replace_subpages 
 	
 - Optional...
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
@@ -70,9 +71,10 @@ sb_automation is compatible with Python 2.7 and 3 on OSX and Windows. Python pac
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 #### RUN	
-__In your bash console:__
+__In your bash console (Terminal on OSX):__
 
-	cd path\to\science-base-automation
+	
+	cd [path]\[to]\science-base-automation
 	python sb_automation.py
 	
 __From Finder:__ Right click and run with your python launcher of choice. 

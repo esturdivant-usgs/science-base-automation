@@ -96,7 +96,7 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	else:
 		return metadata_root
 
-def map_newvals2xml(xml_file, new_values):
+def map_newvals2xml(new_values):
 	# Create dictionary of {new value: {XPath to element: position of element in list retrieved by XPath}}
 	"""
 	To update XML elements with new text:
@@ -114,7 +114,7 @@ def map_newvals2xml(xml_file, new_values):
 	lwork_pubdate = './idinfo/citation/citeinfo/lworkcit/citeinfo/pubdate' # Larger Work / Publish date
 	edition = './idinfo/citation/citeinfo/edition' # Citation / Edition
 	pubdate = './idinfo/citation/citeinfo/pubdate' # Citation / Publish date
-	caldate = './descript/timeperd/timeinfo/sngdate/caldate'
+	caldate = './idinfo/timeperd/timeinfo/sngdate/caldate'
 	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
 	metadate = './metainfo/metd' # Metadata Date
 	# DOI values
@@ -156,7 +156,7 @@ def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
     os.remove(fname+'.tmp')
     return fname
 
-def update_xml(xml_file, new_values):
+def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
 	# Parse metadata
@@ -170,7 +170,7 @@ def update_xml(xml_file, new_values):
 		return False
 	# Work through metadata elements
 	metadata_root=tree.getroot()
-	elem2newvalue = map_newvals2xml(xml_file, new_values)
+	elem2newvalue = map_newvals2xml(new_values)
 	for newval,elemfind in elem2newvalue.items(): # Update elements with new ID text
 		# Add or update the values of each element
 		for fstr,i in elemfind.items():
@@ -192,6 +192,8 @@ def update_xml(xml_file, new_values):
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
 	# Overwrite XML file with new XML
 	tree.write(xml_file)
+	if verbose:
+		print("UPDATED XML: {}".format(xml_file))
 	return xml_file
 
 def json_from_xml():
@@ -232,7 +234,7 @@ def log_in(username=False):
 			return sb
 	if not username:
 		username = raw_input("SB username (should be entire USGS email): ")
-	if 'password' in globals():
+	if 'password' in locals():
 		try:
 			sb = pysb.SbSession(env=None).login(username,password)
 		except NameError:
@@ -278,7 +280,7 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 			try:
 				child_item[field] = parent_item[field]
 			except KeyError:
-				print("KeyError in inherit_SBfields(). Field '{}' not inherited.".format(field))
+				print("Field missing: '{}' not present in parent item '{}...'".format(field, parent_item['title'][:50]))
 				pass
 		child_item = sb.updateSbItem(child_item)
 	return child_item
@@ -289,7 +291,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print("Page with title '{}' was located.".format(child_title))
+				print("found: page '{}...'.".format(child_title[:50]))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -297,7 +299,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item['title'] = child_title
 		child_item = sb.create_item(child_item)
 		if verbose:
-			print("Creating page '{}' because it was not found in page {}.".format(child_title, parentid))
+			print("Creating page '{}...' because it was not found in page {}.".format(child_title[:50], parentid))
 	return child_item
 
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
@@ -317,7 +319,7 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 			up_files.append(os.path.join(datapath,fname))
 	# Upload files
 	if verbose:
-		print('UPLOADING: shapefile files to page "{}" ...\n\n'.format(data_name))
+		print('UPLOADING: {} ...\n'.format(data_name))
 	item = sb.upload_files_and_upsert_item(item, up_files)
 	return item
 
