@@ -54,20 +54,19 @@ Work with landing page and XML
 """
 # Check for metadata and image files in landing directory
 #FIXME: this block is not necessary; remove from simplified version
-for f in os.listdir(parentdir):
-	if f.lower().endswith('xml'):
-		parent_xml = os.path.join(parentdir,f) # metadata file in landing directory = parent_xml
-	if f.lower().endswith(('png','jpg','gif')): # if there is a PNG, JPG, or GIF file
-		imagefile = os.path.join(parentdir,f)
-	elif "previewImage" in locals(): # only if there is not an image file in the parent directory, use the image specified during configuration
-		if os.path.isfile(previewImage):
-			imagefile = previewImage
-		else:
-			print("{} does not exist.".format(previewImage))
-	else:
-		print("Preview image not specified.")
-
 if update_landing_page:
+	for f in os.listdir(parentdir):
+		if f.lower().endswith('xml'):
+			parent_xml = os.path.join(parentdir,f) # metadata file in landing directory = parent_xml
+		if f.lower().endswith(('png','jpg','gif')): # if there is a PNG, JPG, or GIF file
+			imagefile = os.path.join(parentdir,f)
+		elif "previewImage" in locals(): # only if there is not an image file in the parent directory, use the image specified during configuration
+			if os.path.isfile(previewImage):
+				imagefile = previewImage
+			else:
+				print("{} does not exist.".format(previewImage))
+		else:
+			print("Preview image not specified.")
 	#%% Populate landing page from metadata
 	if "parent_xml" in locals():
 		# Update XML file to include new parent ID and DOI
@@ -125,7 +124,7 @@ if update_subpages:
 		for dirname in dirs:
 			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
 			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
-			subpage = find_or_create_child(sb, parent_id, dirname, skip_search=False, verbose=True) # get JSON for subpage based on parent ID and dirname
+			subpage = find_or_create_child(sb, parent_id, dirname, verbose=True) # get JSON for subpage based on parent ID and dirname
 			subpage = inherit_SBfields(sb, subpage, subparent_inherits)
 			if 'previewImage' in subparent_inherits and "imagefile" in locals():
 				subpage = sb.upload_file_to_item(subpage, imagefile)
@@ -167,7 +166,7 @@ for (root, dirs, files) in os.walk(parentdir):
 			# Create (or find) new data page based on title in XML
 			parentid = dict_DIRtoID[d]
 			data_title = get_title_from_data(xml_file) # get title from XML
-			data_item = find_or_create_child(sb, parentid, data_title, skip_search=True, verbose=True) # Create (or find) data page based on title
+			data_item = find_or_create_child(sb, parentid, data_title, verbose=True) # Create (or find) data page based on title
 			# Make updates
 			if update_XML: # Update XML file to include new child ID and DOI
 				find_and_replace_text(xml_file) # Replace 'http:' with 'https:'
@@ -187,7 +186,7 @@ for (root, dirs, files) in os.walk(parentdir):
 			# store values in dictionaries
 			dict_DIRtoID[xml_file] = data_item['id']
 			dict_IDtoJSON[data_item['id']] = data_item
-			dict_PARtoCHILDS.setdefault(parent_item['id'], set()).add(data_item['id'])
+			dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
 
 #%% Pass down fields from parents to children
 # print("\nPassing down fields from parents to children...")
@@ -195,7 +194,7 @@ for (root, dirs, files) in os.walk(parentdir):
 
 #%% BOUNDING BOX
 print("\nGetting extent of child data for parent pages...")
-set_parent_extent(sb, landing_id)
+set_parent_extent(sb, landing_id, verbose=True)
 
 # Preview Image
 if add_preview_image_to_all:

@@ -17,7 +17,7 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'add_element_to_xml' 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+__all__ = ['get_title_from_data', 'add_element_to_xml', 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
 
 
 #%% Functions
@@ -38,33 +38,31 @@ def get_title_from_data(xml_file, metadata_root=False):
 		return False
 
 def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
-	# Appends element 'new_elem' to 'containertag' in XML file.
-	# in_metadata accepts either xmlfile or root element of parsed metadata.
-	# new_elem accepts either lxml._Element or XML string
+	# Appends element 'new_elem' to 'containertag' in XML file. in_metadata accepts either xmlfile or root element of parsed metadata. new_elem accepts either lxml._Element or XML string
 	# Whether in_metadata is a filename or an element, get metadata_root
-    if type(in_metadata) is etree._Element:
-        metadata_root = in_metadata
-        xml_file =False
-    elif type(in_metadata) is str:
-        xml_file = in_metadata
-        tree = etree.parse(xml_file) # parse metadata using etree
-        metadata_root=tree.getroot()
-    else:
-        print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
-    # If new element is still a string convert it to an XML element
-    if type(new_elem) is str:
-        new_elem = etree.fromstring(new_elem)
-    elif not type(new_elem) is etree._Element:
-        raise TypeError("'new_elem' takes either strings or elements.")
+	if type(in_metadata) is etree._Element:
+	    metadata_root = in_metadata
+	    xml_file =False
+	elif type(in_metadata) is str:
+	    xml_file = in_metadata
+	    tree = etree.parse(xml_file) # parse metadata using etree
+	    metadata_root=tree.getroot()
+	else:
+	    print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	# If new element is still a string convert it to an XML element
+	if type(new_elem) is str:
+	    new_elem = etree.fromstring(new_elem)
+	elif not type(new_elem) is etree._Element:
+	    raise TypeError("'new_elem' takes either strings or elements.")
 	# Append new_elem to containertag element
-    elem = metadata_root.findall(containertag)[0]
+	elem = metadata_root.findall(containertag)[0]
 	elem.append(new_elem) # append new tag to container element
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
-        tree.write(xml_file)
-        return xml_file
-    else:
-        return metadata_root
+	    tree.write(xml_file)
+	    return xml_file
+	else:
+	    return metadata_root
 
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# Overwrites the first element in containertag corresponding to the tag of new_elem
@@ -131,7 +129,7 @@ def map_newvals2xml(xml_file, new_values):
 		val2xml[doi_url] = {citelink: 0, lwork_link: 0, networkr: 2}
 	# Landing URL
 	if 'landing_id' in new_values.keys():
-		landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(landing_id)
+		landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['landing_id'])
 		val2xml[landing_link] = {lwork_link: 1, networkr: 0}
 	# Data page URL
 	if 'child_id' in new_values.keys():
@@ -152,11 +150,12 @@ def map_newvals2xml(xml_file, new_values):
 	return val2xml
 
 def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
-    with open(fname, 'r') as f1:
-        with open(fname+'.tmp', 'w') as f2:
+    os.rename(fname, fname+'.tmp')
+    with open(fname+'.tmp', 'r') as f1:
+        with open(fname, 'w') as f2:
             for line in f1:
                 f2.write(line.replace(findstr, replacestr))
-    os.rename(fname+'.tmp', fname)
+    os.remove(fname+'.tmp')
     return fname
 
 def update_xml(xml_file, new_values):
@@ -228,7 +227,11 @@ def get_fields_from_xml(sb, item, xml_file, sbfields, metadata_root=False):
 #
 ###################################################
 def log_in(username=False):
-	print('Logging back in...') if not sb.is_logged_in() else return sb
+	if 'sb' in globals():
+		if not sb.is_logged_in():
+			print('Logging back in...')
+		else:
+			return sb
 	if not username:
 		username = raw_input("SB username (should be entire USGS email): ")
 	if 'password' in globals():
@@ -265,7 +268,6 @@ def get_DOI_from_item(item):
 	except:
 		print("No 'webLinks' in JSON for {}.".format(item['id']))
 		return False
-		break()
 	while not doi:
 		doi = doi[-16:] if 'doi' in weblinks[i]['uri'].lower() else False
 		i += 1
@@ -273,7 +275,7 @@ def get_DOI_from_item(item):
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
 	if inheritedfields:
-		parentid, parent_link, parent_item = flexibly_get_item(sb, child_item['parentId'])
+		parent_item = flexibly_get_item(sb, child_item['parentId'])
 		for field in inheritedfields:
 			try:
 				child_item[field] = parent_item[field]
@@ -306,11 +308,7 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 	datapath = os.path.split(xml_file)[0]
 	if replace:
 		# Remove all files (and facets) from child page
-		item['files'] = []
-		item['facets'] = []
-		item=sb.updateSbItem(item)
-		if verbose:
-			print('All files and facets removed from page "{}".'.format(item['title']))
+		item = remove_all_files(sb, item, verbose)
 	# List files pertaining to shapefile for upload
 	shp_exts = ['.cpg','.dbf','.prj','.sbn','.sbx','.shp','.shx','dbf.xml','.shp.xml']
 	up_files = []
@@ -321,7 +319,7 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 			up_files.append(os.path.join(datapath,fname))
 	# Upload files
 	if verbose:
-		print('Uploading "{}" shapefile files.'.format(data_name))
+		print('UPLOADING: shapefile files to page "{}" ...\n\n'.format(data_name))
 	item = sb.upload_files_and_upsert_item(item, up_files)
 	return item
 
@@ -388,7 +386,8 @@ def get_idlist_bottomup(sb, top_id):
 def set_parent_extent(sb, top_id, verbose=False):
 	pagelist = get_idlist_bottomup(sb,top_id)
 	for page in pagelist:
-		get_parent_bounds(sb, page, verbose)
+		parent_bounds = get_parent_bounds(sb, page, verbose)
+	return parent_bounds
 
 def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=False, verbose=False):
 	# Upload all image files to their respective pages.
@@ -407,14 +406,14 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
 					title = d # dirname should correspond to page title
 					item = sb.find_items_by_title(title)['items'][0]
 				if verbose:
-					print('Uploading preview image to "{}"'.format(d))
+					print('UPLOADING: preview image to "{}"...\n\n'.format(d))
 				item = sb.upload_file_to_item(item, f)
 				dict_IDtoJSON[item['id']] = item
 	return dict_IDtoJSON
 
 def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, replace=True, imagefile=False):
 	# Get values
-	parentid, parent_link, parent_item = flexibly_get_item(sb, parent)
+	parent_item = flexibly_get_item(sb, parent)
 	# Get DOI link from parent_item
 	if not dr_doi:
 		dr_doi = get_DOI_from_item(parent_item)
@@ -438,7 +437,7 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 	return child_item # Return new JSON
 
 def update_datapage(sb, page, xml_file, inheritedfields=False, replace=True):
-	parentid, parent_link, parent_item = flexibly_get_item(sb, page)
+	parent_item = flexibly_get_item(sb, page)
 	if replace:
 		item = sb.replace_file(xml_file,item)
 	if inheritedfields:
@@ -474,12 +473,12 @@ def update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent
 
 def remove_all_files(sb, pageid, verbose=False):
 	# Remove all files (and facets) from child page
-	page_id,link,item = flexibly_get_item(sb, pageid)
+	item = flexibly_get_item(sb, pageid)
 	item['files'] = []
 	item['facets'] = []
 	item=sb.updateSbItem(item)
 	if verbose:
-		print('All files and facets removed from page "{}".'.format(item['title']))
+		print('REMOVED: any files or facets on page "{}".'.format(item['title']))
 	return item
 
 def update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON):
@@ -593,7 +592,7 @@ def apply_topdown(sb, top_id, function, verbose=False):
 def apply_bottomup(sb, top_id, function, verbose=False):
 	for cid in sb.get_child_ids(top_id):
 		try:
-			apply_bottomup(sb, cid, function)
+			apply_bottomup(sb, cid, function, verbose)
 		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 		citem = sb.get_item(cid)

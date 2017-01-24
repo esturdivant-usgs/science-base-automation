@@ -35,10 +35,10 @@ landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da
 # Path to local top directory of data release (equivalent to landing page):
 # If this is a server, it should be mounted and visible in your Volumes. Then it is referenced by '/Volumes/[volume name]' The volume name should be the name of the directory on the server, rather than the server itself. Check this by looking at the volumes mounted on your computer.
 parentdir = r'/Users/esturdivant/Desktop/SE_ATLANTIC' # OSX
-parentdir = "c:/Users/esturdivant/Desktop/SE_ATLANTIC" # WINDOWS
-parentdir = r"/Users/emilysturdivant/Documents/USGS/Test Data Release" # brigitta
+parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
+#parentdir = r"/Users/emilysturdivant/Documents/USGS/Test Data Release" # brigitta
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-dr_doi = "10.5066/F74X55X7"
+dr_doi = "10.5066/xWAHOOx"
 # Image file (with path) to be used as preview image. If commented out, the preview image will be ignored.
 #previewImage = r'/Users/esturdivant/Desktop/SE_ATLANTIC/NASCP_SEAtlantic.png'
 # The edition element in the metadata can be modified here.
