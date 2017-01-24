@@ -71,30 +71,30 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# in_metadata accepts either xml file or root element of parsed metadata.
 	# new_elem accepts either lxml._Element or XML string
 	# Whether in_metadata is a filename or an element, get metadata_root
-    if type(in_metadata) is etree._Element:
-        metadata_root = in_metadata
-        xml_file =False
-    elif type(in_metadata) is str:
-        xml_file = in_metadata
-        tree = etree.parse(xml_file) # parse metadata using etree
-        metadata_root=tree.getroot()
-    else:
-        print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
-    # If new element is still a string convert it to an XML element
-    if type(new_elem) is str:
-        new_elem = etree.fromstring(new_elem)
-    elif not type(new_elem) is etree._Element:
-        raise TypeError("'new_elem' takes either strings or elements.")
+	if type(in_metadata) is etree._Element:
+		metadata_root = in_metadata
+		xml_file =False
+	elif type(in_metadata) is str:
+		xml_file = in_metadata
+		tree = etree.parse(xml_file) # parse metadata using etree
+		metadata_root=tree.getroot()
+	else:
+		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	# If new element is still a string convert it to an XML element
+	if type(new_elem) is str:
+		new_elem = etree.fromstring(new_elem)
+	elif not type(new_elem) is etree._Element:
+		raise TypeError("'new_elem' takes either strings or elements.")
 	# Replace element with new_elem
-    elem = metadata_root.findall(containertag)[0]
-    old_elem = elem.findall(new_elem.tag)[0]
+	elem = metadata_root.findall(containertag)[0]
+	old_elem = elem.findall(new_elem.tag)[0]
 	elem.replace(old_elem, new_elem)
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
-        tree.write(xml_file)
-        return xml_file
-    else:
-        return metadata_root
+		tree.write(xml_file)
+		return xml_file
+	else:
+		return metadata_root
 
 def map_newvals2xml(xml_file, new_values):
 	# Create dictionary that maps new values to values that will be used to locate the XML element
@@ -116,8 +116,10 @@ def map_newvals2xml(xml_file, new_values):
 	citelink = './idinfo/citation/citeinfo/onlink' # Citation / Online Linkage
 	lwork_link = './idinfo/citation/citeinfo/lworkcit/citeinfo/onlink' # Larger Work / Online Linkage
 	lwork_serID = './idinfo/citation/citeinfo/lworkcit/citeinfo/serinfo/issue' # Larger Work / Series / Issue Identification
-	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
+	lwork_pubdate = './idinfo/citation/citeinfo/lworkcit/citeinfo/pubdate' # Larger Work / Publish date
 	edition = './idinfo/citation/citeinfo/edition' # Citation / Edition
+	pubdate = './idinfo/citation/citeinfo/pubdate' # Citation / Publish date
+	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
 	metadate = './metainfo/metd' # Metadata Date
 	# DOI values
 	if 'doi' in new_values.keys():
@@ -142,6 +144,8 @@ def map_newvals2xml(xml_file, new_values):
 	# Edition
 	if 'edition' in new_values.keys():
 		val2xml[new_values['edition']] = {edition:0}
+	if 'pubdate' in new_values.keys():
+		val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0}
 	# Date and time of update
 	now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 	val2xml[now_str] = {metadate: 0}
@@ -224,6 +228,7 @@ def get_fields_from_xml(sb, item, xml_file, sbfields, metadata_root=False):
 #
 ###################################################
 def log_in(username=False):
+	print('Logging back in...') if not sb.is_logged_in() else return sb
 	if not username:
 		username = raw_input("SB username (should be entire USGS email): ")
 	if 'password' in globals():
@@ -387,15 +392,15 @@ def set_parent_extent(sb, top_id, verbose=False):
 
 def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=False, verbose=False):
 	# Upload all image files to their respective pages.
+	# 1. find all image files in folder tree
+	# 2. for each image, try to upload it to it
 	for (root, dirs, files) in os.walk(parentdir):
 		for d in dirs:
 			imagelist = glob.glob(os.path.join(root,d,'*.png'))
 			imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
 			imagelist.extend(glob.glob(os.path.join(root,d,'*.gif')))
 			for f in imagelist:
-				if not sb.is_logged_in():
-					print('Logging back in...')
-					sb = pysb.SbSession(env).login(useremail,password)
+				sb = log_in(useremail)
 				try:
 					item = sb.get_item(dict_DIRtoID[d])
 				except:
@@ -445,9 +450,7 @@ def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID
 	# Find sub-parent container pages following directory hierarchy and copy-paste fields from landing page
 	for (root, dirs, files) in os.walk(parentdir):
 		for d in dirs:
-			if not sb.is_logged_in():
-				print('Logging back in...')
-				sb = pysb.SbSession(env).login(useremail,password)
+			sb = log_in(useremail)
 			subpage = sb.get_item(dict_DIRtoID[d])
 			subpage = inherit_SBfields(sb, subpage, subparent_inherits)
 			dict_IDtoJSON[subpage['id']] = subpage
@@ -510,9 +513,7 @@ def Update_XMLfromSB(sb, useremail, parentdir, fname_dir2id='dir_to_id.json', fn
 	with open(os.path.join(parentdir,fname_id2json), 'r') as f:
 		dict_IDtoJSON = json.load(f)
 		# log into ScienceBase
-	if not sb.is_logged_in():
-		print('Logging back in...')
-		sb = pysb.SbSession(env).loginc(useremail)
+	sb = log_in(useremail)
 	# Populate XML with SB values
 	dict_IDtoJSON = update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
 	# Update dictionary with JSON items

@@ -30,8 +30,8 @@ useremail = 'esturdivant@usgs.gov'
 # SB password. If commented out, you will be prompted for your password each time you run the script.
 #password =
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page
-landing_link = "https://www.sciencebase.gov/catalog/item/580a2b32e4b0f497e7906380" # testing page
+#landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page
+landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 # Path to local top directory of data release (equivalent to landing page):
 # If this is a server, it should be mounted and visible in your Volumes. Then it is referenced by '/Volumes/[volume name]' The volume name should be the name of the directory on the server, rather than the server itself. Check this by looking at the volumes mounted on your computer.
 parentdir = r'/Users/esturdivant/Desktop/SE_ATLANTIC' # OSX
@@ -43,6 +43,7 @@ dr_doi = "10.5066/F74X55X7"
 #previewImage = r'/Users/esturdivant/Desktop/SE_ATLANTIC/NASCP_SEAtlantic.png'
 # The edition element in the metadata can be modified here.
 #edition = '1.0'
+pubdate = '2017'
 
 #-----------------------
 #   OPTIONAL
@@ -60,7 +61,7 @@ landing_fields_from_xml = []
 update_subpages = True # default: True. False to save time if SB pages already exist
 update_XML = True # default: True. False to save time if XML already has the most up-to-date values.
 update_data = True # default: True. False to save time if up-to-date data files have already been uploaded.
-add_preview_image_to_all = False # default: False. True to put the same preview image (file specified above) on every page in the data release.
+add_preview_image_to_all = False # default: False. True to put the first image file encountered in a directory on its corresponding page
 update_landing_page = False # default: True. True if values on the landing page should be updated from XML file in the parent directory
 replace_subpages = False # default: False. True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
 
