@@ -1,24 +1,22 @@
 # science-base-automation
-Automatically create ScienceBase pages with updated metadata
-  
-## Overview  
+__Automatically create and populate ScienceBase pages with metadata and data files.__
+
 Given a local top directory with metadata and data files in sub-directories and a ScienceBase (SB) landing page, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, populates the SB pages from the data. 
 
 ### Overall process
 1. Set up a local directory structure for your data release. 
 2. Set up a ScienceBase landing page. 
-3. Get the script and modify parameters.
-4. Install python modules.
-5. Run.
-6. Check ScienceBase pages and make manual modifications.   
+3. Modify script parameters in config_autoSB.py.
+4. Run (first install necessary python modules).
+5. Check ScienceBase pages and make manual modifications.   
 
 ### Limitations
 (besides soon-to-be-discovered bugs)
 
 - It only uploads shapefile (including dbf) and XML files. This will be easy to modify; it just hasn’t been done yet. 
 - The metadata population routine is hard-coded to a specific metadata template, which should match the structure created by TKME.
-- The bounding box routine is not consistently successful. 
-- The script will overwrite XML files. In the future, it may include a means to archive the original XML files. 
+- The bounding box routine is not consistently successful. - You may want to comment it out.
+- The script overwrites XML files without creating an archive. 
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release. 
@@ -32,7 +30,7 @@ Create the data release landing page before running the script.
 Begin either by uploading an XML file to the File section, which SB will use to automatically populate fields or go straight to working manually with the page. Make manual revisions, such as to the citation, the body, the purpose, etc. If desired, create a preview image by uploading an image to the File section; this will automatically be used as the preview image. You can choose any of these fields to be copied over to child pages (including the preview image). 
 It is also possible for the script to automatically create the SB page from an XML file. If desired, that file should be checked for errors using MP and placed in the top directory. 
 
-### 3. Modify parameters in configuration script.
+### 3. Modify parameters.
 
 Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments. 
 
@@ -48,48 +46,41 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- data_inherits – fields that data pages inherit from their immediate parent page
 
 - Choose which processes to conduct. The default values will suit most purposes, but these fields allow you to tune the processes to save time. 
-	- update_landing_page
 	- replace_subpages 
 	- update_subpages 
 	- update_XML 
 	- update_data 
+	- update_landing_page
 	
 - Optional...
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
+	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
-### 4. Install python modules (lxml, pysb).
+### 4. Run script sb_automation.py! 
+#### Install required python modules, including this one (lxml, pysb, science-base-automation).
 
-sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
+sb_automation is compatible with Python 2.7 and 3 on OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
 
-#### Install lxml and pysb using pip (requires Git):
+##### Download/fork/clone science-base-automation
+
+##### Install lxml and pysb using pip (requires Git):
 
 	easy_install pip
 	pip install lxml 
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-	
-#### Install lxml and pysb using Conda (install Anaconda or Miniconda; requires Git)
 
-##### OSX:
-
-	conda create -n sciencebase python=2.7 lxml 
-	source activate sciencebase
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-	
-##### Windows: 
-
-	conda create -n sciencebase python=2.7 lxml
-	activate sciencebase
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-
-### 5. Run script sb_automation.py! 
-In your bash console: 
+#### RUN	
+__In your bash console:__
 
 	cd path\to\science-base-automation
 	python sb_automation.py
 	
-From Finder: Right click and run with your python launcher of choice. 
+__From Finder:__ Right click and run with your python launcher of choice. 
 
-In your Python IDE of choice: Open the script and run it line by line or however you choose. 
+__In your Python IDE of choice:__ Open the script and run it line by line or however you choose. 
+
+### 5. Check ScienceBase pages and make manual modifications.   
+
 
 ## What the script does:
 - Starts a ScienceBase session. 
@@ -161,6 +152,9 @@ Each directory will become a ScienceBase page within your data release. The dire
 - Shorelines of North Carolina… - data page
 
 ### ScienceBase features
+
+Reference for ScienceBase item services: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Services
+
 #### Intelligent content from uploaded files
 ScienceBase automatically detects the file type and in some cases the contents of uploaded files and makes intelligent decisions about how to use them. For instance, an image file uploaded to a page will be used as the preview image. It will pull information from an XML file to populate fields, and it will detect components of a shapefile or raster file and present them as a shapefile or raster “facet”, which can be downloaded as a package. Even if an XML file is later removed from the Files, the fields populated from it will remain.
 
