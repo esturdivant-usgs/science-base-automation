@@ -1,14 +1,13 @@
 # science-base-automation
-Automatically create and populate ScienceBase pages with metadata and data files.
-  
-## Overview  
+__Automatically create and populate ScienceBase pages with metadata and data files.__
+
 Given a local top directory with metadata and data files in sub-directories and a ScienceBase (SB) landing page, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, populates the SB pages from the data. 
 
 ### Overall process
 1. Set up a local directory structure for your data release. 
 2. Set up a ScienceBase landing page. 
 3. Modify script parameters in config_autoSB.py.
-5. Run (first install necessary python modules)
+5. Run (first install necessary python modules).
 6. Check ScienceBase pages and make manual modifications.   
 
 ### Limitations
@@ -31,7 +30,7 @@ Create the data release landing page before running the script.
 Begin either by uploading an XML file to the File section, which SB will use to automatically populate fields or go straight to working manually with the page. Make manual revisions, such as to the citation, the body, the purpose, etc. If desired, create a preview image by uploading an image to the File section; this will automatically be used as the preview image. You can choose any of these fields to be copied over to child pages (including the preview image). 
 It is also possible for the script to automatically create the SB page from an XML file. If desired, that file should be checked for errors using MP and placed in the top directory. 
 
-### 3. Modify parameters in configuration script.
+### 3. Modify parameters.
 
 Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments. 
 
@@ -57,39 +56,27 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
 	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
-### 4. Install python modules (lxml, pysb).
+### 5. Run script sb_automation.py! 
+#### Install required python modules, including this one (lxml, pysb, science-base-automation).
 
-sb_automation was written and tested in Python 2.7 on both OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
+sb_automation is compatible with Python 2.7 and 3 on OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
 
-#### Install lxml and pysb using pip (requires Git):
+##### Download/fork/clone science-base-automation
+
+##### Install lxml and pysb using pip (requires Git):
 
 	easy_install pip
 	pip install lxml 
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-	
-#### Install lxml and pysb using Conda (install Anaconda or Miniconda; requires Git)
 
-##### OSX:
-
-	conda create -n sciencebase python=2.7 lxml 
-	source activate sciencebase
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-	
-##### Windows: 
-
-	conda create -n sciencebase python=2.7 lxml
-	activate sciencebase
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-
-### 5. Run script sb_automation.py! 
-In your bash console: 
+#### RUN	
+__In your bash console:__
 
 	cd path\to\science-base-automation
 	python sb_automation.py
 	
-From Finder: Right click and run with your python launcher of choice. 
-
-In your Python IDE of choice: Open the script and run it line by line or however you choose. 
+__From Finder:__ Right click and run with your python launcher of choice. 
+__In your Python IDE of choice:__ Open the script and run it line by line or however you choose. 
 
 ## What the script does:
 - Starts a ScienceBase session. 
