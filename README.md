@@ -76,6 +76,7 @@ __In your bash console:__
 	python sb_automation.py
 	
 __From Finder:__ Right click and run with your python launcher of choice. 
+
 __In your Python IDE of choice:__ Open the script and run it line by line or however you choose. 
 
 ## What the script does:
@@ -148,6 +149,9 @@ Each directory will become a ScienceBase page within your data release. The dire
 - Shorelines of North Carolina… - data page
 
 ### ScienceBase features
+
+Reference for ScienceBase item services: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Services
+
 #### Intelligent content from uploaded files
 ScienceBase automatically detects the file type and in some cases the contents of uploaded files and makes intelligent decisions about how to use them. For instance, an image file uploaded to a page will be used as the preview image. It will pull information from an XML file to populate fields, and it will detect components of a shapefile or raster file and present them as a shapefile or raster “facet”, which can be downloaded as a package. Even if an XML file is later removed from the Files, the fields populated from it will remain.
 
