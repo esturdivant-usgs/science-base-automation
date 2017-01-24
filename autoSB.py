@@ -17,7 +17,9 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'add_element_to_xml', 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml', 'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields', 'delete_all_children', 'remove_all_child_pages', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+__all__ = ['get_title_from_data', 'add_element_to_xml', 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml',
+'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
+'delete_all_children', 'remove_all_child_pages', 'landing_page_from_parentdir', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
 
 
 #%% Functions
@@ -95,18 +97,13 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 		return metadata_root
 
 def map_newvals2xml(xml_file, new_values):
-	# Create dictionary that maps new values to values that will be used to locate the XML element
+	# Create dictionary of {new value: {XPath to element: position of element in list retrieved by XPath}}
 	"""
 	To update XML elements with new text:
 		for newval, elemfind in val2xml.items():
 			for elempath, i in elemfind.items():
 				metadata_root.findall(elempath)[i].text = newval
 	Currently hard-wired; will need to be adapted to match metadata scheme.
-	Alternative: Search for 'xxx' in XML and replace with relevant value. Requires that values that need to be replaced have 'xxx'
-	from VeeAnn:
-	citeinfo/onlink citelink 1. DOI link; 2. child page URL; 3. data direct download URL (if possible)
-	lworkcit/onlink lwork_link 1. DOI link; 2. link to landing page (optional)
-	distinfo/.../networkr networkr 1. data direct download; 2. child page URL; 3. landing page URL (not necessary)
 	"""
 	val2xml = {} # initialize storage dictionary
 	# Hard-wire path in metadata to each element
@@ -117,6 +114,7 @@ def map_newvals2xml(xml_file, new_values):
 	lwork_pubdate = './idinfo/citation/citeinfo/lworkcit/citeinfo/pubdate' # Larger Work / Publish date
 	edition = './idinfo/citation/citeinfo/edition' # Citation / Edition
 	pubdate = './idinfo/citation/citeinfo/pubdate' # Citation / Publish date
+	caldate = './descript/timeperd/timeinfo/sngdate/caldate'
 	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
 	metadate = './metainfo/metd' # Metadata Date
 	# DOI values
@@ -143,7 +141,7 @@ def map_newvals2xml(xml_file, new_values):
 	if 'edition' in new_values.keys():
 		val2xml[new_values['edition']] = {edition:0}
 	if 'pubdate' in new_values.keys():
-		val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0}
+		val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0, caldate:0}
 	# Date and time of update
 	now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 	val2xml[now_str] = {metadate: 0}
@@ -188,10 +186,10 @@ def update_xml(xml_file, new_values):
 					pass
 			except:
 				pass
-	if "metadata_additions" in globals():
-		[add_element_to_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
-	if "metadata_replacements" in globals():
-		[replace_element_in_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
+	if "metadata_additions" in new_values:
+		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
+	if "metadata_replacements" in new_values:
+		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
 	# Overwrite XML file with new XML
 	tree.write(xml_file)
 	return xml_file
@@ -564,6 +562,32 @@ def remove_all_child_pages(useremail=False, landing_link=False):
 	sb = log_in(useremail)
 	delete_all_children(sb, landing_id)
 	return landing_id
+
+def landing_page_from_parentdir(parentdir, parent_xml, previewImage, new_values):
+	for f in os.listdir(parentdir):
+		if f.lower().endswith('xml'):
+			parent_xml = os.path.join(parentdir,f) # metadata file in landing directory = parent_xml
+	#%% Populate landing page from metadata
+	if "parent_xml" in locals():
+		# Update XML file to include new parent ID and DOI
+		parent_xml = update_xml(parent_xml, new_values)
+		landing_item = new_values['landing_item']
+		try: # upload XML to landing page
+			landing_item = sb.upload_file_to_item(landing_item, parent_xml)
+		except Exception as e:
+			print(e)
+		if 'body' not in landing_item.keys():
+			try: # update SB landing page with specific fields from XML
+				landing_item = get_fields_from_xml(sb, landing_item, parent_xml, landing_fields_from_xml)
+				landing_item=sb.updateSbItem(landing_item)
+			except Exception as e:
+				print(e)
+	if imagefile:
+		try: # Add preview image to landing page
+			landing_item = sb.upload_file_to_item(landing_item, imagefile)
+		except Exception as e:
+			print("Exception while trying to upload file {}: {}".format(imagefile, e))
+	return landing_item, imagefile
 
 def universal_inherit(sb, top_id, inheritedfields, verbose=False):
 	for cid in sb.get_child_ids(top_id):

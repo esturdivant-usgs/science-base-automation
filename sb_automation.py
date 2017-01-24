@@ -48,46 +48,14 @@ landing_item = sb.get_item(landing_id)
 new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 if 'pubdate' in locals():
 	new_values['pubdate'] = pubdate
+if 'metadata_additions' in locals():
+	new_values['metadata_additions'] = metadata_additions
+if "metadata_replacements" in locals():
+	new_values['metadata_replacements'] = metadata_replacements
 
 """
 Work with landing page and XML
 """
-# Check for metadata and image files in landing directory
-#FIXME: this block is not necessary; remove from simplified version
-if update_landing_page:
-	for f in os.listdir(parentdir):
-		if f.lower().endswith('xml'):
-			parent_xml = os.path.join(parentdir,f) # metadata file in landing directory = parent_xml
-		if f.lower().endswith(('png','jpg','gif')): # if there is a PNG, JPG, or GIF file
-			imagefile = os.path.join(parentdir,f)
-		elif "previewImage" in locals(): # only if there is not an image file in the parent directory, use the image specified during configuration
-			if os.path.isfile(previewImage):
-				imagefile = previewImage
-			else:
-				print("{} does not exist.".format(previewImage))
-		else:
-			print("Preview image not specified.")
-	#%% Populate landing page from metadata
-	if "parent_xml" in locals():
-		# Update XML file to include new parent ID and DOI
-		parent_xml = update_xml(parent_xml, new_values)
-		try: # upload XML to landing page
-			landing_item = sb.upload_file_to_item(landing_item, parent_xml)
-		except Exception as e:
-			print(e)
-	if "parent_xml" in locals():
-		if 'body' not in landing_item.keys():
-			try: # update SB landing page with specific fields from XML
-				landing_item = get_fields_from_xml(sb, landing_item, parent_xml, landing_fields_from_xml)
-				landing_item=sb.updateSbItem(landing_item)
-			except Exception as e:
-				print(e)
-	if "imagefile" in locals():
-		try: # Add preview image to landing page
-			landing_item = sb.upload_file_to_item(landing_item, imagefile)
-		except Exception as e:
-			print("Exception while trying to upload file {}: {}".format(imagefile, e))
-
 # Remove all child pages
 if replace_subpages: # If this is used, you may have to wait a long time before the removal takes full effect.
 	delete_all_children(sb, landing_id)
@@ -98,9 +66,16 @@ if 'previewImage' in data_inherits:
 		if f.lower().endswith(('png','jpg','gif')):
 			imagefile = os.path.join(parentdir,f)
 elif "previewImage" in locals():
-	imagefile = previewImage
+	if os.path.isfile(previewImage):
+		imagefile = previewImage
+	else:
+		print("{} does not exist.".format(previewImage))
 else:
 	imagefile = False
+
+if update_landing_page: #this block is not necessary; remove from simplified version
+	# Check for metadata and image files in landing directory
+	landing_item = update_landing_page(parentdir, parent_xml, imagefile, new_values)
 
 """
 Create SB page structure: nested child pages following directory hierarchy
