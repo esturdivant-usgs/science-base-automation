@@ -7,8 +7,8 @@ Given a local top directory with metadata and data files in sub-directories and 
 1. Set up a local directory structure for your data release. 
 2. Set up a ScienceBase landing page. 
 3. Modify script parameters in config_autoSB.py.
-5. Run (first install necessary python modules).
-6. Check ScienceBase pages and make manual modifications.   
+4. Run (first install necessary python modules).
+5. Check ScienceBase pages and make manual modifications.   
 
 ### Limitations
 (besides soon-to-be-discovered bugs)
@@ -56,7 +56,7 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
 	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
-### 5. Run script sb_automation.py! 
+### 4. Run script sb_automation.py! 
 #### Install required python modules, including this one (lxml, pysb, science-base-automation).
 
 sb_automation is compatible with Python 2.7 and 3 on OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
@@ -78,6 +78,9 @@ __In your bash console:__
 __From Finder:__ Right click and run with your python launcher of choice. 
 
 __In your Python IDE of choice:__ Open the script and run it line by line or however you choose. 
+
+### 5. Check ScienceBase pages and make manual modifications.   
+
 
 ## What the script does:
 - Starts a ScienceBase session. 
