@@ -1,5 +1,5 @@
 # science-base-automation
-Automatically create ScienceBase pages with updated metadata
+Automatically create and populate ScienceBase pages with metadata and data files.
   
 ## Overview  
 Given a local top directory with metadata and data files in sub-directories and a ScienceBase (SB) landing page, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, populates the SB pages from the data. 
@@ -7,9 +7,8 @@ Given a local top directory with metadata and data files in sub-directories and 
 ### Overall process
 1. Set up a local directory structure for your data release. 
 2. Set up a ScienceBase landing page. 
-3. Get the script and modify parameters.
-4. Install python modules.
-5. Run.
+3. Modify script parameters in config_autoSB.py.
+5. Run (first install necessary python modules)
 6. Check ScienceBase pages and make manual modifications.   
 
 ### Limitations
@@ -17,8 +16,8 @@ Given a local top directory with metadata and data files in sub-directories and 
 
 - It only uploads shapefile (including dbf) and XML files. This will be easy to modify; it just hasn’t been done yet. 
 - The metadata population routine is hard-coded to a specific metadata template, which should match the structure created by TKME.
-- The bounding box routine is not consistently successful. 
-- The script will overwrite XML files. In the future, it may include a means to archive the original XML files. 
+- The bounding box routine is not consistently successful. - You may want to comment it out.
+- The script overwrites XML files without creating an archive. 
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release. 
@@ -48,14 +47,15 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- data_inherits – fields that data pages inherit from their immediate parent page
 
 - Choose which processes to conduct. The default values will suit most purposes, but these fields allow you to tune the processes to save time. 
-	- update_landing_page
 	- replace_subpages 
 	- update_subpages 
 	- update_XML 
 	- update_data 
+	- update_landing_page
 	
 - Optional...
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
+	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
 ### 4. Install python modules (lxml, pysb).
 
