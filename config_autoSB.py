@@ -58,12 +58,14 @@ landing_fields_from_xml = []
 #-----------------------
 # Time-saving options
 #-----------------------
-update_subpages = True # default: True. False to save time if SB pages already exist
-update_XML = True # default: True. False to save time if XML already has the most up-to-date values.
-update_data = True # default: True. False to save time if up-to-date data files have already been uploaded.
-add_preview_image_to_all = False # default: False. True to put the first image file encountered in a directory on its corresponding page
-update_landing_page = False # default: True. True if values on the landing page should be updated from XML file in the parent directory
-replace_subpages = False # default: False. True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
+# Default True:
+update_subpages = False # False to save time if SB pages already exist
+update_XML = True # False to save time if XML already has the most up-to-date values.
+update_data = False # False to save time if up-to-date data files have already been uploaded.
+# Default False:
+add_preview_image_to_all = False # True to put the first image file encountered in a directory on its corresponding page
+update_landing_page = False # True if values on the landing page should be updated from XML file in the parent directory
+replace_subpages = False # True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
 
 # --------------------
 # Additions to metadata
