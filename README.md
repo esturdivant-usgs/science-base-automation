@@ -71,9 +71,10 @@ sb_automation is compatible with Python 2.7 and 3 on OSX and Windows. Python pac
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 #### RUN	
-__In your bash console:__
+__In your bash console (Terminal on OSX):__
 
-	cd path\to\science-base-automation
+	
+	cd [path]\[to]\science-base-automation
 	python sb_automation.py
 	
 __From Finder:__ Right click and run with your python launcher of choice. 
