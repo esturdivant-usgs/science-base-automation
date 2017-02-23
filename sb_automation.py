@@ -89,6 +89,9 @@ if not sb.is_logged_in():
 	except NameError:
 		sb = pysb.SbSession(env=None).loginc(useremail)
 
+if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json.json')):
+	print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
+	update_subpages = True
 if update_subpages:
 	# Initialize dictionaries that will store relationships: directories/file:ID, ID:JSON item, parentID:childIDs
 	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
@@ -115,6 +118,7 @@ else: # Import pre-created dictionaries if all SB pages exist
 	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
 		dict_PARtoCHILDS = pickle.load(f)
 
+
 """
 Create and populate data pages
 Inputs: parent directory, landing page ID, dictionary of new values (new_values)
@@ -140,12 +144,16 @@ for (root, dirs, files) in os.walk(parentdir):
 			data_title = get_title_from_data(xml_file) # get title from XML
 			data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
 			# Make updates
-			if update_XML: # Update XML file to include new child ID and DOI
-				find_and_replace_text(xml_file) # Replace 'http:' with 'https:'
-				new_values['child_id'] = data_item['id']
-				update_xml(xml_file, new_values, verbose=verbose)
+			if update_XML: 								# Update XML file to include new child ID and DOI
+				find_and_replace_text(xml_file) 				# Replace 'http:' with 'https:'
+				new_values['child_id'] = data_item['id'] 		# add SB UID to values that will be updated in XML
+				update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 			if update_data: # Upload data files (FIXME: currently only shapefile)
 				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
+				try: #FIXME: add this to a function in a more generalized way?
+					data_item["dates"][0]["dateString"]= new_values['pubdate']
+				except:
+					pass
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
 				sb.replace_file(xml_file, data_item) # This function does not work well.
