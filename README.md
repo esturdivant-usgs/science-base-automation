@@ -166,5 +166,6 @@ There is also the option for direct download of a single file, which adds a quer
 If a facet was created, a URL for direct download of the all files in the facets can be retrieved from the JSON item.
 
 ## Tips
-- Accessing files on a server: In OSX, paths: r'/Volumes/[server directory name]'. Replace [server directory] with the name of the directory on the server, not the server itself. The server must first be mounted and visible in your Volumes. Then get the directory name by viewing the volumes mounted on your computer. 
-	- e.g. >>>parentdir = r'/Volumes/myserverfolder/data_release'
+- Accessing files on a server: In OSX, paths: r'/Volumes/[server directory name]'. Replace [server directory] with the name of the directory on the server, not the server itself. The server must first be mounted and visible in your Volumes. Then get the directory name by viewing the volumes mounted on your computer. Example: 
+
+	>>>parentdir = r'/Volumes/myserverfolder/data_release'
