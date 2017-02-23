@@ -28,7 +28,7 @@ Input variables
 # SB username (should be entire USGS email):
 useremail = 'esturdivant@usgs.gov'
 # SB password. If commented out, you will be prompted for your password each time you run the script.
-#password =
+#password = 
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 #landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page
@@ -120,4 +120,7 @@ metadata_replacements = {'./distinfo':new_distrib}
 Initialize
 """
 #%% Initialize SB session
-sb = log_in(useremail)
+if "password" in locals():
+    sb = log_in(useremail, password)
+else:
+    sb = log_in(useremail)

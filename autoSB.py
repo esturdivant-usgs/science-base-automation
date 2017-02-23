@@ -226,7 +226,7 @@ def get_fields_from_xml(sb, item, xml_file, sbfields, metadata_root=False):
 # SB helper functions
 #
 ###################################################
-def log_in(username=False):
+def log_in(username=False, password=False):
 	if 'sb' in globals():
 		if not sb.is_logged_in():
 			print('Logging back in...')
@@ -234,13 +234,17 @@ def log_in(username=False):
 			return sb
 	if not username:
 		username = raw_input("SB username (should be entire USGS email): ")
-	if 'password' in locals():
-		try:
-			sb = pysb.SbSession(env=None).login(username,password)
-		except NameError:
-			sb = pysb.SbSession(env=None).loginc(username)
-	else:
+	if not password:
 		sb = pysb.SbSession(env=None).loginc(username)
+	else:
+		try:
+			sb = pysb.SbSession(env=None).login(username, password)
+		except Exception as e: # 'Login failed' returned as Exception for bad password in login()
+			print('{}. Try reentering...'.format(e))
+			sb = pysb.SbSession(env=None).loginc(username) # 'Invalid password, try again' printed for bad password
+		except NameError as e:
+			print('{}. Try reentering...'.format(e))
+			sb = pysb.SbSession(env=None).loginc(username)
 	return sb
 
 def flexibly_get_item(sb, mystery_id, output='item'):

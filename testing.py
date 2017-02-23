@@ -30,10 +30,3 @@ sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import *
-
-
-landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
-
-#%% BOUNDING BOX
-print("\nGetting extent of child data for parent pages...")
-set_parent_extent(sb, landing_id)
