@@ -31,8 +31,8 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
-#landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
+#landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
+landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
@@ -74,6 +74,7 @@ landing_fields_from_xml = []
 update_subpages = True # False to save time if  SB pages already exist
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
+overwrite_datapages = True
 verbose         = True
 
 # Default False:

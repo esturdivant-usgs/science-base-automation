@@ -17,9 +17,18 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'add_element_to_xml', 'map_newvals2xml', 'find_and_replace_text', 'update_xml', 'json_from_xml', 'get_fields_from_xml',
-'log_in', 'flexibly_get_item', 'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup', 'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child', 'update_datapage', 'update_subpages_from_landing', 'update_pages_from_XML_and_landing', 'remove_all_files', 'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
-'delete_all_children', 'remove_all_child_pages', 'landing_page_from_parentdir', 'universal_inherit', 'apply_topdown', 'apply_bottomup']
+__all__ = ['get_title_from_data', 'add_element_to_xml', 'map_newvals2xml',
+		   'find_and_replace_text', 'update_xml', 'json_from_xml',
+		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
+		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
+		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
+		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
+		   'update_datapage', 'update_subpages_from_landing',
+		   'update_pages_from_XML_and_landing', 'remove_all_files',
+		   'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
+		   'delete_all_children', 'remove_all_child_pages',
+		   'landing_page_from_parentdir', 'universal_inherit', 'apply_topdown',
+		   'apply_bottomup']
 
 
 #%% Functions
@@ -218,7 +227,7 @@ def get_fields_from_xml(sb, item, xml_file, sbfields, metadata_root=False):
 				item[field] = metadata_root.findall(fstr)[i].text
 			except:
 				pass
-	item=sb.updateSbItem(item)
+	item = sb.updateSbItem(item)
 	return item
 
 ###################################################
@@ -295,7 +304,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print("found: page '{}...'.".format(child_title[:50]))
+				print("FOUND: page '{}...'.".format(child_title[:50]))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -324,7 +333,7 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 	# Upload files
 	if verbose:
 		print('UPLOADING: {} ...\n'.format(data_name))
-	item = sb.upload_files_and_upsert_item(item, up_files)
+	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
 	return item
 
 def get_parent_bounds(sb, parent_id, verbose=False):
@@ -441,9 +450,10 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 	return child_item # Return new JSON
 
 def update_datapage(sb, page, xml_file, inheritedfields=False, replace=True):
+	#FIXME This is not currently being used. Why not?
 	parent_item = flexibly_get_item(sb, page)
 	if replace:
-		item = sb.replace_file(xml_file,item)
+		item = sb.replace_file(xml_file,item) # replace_file() does not work well
 	if inheritedfields:
 		parent_item = sb.get_item(item['parentId'])
 		item = inherit_SBfields(sb, item, inheritedfields)

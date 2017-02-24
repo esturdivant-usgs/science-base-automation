@@ -148,10 +148,12 @@ for (root, dirs, files) in os.walk(parentdir):
 			data_title = get_title_from_data(xml_file) # get title from XML
 			data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
 			# Make updates
+			# Update XML
 			if update_XML: 								# Update XML file to include new child ID and DOI
 				find_and_replace_text(xml_file) 				# Replace 'http:' with 'https:'
 				new_values['child_id'] = data_item['id'] 		# add SB UID to values that will be updated in XML
 				update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+			# Upload to ScienceBase
 			if update_data: # Upload data files (FIXME: currently only shapefile)
 				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 				try: #FIXME: add this to a function in a more generalized way?
@@ -161,7 +163,7 @@ for (root, dirs, files) in os.walk(parentdir):
 					pass
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
-				sb.replace_file(xml_file, data_item) # This function does not work well.
+				sb.replace_file(xml_file, data_item)
 			# Pass parent fields on to child
 			data_item = inherit_SBfields(sb, data_item, data_inherits)
 			if 'previewImage' in data_inherits:
