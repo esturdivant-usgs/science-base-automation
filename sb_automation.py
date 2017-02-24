@@ -124,7 +124,11 @@ Create and populate data pages
 Inputs: parent directory, landing page ID, dictionary of new values (new_values)
 For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 """
-sb = log_in(useremail)
+#sb = log_in(useremail) #FIXME
+if "password" in locals():
+    sb = log_in(useremail, password)
+else:
+    sb = log_in(useremail)
 
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
@@ -152,6 +156,7 @@ for (root, dirs, files) in os.walk(parentdir):
 				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 				try: #FIXME: add this to a function in a more generalized way?
 					data_item["dates"][0]["dateString"]= new_values['pubdate']
+					#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
 				except:
 					pass
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
