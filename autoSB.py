@@ -17,7 +17,8 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'add_element_to_xml', 'map_newvals2xml',
+__all__ = ['get_title_from_data', 'get_root_flexibly','add_element_to_xml',
+		   'remove_xml_element', 'map_newvals2xml',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
@@ -48,6 +49,18 @@ def get_title_from_data(xml_file, metadata_root=False):
 		print >> sys.stderr, "Exception while trying to parse XML file ({}): {}".format(xml_file, e)
 		return False
 
+def get_root_flexibly(in_metadata):
+	if type(in_metadata) is etree._Element:
+		metadata_root = in_metadata
+		xml_file =False
+	elif type(in_metadata) is str:
+		xml_file = in_metadata
+		tree = etree.parse(xml_file) # parse metadata using etree
+		metadata_root=tree.getroot()
+	else:
+		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	return metadata_root, xml_file
+
 def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	# Appends element 'new_elem' to 'containertag' in XML file. in_metadata accepts either xmlfile or root element of parsed metadata. new_elem accepts either lxml._Element or XML string
 	# Whether in_metadata is a filename or an element, get metadata_root
@@ -75,6 +88,21 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	else:
 	    return metadata_root
 
+def remove_xml_element(metadata_root, path='./idinfo/crossref', fill_text='AUTHOR'):
+	# Remove any elements in path that contain fill text
+	# To be used as:
+	# tree = etree.parse(xml_file)
+	# metadata_root = tree.getroot()
+	# metadata_root = remove_xml_element(metadata_root)
+	# tree.write(xml_file)
+	container, tag = os.path.split(path)
+	parent_elem = metadata_root.find(container)
+	for elem in parent_elem.iter(tag):
+		for text in elem.itertext():
+			if fill_text in text:
+				parent_elem.remove(elem)
+	return metadata_root
+
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# Overwrites the first element in containertag corresponding to the tag of new_elem
 	# in_metadata accepts either xml file or root element of parsed metadata.
@@ -98,6 +126,39 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	elem = metadata_root.findall(containertag)[0]
 	old_elem = elem.findall(new_elem.tag)[0]
 	elem.replace(old_elem, new_elem)
+	# Either overwrite XML file with new XML or return the updated metadata_root
+	if type(xml_file) is str:
+		tree.write(xml_file)
+		return xml_file
+	else:
+		return metadata_root
+
+def replace_element_in_xml_for_wrapper(metadata_root, new_elem, containertag='./distinfo'):
+	if type(new_elem) is str:
+		new_elem = etree.fromstring(new_elem)
+	elif not type(new_elem) is etree._Element:
+		raise TypeError("'new_elem' takes either strings or elements.")
+	# Replace element with new_elem
+	elem = metadata_root.findall(containertag)[0]
+	old_elem = elem.findall(new_elem.tag)[0]
+	elem.replace(old_elem, new_elem)
+	return metadata_root
+
+def xml_write_wrapper(in_metadata, new_elem, containertag='./distinfo'):
+	# FIXME: I don't actually know how to make a wrapper. This is completely unchecked.
+	# in_metadata accepts either xml file or root element of parsed metadata.
+	# Whether in_metadata is a filename or an element, get metadata_root
+	if type(in_metadata) is etree._Element:
+		metadata_root = in_metadata
+		xml_file =False
+	elif type(in_metadata) is str:
+		xml_file = in_metadata
+		tree = etree.parse(xml_file) # parse metadata using etree
+		metadata_root=tree.getroot()
+	else:
+		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	# If new element is still a string convert it to an XML element
+	replace_element_in_xml_for_wrapper(metadata_root, new_elem, containertag)
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
 		tree.write(xml_file)
@@ -188,7 +249,7 @@ def update_xml(xml_file, new_values, verbose=False):
 			except IndexError: # if the element does not yet exist, create the element
 				try:
 					container, tag = os.path.split(fstr)
-					elem = metadata_root.findall(container)[0]
+					elem = metadata_root.find(container)
 					elem.append(etree.Element(tag))
 					metadata_root.findall(fstr)[i].text = newval
 				except:

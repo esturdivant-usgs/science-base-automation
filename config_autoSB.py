@@ -31,8 +31,8 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-#landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
-landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
+landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
+#landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
@@ -74,7 +74,7 @@ landing_fields_from_xml = []
 update_subpages = True # False to save time if  SB pages already exist
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
-overwrite_datapages = True
+# overwrite_datapages = True
 verbose         = True
 
 # Default False:
@@ -86,10 +86,13 @@ replace_subpages         = False # True to delete all child pages before running
 # Additions and replacements for metadata XML
 # ------------------------------------------------------------------------------
 # Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element.
+# Appending will not remove any elements.
+
 # Example of a new cross reference:
-new_crossref = """
+fill_text = 'AUTHOR'
+blank_crossref = """
     <crossref><citeinfo>
-        <origin>AUTHOR</origin>
+        <origin>FILL AUTHOR</origin>
         <pubdate>YEAR</pubdate>
         <title>TITLE</title>
         <serinfo><sername>Open-File Report</sername><issue>ISSUE</issue></serinfo>
@@ -100,31 +103,48 @@ new_crossref = """
         <onlink>URL</onlink>
     </citeinfo></crossref>
     """
-metadata_additions = {'./idinfo':new_crossref}
+# new_crossref = """
+#     <crossref><citeinfo>
+#         <origin>Emily Himmelstoss</origin>
+#         <origin>Meredith Kratzmann</origin>
+#         <origin>Emily Himmelstoss</origin>
+#         <pubdate>2017</pubdate>
+#         <title>National Assessment of Shoreline Change: Summary Statistics for Updated Vector Shorelines and Associated Shoreline Change Data for the Gulf of Mexico and Southeast Atlantic Coasts</title>
+#         <serinfo><sername>Open-File Report</sername><issue>2017-1015</issue></serinfo>
+#         <pubinfo>
+#         <pubplace>Reston, VA</pubplace>
+#         <publish>U.S. Geological Survey</publish>
+#         </pubinfo>
+#         <onlink>https://doi.org/10.3133/ofr20171015</onlink>
+#     </citeinfo></crossref>
+# """
+# metadata_additions = {'./idinfo':new_crossref}
+
 
 # Example of a new distribution information:
-new_distrib = """
-    <distrib>
-		<cntinfo>
-            <cntperp>
-                <cntper>Emily Himmelstoss</cntper>
-				<cntorg>U.S. Geological Survey</cntorg>
-			</cntperp>
-			<cntaddr>
-				<addrtype>mailing and physical address</addrtype>
-				<address>384 Woods Hole Road</address>
-				<city>Woods Hole</city>
-				<state>MA</state>
-				<postal>02543-1598</postal>
-				<country>USA</country>
-			</cntaddr>
-			<cntvoice>508-548-8700 x2262</cntvoice>
-			<cntfax>508-457-2310</cntfax>
-            <cntemail>ehimmelstoss@usgs.gov</cntemail>
-		</cntinfo>
-	</distrib>
-    """
-metadata_replacements = {'./distinfo':new_distrib}
+# Can
+# new_distrib = """
+#     <distrib>
+# 		<cntinfo>
+#             <cntperp>
+#                 <cntper>Emily Himmelstoss</cntper>
+# 				<cntorg>U.S. Geological Survey</cntorg>
+# 			</cntperp>
+# 			<cntaddr>
+# 				<addrtype>mailing and physical address</addrtype>
+# 				<address>384 Woods Hole Road</address>
+# 				<city>Woods Hole</city>
+# 				<state>MA</state>
+# 				<postal>02543-1598</postal>
+# 				<country>USA</country>
+# 			</cntaddr>
+# 			<cntvoice>508-548-8700 x2262</cntvoice>
+# 			<cntfax>508-457-2310</cntfax>
+#             <cntemail>ehimmelstoss@usgs.gov</cntemail>
+# 		</cntinfo>
+# 	</distrib>
+#     """
+# metadata_replacements = {'./distinfo':new_distrib}
 
 """
 Initialize
