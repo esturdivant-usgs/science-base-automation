@@ -17,8 +17,8 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'get_root_flexibly','add_element_to_xml',
-		   'remove_xml_element', 'map_newvals2xml',
+__all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml',
+		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
@@ -52,27 +52,37 @@ def get_title_from_data(xml_file, metadata_root=False):
 def get_root_flexibly(in_metadata):
 	if type(in_metadata) is etree._Element:
 		metadata_root = in_metadata
+		tree = False
 		xml_file =False
 	elif type(in_metadata) is str:
 		xml_file = in_metadata
-		tree = etree.parse(xml_file) # parse metadata using etree
+		try:
+			tree = etree.parse(xml_file) # parse metadata using etree
+		except etree.XMLSyntaxError as e:
+			print "XML Syntax Error while trying to parse XML file: {}".format(e)
+			return False
+		except Exception as e:
+			print "Exception while trying to parse XML file: {}".format(e)
+			return False
 		metadata_root=tree.getroot()
 	else:
 		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
-	return metadata_root, xml_file
+	return metadata_root, tree, xml_file
 
 def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	# Appends element 'new_elem' to 'containertag' in XML file. in_metadata accepts either xmlfile or root element of parsed metadata. new_elem accepts either lxml._Element or XML string
 	# Whether in_metadata is a filename or an element, get metadata_root
-	if type(in_metadata) is etree._Element:
-	    metadata_root = in_metadata
-	    xml_file =False
-	elif type(in_metadata) is str:
-	    xml_file = in_metadata
-	    tree = etree.parse(xml_file) # parse metadata using etree
-	    metadata_root=tree.getroot()
-	else:
-	    print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	# FIXME: Check whether element already exists
+	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+	# if type(in_metadata) is etree._Element:
+	#     metadata_root = in_metadata
+	#     xml_file =False
+	# elif type(in_metadata) is str:
+	#     xml_file = in_metadata
+	#     tree = etree.parse(xml_file) # parse metadata using etree
+	#     metadata_root=tree.getroot()
+	# else:
+	#     print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	if type(new_elem) is str:
 	    new_elem = etree.fromstring(new_elem)
@@ -88,7 +98,7 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	else:
 	    return metadata_root
 
-def remove_xml_element(metadata_root, path='./idinfo/crossref', fill_text='AUTHOR'):
+def remove_xml_element(metadata_root, path='./', fill_text='AUTHOR'):
 	# Remove any elements in path that contain fill text
 	# To be used as:
 	# tree = etree.parse(xml_file)
@@ -108,15 +118,16 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# in_metadata accepts either xml file or root element of parsed metadata.
 	# new_elem accepts either lxml._Element or XML string
 	# Whether in_metadata is a filename or an element, get metadata_root
-	if type(in_metadata) is etree._Element:
-		metadata_root = in_metadata
-		xml_file =False
-	elif type(in_metadata) is str:
-		xml_file = in_metadata
-		tree = etree.parse(xml_file) # parse metadata using etree
-		metadata_root=tree.getroot()
-	else:
-		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+	# if type(in_metadata) is etree._Element:
+	# 	metadata_root = in_metadata
+	# 	xml_file =False
+	# elif type(in_metadata) is str:
+	# 	xml_file = in_metadata
+	# 	tree = etree.parse(xml_file) # parse metadata using etree
+	# 	metadata_root=tree.getroot()
+	# else:
+	# 	print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	if type(new_elem) is str:
 		new_elem = etree.fromstring(new_elem)
@@ -148,15 +159,16 @@ def xml_write_wrapper(in_metadata, new_elem, containertag='./distinfo'):
 	# FIXME: I don't actually know how to make a wrapper. This is completely unchecked.
 	# in_metadata accepts either xml file or root element of parsed metadata.
 	# Whether in_metadata is a filename or an element, get metadata_root
-	if type(in_metadata) is etree._Element:
-		metadata_root = in_metadata
-		xml_file =False
-	elif type(in_metadata) is str:
-		xml_file = in_metadata
-		tree = etree.parse(xml_file) # parse metadata using etree
-		metadata_root=tree.getroot()
-	else:
-		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+	# if type(in_metadata) is etree._Element:
+	# 	metadata_root = in_metadata
+	# 	xml_file =False
+	# elif type(in_metadata) is str:
+	# 	xml_file = in_metadata
+	# 	tree = etree.parse(xml_file) # parse metadata using etree
+	# 	metadata_root=tree.getroot()
+	# else:
+	# 	print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	replace_element_in_xml_for_wrapper(metadata_root, new_elem, containertag)
 	# Either overwrite XML file with new XML or return the updated metadata_root
@@ -168,14 +180,13 @@ def xml_write_wrapper(in_metadata, new_elem, containertag='./distinfo'):
 
 def map_newvals2xml(new_values):
 	# Create dictionary of {new value: {XPath to element: position of element in list retrieved by XPath}}
-	"""
-	To update XML elements with new text:
-		for newval, elemfind in val2xml.items():
-			for elempath, i in elemfind.items():
-				metadata_root.findall(elempath)[i].text = newval
-	Currently hard-wired; will need to be adapted to match metadata scheme.
-	"""
-	val2xml = {} # initialize storage dictionary
+	# """
+	# To update XML elements with new text:
+	# 	for newval, elemfind in val2xml.items():
+	# 		for elempath, i in elemfind.items():
+	# 			metadata_root.findall(elempath)[i].text = newval
+	# Currently hard-wired; will need to be adapted to match metadata scheme.
+	# """
 	# Hard-wire path in metadata to each element
 	seriesid = './idinfo/citation/citeinfo/serinfo/issue' # Citation / Series / Issue Identification
 	citelink = './idinfo/citation/citeinfo/onlink' # Citation / Online Linkage
@@ -187,6 +198,8 @@ def map_newvals2xml(new_values):
 	caldate = './idinfo/timeperd/timeinfo/sngdate/caldate'
 	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
 	metadate = './metainfo/metd' # Metadata Date
+	# Initialize storage dictionary
+	val2xml = {}
 	# DOI values
 	if 'doi' in new_values.keys():
 		# get DOI values (as issue and URL)
@@ -230,20 +243,21 @@ def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
 	# Parse metadata
-	try:
-		tree = etree.parse(xml_file) # parse metadata using etree
-	except etree.XMLSyntaxError as e:
-		print "XML Syntax Error while trying to parse XML file: {}".format(e)
-		return False
-	except Exception as e:
-		print "Exception while trying to parse XML file: {}".format(e)
-		return False
+	metadata_root, tree, xml_file = get_root_flexibly(xml_file)
+	# try:
+	# 	tree = etree.parse(xml_file) # parse metadata using etree
+	# except etree.XMLSyntaxError as e:
+	# 	print "XML Syntax Error while trying to parse XML file: {}".format(e)
+	# 	return False
+	# except Exception as e:
+	# 	print "Exception while trying to parse XML file: {}".format(e)
+	# 	return False
+	# metadata_root=tree.getroot()
 	# Work through metadata elements
-	metadata_root=tree.getroot()
 	elem2newvalue = map_newvals2xml(new_values)
-	for newval,elemfind in elem2newvalue.items(): # Update elements with new ID text
+	for newval, elemfind in elem2newvalue.items(): # Update elements with new ID text
 		# Add or update the values of each element
-		for fstr,i in elemfind.items():
+		for fstr, i in elemfind.items():
 			try:
 				metadata_root.findall(fstr)[i].text = newval
 			except IndexError: # if the element does not yet exist, create the element
@@ -256,6 +270,9 @@ def update_xml(xml_file, new_values, verbose=False):
 					pass
 			except:
 				pass
+	# Could be moved to main script execution
+	if "remove_fills" in new_values:
+		[remove_xml_element(metadata_root, path, fill_text) for path, fill_text in new_values['remove_fills'].items()]
 	if "metadata_additions" in new_values:
 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
 	if "metadata_replacements" in new_values:
@@ -347,15 +364,23 @@ def get_DOI_from_item(item):
 		i += 1
 	return doi
 
-def inherit_SBfields(sb, child_item, inheritedfields=['citation']):
+def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False):
 	if inheritedfields:
+		if verbose:
+			print('Inheriting fields from parent...')
 		parent_item = flexibly_get_item(sb, child_item['parentId'])
 		for field in inheritedfields:
-			try:
-				child_item[field] = parent_item[field]
-			except KeyError:
-				print("Field missing: '{}' not present in parent item '{}...'".format(field, parent_item['title'][:50]))
-				pass
+			if field == 'previewImage':
+				try:
+					child_item = sb.upload_file_to_item(child_item, imagefile)
+				except Exception as e:
+					print(e)
+			else:
+				try:
+					child_item[field] = parent_item[field]
+				except KeyError:
+					print("Field missing: '{}' not present in parent item '{}...'".format(field, parent_item['title'][:50]))
+					pass
 		child_item = sb.updateSbItem(child_item)
 	return child_item
 
@@ -393,7 +418,7 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 			up_files.append(os.path.join(datapath,fname))
 	# Upload files
 	if verbose:
-		print('UPLOADING: {} ...\n'.format(data_name))
+		print('UPLOADING: {} ...'.format(data_name))
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
 	return item
 

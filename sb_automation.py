@@ -48,10 +48,12 @@ landing_item = sb.get_item(landing_id)
 new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 if 'pubdate' in locals():
 	new_values['pubdate'] = pubdate
-if 'metadata_additions' in locals():
-	new_values['metadata_additions'] = metadata_additions
-if "metadata_replacements" in locals():
-	new_values['metadata_replacements'] = metadata_replacements
+# if 'metadata_additions' in locals():
+# 	new_values['metadata_additions'] = metadata_additions
+# if "metadata_replacements" in locals():
+# 	new_values['metadata_replacements'] = metadata_replacements
+# if "fill_text" in locals():
+# 	new_values['fill_text'] = fill_text
 
 """
 Work with landing page and XML
@@ -110,6 +112,13 @@ if update_subpages:
 			dict_DIRtoID[dirname] = subpage['id']
 			dict_IDtoJSON[subpage['id']] = subpage
 			dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
+	# Save dictionaries
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+		json.dump(dict_DIRtoID, f)
+	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
+		json.dump(dict_IDtoJSON, f)
+	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
+		pickle.dump(dict_PARtoCHILDS, f)
 else: # Import pre-created dictionaries if all SB pages exist
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
@@ -124,53 +133,85 @@ Create and populate data pages
 Inputs: parent directory, landing page ID, dictionary of new values (new_values)
 For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 """
+if verbose:
+	print('checking log in information...')
 #sb = log_in(useremail) #FIXME
-if "password" in locals():
-    sb = log_in(useremail, password)
-else:
-    sb = log_in(useremail)
+if not sb.is_logged_in():
+	print('Logging back in...')
+	try:
+		sb = pysb.SbSession(env=None).login(useremail,password)
+	except NameError:
+		sb = pysb.SbSession(env=None).loginc(useremail)
 
+if verbose:
+	print('Checking for directory: ID dictionary...')
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
 
+# Count XML files
+xmllist = []
+for root, dirs, files in os.walk(parentdir):
+	for d in dirs:
+		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+xml_cnt = len(xmllist)
+# for xml_file in xmllist:
+# 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
+# 	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
+# 	tree = etree.parse(xml_file)
+# 	metadata_root = tree.getroot()
+# 	if "fill_text" in locals():
+# 		metadata_root = remove_xml_element(metadata_root, path='./idinfo/crossref', fill_text)
+# 	if "metadata_additions" in locals():
+# 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
+# 	if "metadata_replacements" in locals():
+# 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
+# 	tree.write(xml_file)
+
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
 	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
-for (root, dirs, files) in os.walk(parentdir):
+cnt = 0
+for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist = glob.glob(os.path.join(root,d,'*.xml'))
 		for xml_file in xmllist:
+			cnt += 1
+			if not sb.is_logged_in():
+				print('Logging back in...')
+				try:
+					sb = pysb.SbSession(env=None).login(useremail,password)
+				except NameError:
+					sb = pysb.SbSession(env=None).loginc(useremail)
 			# Get values
-			new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, dict_DIRtoID[d]))
-			# Create (or find) new data page based on title in XML
 			parentid = dict_DIRtoID[d]
+			new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
+			# Create (or find) new data page based on title in XML
 			data_title = get_title_from_data(xml_file) # get title from XML
 			data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+			try: #FIXME: add this to a function in a more generalized way?
+				data_item["dates"][0]["dateString"]= new_values['pubdate']
+				#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
+			except:
+				pass
 			# Make updates
 			# Update XML
 			if update_XML: 								# Update XML file to include new child ID and DOI
-				find_and_replace_text(xml_file) 				# Replace 'http:' with 'https:'
 				new_values['child_id'] = data_item['id'] 		# add SB UID to values that will be updated in XML
 				update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+				find_and_replace_text(xml_file, 'http:', 'https:') 			# Replace 'http:' with 'https:'
+				find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
 			# Upload to ScienceBase
 			if update_data: # Upload data files (FIXME: currently only shapefile)
 				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
-				try: #FIXME: add this to a function in a more generalized way?
-					data_item["dates"][0]["dateString"]= new_values['pubdate']
-					#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
-				except:
-					pass
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
 				sb.replace_file(xml_file, data_item)
 			# Pass parent fields on to child
-			data_item = inherit_SBfields(sb, data_item, data_inherits)
-			if 'previewImage' in data_inherits:
-				try:
-					data_item = sb.upload_file_to_item(data_item, imagefile)
-				except Exception as e:
-					print(e)
+			data_item = inherit_SBfields(sb, data_item, data_inherits, verbose=verbose)
+			if verbose:
+				now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+				print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
 			# store values in dictionaries
 			dict_DIRtoID[xml_file] = data_item['id']
 			dict_IDtoJSON[data_item['id']] = data_item
@@ -195,3 +236,5 @@ with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
 	json.dump(dict_IDtoJSON, f)
 with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
 	pickle.dump(dict_PARtoCHILDS, f)
+
+print('All done! View the result at {}'.format(landing_link))

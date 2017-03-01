@@ -31,19 +31,16 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
+landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - GOM
 #landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
+parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-dr_doi = "10.5066/F78P5XNK"
-
-# Image file (with path) to be used as preview image. If commented out, the preview image will be ignored.
-#previewImage = r'/Users/esturdivant/Desktop/SE_ATLANTIC/NASCP_SEAtlantic.png'
+dr_doi = "10.5066/F74X55X7"
 
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
 pubdate = '2017'
@@ -51,12 +48,15 @@ pubdate = '2017'
 # The edition element in the metadata can be modified here.
 #edition = '1.0'
 
+# Image file (with path) to be used as preview image. If commented out, the preview image will be ignored.
+#previewImage = r'/Users/esturdivant/Desktop/SE_ATLANTIC/NASCP_SEAtlantic.png'
+
 #-------------------------------------------------------------------------------
 #   OPTIONAL - Page inheritance
 #-------------------------------------------------------------------------------
 # SB fields that will be copied (inherited) from landing page to sub-pages (subparents), which are different from data pages.
 # Defaults: citation, contacts, body (='abstract' in XML; 'summary' in SB), purpose, webLinks
-subparent_inherits = ['citation','contacts','body','purpose','webLinks']
+subparent_inherits = ['citation','contacts','body','purpose'] #'webLinks'
 
 # SB fields that data pages inherit from their parent page. All other fields will be automatically populated from the XML.
 # Defaults: citation, body.
@@ -74,7 +74,6 @@ landing_fields_from_xml = []
 update_subpages = True # False to save time if  SB pages already exist
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
-# overwrite_datapages = True
 verbose         = True
 
 # Default False:
@@ -89,62 +88,51 @@ replace_subpages         = False # True to delete all child pages before running
 # Appending will not remove any elements.
 
 # Example of a new cross reference:
-fill_text = 'AUTHOR'
-blank_crossref = """
+new_crossref = """
     <crossref><citeinfo>
-        <origin>FILL AUTHOR</origin>
-        <pubdate>YEAR</pubdate>
-        <title>TITLE</title>
-        <serinfo><sername>Open-File Report</sername><issue>ISSUE</issue></serinfo>
+        <origin>Emily Himmelstoss</origin>
+        <origin>Meredith Kratzmann</origin>
+        <origin>Emily Himmelstoss</origin>
+        <pubdate>2017</pubdate>
+        <title>National Assessment of Shoreline Change: Summary Statistics for Updated Vector Shorelines and Associated Shoreline Change Data for the Gulf of Mexico and Southeast Atlantic Coasts</title>
+        <serinfo><sername>Open-File Report</sername><issue>2017-1015</issue></serinfo>
         <pubinfo>
         <pubplace>Reston, VA</pubplace>
         <publish>U.S. Geological Survey</publish>
         </pubinfo>
-        <onlink>URL</onlink>
+        <onlink>https://doi.org/10.3133/ofr20171015</onlink>
     </citeinfo></crossref>
-    """
-# new_crossref = """
-#     <crossref><citeinfo>
-#         <origin>Emily Himmelstoss</origin>
-#         <origin>Meredith Kratzmann</origin>
-#         <origin>Emily Himmelstoss</origin>
-#         <pubdate>2017</pubdate>
-#         <title>National Assessment of Shoreline Change: Summary Statistics for Updated Vector Shorelines and Associated Shoreline Change Data for the Gulf of Mexico and Southeast Atlantic Coasts</title>
-#         <serinfo><sername>Open-File Report</sername><issue>2017-1015</issue></serinfo>
-#         <pubinfo>
-#         <pubplace>Reston, VA</pubplace>
-#         <publish>U.S. Geological Survey</publish>
-#         </pubinfo>
-#         <onlink>https://doi.org/10.3133/ofr20171015</onlink>
-#     </citeinfo></crossref>
-# """
-# metadata_additions = {'./idinfo':new_crossref}
+"""
+metadata_additions = {'./idinfo':new_crossref}
 
+# # If an element needs to be removed,
+# remove_fills = {'./idinfo/crossref' # XPath to the location of the bad element
+#                 :'AUTHOR' # text string that identifies the bad element
+#                 }
 
 # Example of a new distribution information:
-# Can
-# new_distrib = """
-#     <distrib>
-# 		<cntinfo>
-#             <cntperp>
-#                 <cntper>Emily Himmelstoss</cntper>
-# 				<cntorg>U.S. Geological Survey</cntorg>
-# 			</cntperp>
-# 			<cntaddr>
-# 				<addrtype>mailing and physical address</addrtype>
-# 				<address>384 Woods Hole Road</address>
-# 				<city>Woods Hole</city>
-# 				<state>MA</state>
-# 				<postal>02543-1598</postal>
-# 				<country>USA</country>
-# 			</cntaddr>
-# 			<cntvoice>508-548-8700 x2262</cntvoice>
-# 			<cntfax>508-457-2310</cntfax>
-#             <cntemail>ehimmelstoss@usgs.gov</cntemail>
-# 		</cntinfo>
-# 	</distrib>
-#     """
-# metadata_replacements = {'./distinfo':new_distrib}
+new_distrib = """
+    <distrib>
+		<cntinfo>
+            <cntperp>
+                <cntper>Emily Himmelstoss</cntper>
+				<cntorg>U.S. Geological Survey</cntorg>
+			</cntperp>
+			<cntaddr>
+				<addrtype>mailing and physical address</addrtype>
+				<address>384 Woods Hole Road</address>
+				<city>Woods Hole</city>
+				<state>MA</state>
+				<postal>02543-1598</postal>
+				<country>USA</country>
+			</cntaddr>
+			<cntvoice>508-548-8700 x2262</cntvoice>
+			<cntfax>508-457-2310</cntfax>
+            <cntemail>ehimmelstoss@usgs.gov</cntemail>
+		</cntinfo>
+	</distrib>
+    """
+metadata_replacements = {'./distinfo':new_distrib}
 
 """
 Initialize
