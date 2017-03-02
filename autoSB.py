@@ -98,19 +98,25 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	else:
 	    return metadata_root
 
-def remove_xml_element(metadata_root, path='./', fill_text='AUTHOR'):
+def remove_xml_element(metadata_root, path='./', fill_text=['AUTHOR']):
 	# Remove any elements in path that contain fill text
 	# To be used as:
 	# tree = etree.parse(xml_file)
 	# metadata_root = tree.getroot()
 	# metadata_root = remove_xml_element(metadata_root)
 	# tree.write(xml_file)
+	if type(fill_text) is str:
+		fill_text = [fill_text]
+	elif not type(fill_text) is list:
+		print('fill_text must be string or list')
+		raise(Exception)
 	container, tag = os.path.split(path)
 	parent_elem = metadata_root.find(container)
 	for elem in parent_elem.iter(tag):
 		for text in elem.itertext():
-			if fill_text in text:
-				parent_elem.remove(elem)
+			for ftext in fill_text:
+				if ftext in text:
+					parent_elem.remove(elem)
 	return metadata_root
 
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
@@ -272,7 +278,7 @@ def update_xml(xml_file, new_values, verbose=False):
 				pass
 	# Could be moved to main script execution
 	if "remove_fills" in new_values:
-		[remove_xml_element(metadata_root, path, fill_text) for path, fill_text in new_values['remove_fills'].items()]
+		[remove_xml_element(metadata_root, path, ftext) for path, ftext in new_values['remove_fills'].items()]
 	if "metadata_additions" in new_values:
 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
 	if "metadata_replacements" in new_values:
@@ -641,7 +647,8 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
 # Apply functions to entire data release page tree
 #
 ###################################################
-def delete_all_children(sb, parentid):
+def delete_all_children(sb, parentid, verbose=False):
+	# Recursively delete all SB items that are children of the input page.
 	cids = sb.get_child_ids(parentid)
 	for cid in cids:
 		try:
@@ -649,10 +656,12 @@ def delete_all_children(sb, parentid):
 		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 	sb.delete_items(cids)
+	ptitle = sb.get_item(parentid)['title']
 	if len(cids) > 0:
-		print("{} children hanging on in {}, \nbut they should vanish soon?".format(len(cids), sb.get_item(parentid)['title']))
+		print("{} children hanging on in {}, \nbut they should vanish soon?".format(len(cids), ptitle))
 	else:
-		print("Eradicated all kids from {}!".format(parentid))
+		if verbose:
+			print("Eradicated all kids from {}!".format(ptitle))
 	return True
 
 def remove_all_child_pages(useremail=False, landing_link=False):

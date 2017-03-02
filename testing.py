@@ -24,14 +24,14 @@ from lxml import etree
 import json
 import pickle
 import sys
-sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
-# sb_auto_dir = '/Users/esturdivant/GitHub/science-base-automation'
+# sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
+sb_auto_dir = '/Users/esturdivant/GitHub/science-base-automation'
 # sb_auto_dir = os.path.dirname(os.path.realpath('testing.py'))
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure
 from autoSB import *
 from config_autoSB import *
 
-parentdir = r'/Users/esturdivant/Desktop/GOM_final_xtraCrossrefs' # OSX
+parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 
 # Python 3:
 # ixmllist = glob.iglob(os.path.join(root,'**','*.xml'), recursive=True)
@@ -42,6 +42,7 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+
 # Change each XML file
 for xml_file in xmllist:
 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
@@ -55,3 +56,19 @@ for xml_file in xmllist:
 	if "metadata_replacements" in locals():
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
 	tree.write(xml_file)
+
+remove_fills = {'./idinfo/crossref':['AUTHOR', 'Meredith Kratzmann']}
+
+for xml_file in xmllist[3:7]:
+	tree = etree.parse(xml_file)
+	metadata_root = tree.getroot()
+	if "remove_fills" in locals():
+		[remove_xml_element(metadata_root, path, ftext) for path, ftext in remove_fills.items()]
+	tree.write(xml_file)
+
+if not "landing_id" in locals():
+	try:
+		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
+	except:
+		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
+delete_all_children(sb, landing_id)

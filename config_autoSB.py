@@ -31,16 +31,19 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - GOM
+# landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
+landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
 #landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
+# parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-dr_doi = "10.5066/F74X55X7"
+# dr_doi = "10.5066/F78P5XNK" #GOM
+dr_doi = "10.5066/F74X55X7" #SE Atlantic
 
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
 pubdate = '2017'
@@ -87,12 +90,15 @@ replace_subpages         = False # True to delete all child pages before running
 # Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element.
 # Appending will not remove any elements.
 
+# If an element needs to be removed. This will occur before additions or replacements
+remove_fills = {'./idinfo/crossref':['AUTHOR', 'Meredith Kratzmann']}
+
 # Example of a new cross reference:
 new_crossref = """
     <crossref><citeinfo>
         <origin>Emily Himmelstoss</origin>
         <origin>Meredith Kratzmann</origin>
-        <origin>Emily Himmelstoss</origin>
+        <origin>E. Robert Thieler</origin>
         <pubdate>2017</pubdate>
         <title>National Assessment of Shoreline Change: Summary Statistics for Updated Vector Shorelines and Associated Shoreline Change Data for the Gulf of Mexico and Southeast Atlantic Coasts</title>
         <serinfo><sername>Open-File Report</sername><issue>2017-1015</issue></serinfo>
@@ -102,33 +108,28 @@ new_crossref = """
         </pubinfo>
         <onlink>https://doi.org/10.3133/ofr20171015</onlink>
     </citeinfo></crossref>
-"""
+    """
 metadata_additions = {'./idinfo':new_crossref}
-
-# # If an element needs to be removed,
-# remove_fills = {'./idinfo/crossref' # XPath to the location of the bad element
-#                 :'AUTHOR' # text string that identifies the bad element
-#                 }
 
 # Example of a new distribution information:
 new_distrib = """
     <distrib>
 		<cntinfo>
-            <cntperp>
-                <cntper>Emily Himmelstoss</cntper>
+            <cntorgp>
 				<cntorg>U.S. Geological Survey</cntorg>
-			</cntperp>
+			</cntorgp>
 			<cntaddr>
 				<addrtype>mailing and physical address</addrtype>
-				<address>384 Woods Hole Road</address>
-				<city>Woods Hole</city>
-				<state>MA</state>
-				<postal>02543-1598</postal>
+				<address>Denver Federal Center</address>
+                <address>Building 810</address>
+                <address>MS 302</address>
+				<city>Denver</city>
+				<state>CO</state>
+				<postal>80225</postal>
 				<country>USA</country>
 			</cntaddr>
-			<cntvoice>508-548-8700 x2262</cntvoice>
-			<cntfax>508-457-2310</cntfax>
-            <cntemail>ehimmelstoss@usgs.gov</cntemail>
+			<cntvoice>1-888-275-8747</cntvoice>
+            <cntemail>sciencebase@usgs.gov</cntemail>
 		</cntinfo>
 	</distrib>
     """
@@ -142,3 +143,10 @@ if "password" in locals():
     sb = log_in(useremail, password)
 else:
     sb = log_in(useremail)
+
+#%% Find landing page
+if not "landing_id" in locals():
+	try:
+		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
+	except:
+		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')

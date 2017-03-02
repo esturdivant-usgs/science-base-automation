@@ -24,6 +24,7 @@ import glob
 from lxml import etree
 import json
 import pickle
+import datetime
 import sys
 sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
 #sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
@@ -35,12 +36,12 @@ from config_autoSB import *
 #%% Initialize SB session
 sb = log_in(useremail)
 """
-#%% Find landing page
-if not "landing_id" in locals():
-	try:
-		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
-	except:
-		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
+# #%% Find landing page
+# if not "landing_id" in locals():
+# 	try:
+# 		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
+# 	except:
+# 		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
 # get JSON item for parent page
 landing_item = sb.get_item(landing_id)
 #print("CITATION: {}".format(landing_item['citation'])) # print to QC citation
@@ -48,12 +49,12 @@ landing_item = sb.get_item(landing_id)
 new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 if 'pubdate' in locals():
 	new_values['pubdate'] = pubdate
-# if 'metadata_additions' in locals():
-# 	new_values['metadata_additions'] = metadata_additions
-# if "metadata_replacements" in locals():
-# 	new_values['metadata_replacements'] = metadata_replacements
-# if "fill_text" in locals():
-# 	new_values['fill_text'] = fill_text
+if 'metadata_additions' in locals():
+	new_values['metadata_additions'] = metadata_additions
+if "metadata_replacements" in locals():
+	new_values['metadata_replacements'] = metadata_replacements
+if "remove_fills" in locals():
+	new_values['remove_fills'] = remove_fills
 
 """
 Work with landing page and XML
@@ -156,17 +157,17 @@ for root, dirs, files in os.walk(parentdir):
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
 xml_cnt = len(xmllist)
 # for xml_file in xmllist:
-# 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
-# 	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
 # 	tree = etree.parse(xml_file)
 # 	metadata_root = tree.getroot()
-# 	if "fill_text" in locals():
-# 		metadata_root = remove_xml_element(metadata_root, path='./idinfo/crossref', fill_text)
+# 	if "remove_fills" in locals():
+# 		[remove_xml_element(metadata_root, path, ftext) for path, ftext in remove_fills.items()])
 # 	if "metadata_additions" in locals():
 # 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
 # 	if "metadata_replacements" in locals():
 # 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
 # 	tree.write(xml_file)
+# 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
+# 	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
 
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
@@ -206,11 +207,15 @@ for root, dirs, files in os.walk(parentdir):
 				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
-				sb.replace_file(xml_file, data_item)
+				try:
+					sb.replace_file(xml_file, data_item)
+				except e:
+					print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
+				# sb.upload_files_and_upsert_item(data_item, [xml_file])
 			# Pass parent fields on to child
 			data_item = inherit_SBfields(sb, data_item, data_inherits, verbose=verbose)
 			if verbose:
-				now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+				now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
 				print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
 			# store values in dictionaries
 			dict_DIRtoID[xml_file] = data_item['id']
