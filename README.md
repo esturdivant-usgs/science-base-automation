@@ -1,7 +1,9 @@
 # science-base-automation
-__Automatically create and populate ScienceBase pages with metadata and data files.__
+__Automatically create and populate ScienceBase pages with metadata and data files.__ Given a ScienceBase (SB) landing page and a directory tree with data and metadata, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, and populates the SB pages from the data. 
 
-Given a local top directory with metadata and data files in sub-directories and a ScienceBase (SB) landing page, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, populates the SB pages from the data. 
+### Links
+SB Item values: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Core+Model
+PYSB, SB python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/browse
 
 ### Overall process
 1. Set up a local directory structure for your data release. 
