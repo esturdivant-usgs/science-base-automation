@@ -3,6 +3,7 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 
 ### Links
 SB Item values: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Core+Model
+
 PYSB, SB python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/browse
 
 ### Overall process
