@@ -22,7 +22,7 @@ __all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
-		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
+		   'upload_data', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
@@ -232,7 +232,7 @@ def map_newvals2xml(new_values):
 	if 'pubdate' in new_values.keys():
 		val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0, caldate:0}
 	# Date and time of update
-	now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+	now_str = datetime.datetime.now().strftime("%Y%m%d")
 	val2xml[now_str] = {metadate: 0}
 	return val2xml
 
@@ -370,24 +370,26 @@ def get_DOI_from_item(item):
 		i += 1
 	return doi
 
-def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False):
-	if inheritedfields:
-		if verbose:
-			print('Inheriting fields from parent...')
-		parent_item = flexibly_get_item(sb, child_item['parentId'])
-		for field in inheritedfields:
-			if field == 'previewImage':
-				try:
-					child_item = sb.upload_file_to_item(child_item, imagefile)
-				except Exception as e:
-					print(e)
+def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False, inherit_void=True):
+	# Upsert inheritedfield from parent to child by retrieving parent_item based on child
+	# Modified 3/8/17: if field does not exist in parent, remove in child
+	# If field is entered incorrecly, no errors will be thrown, but the page will not be updated.
+	if verbose:
+		print("Inheriting fields from parent '{}...'".format(child_item['title'][:50]))
+	parent_item = flexibly_get_item(sb, child_item['parentId'])
+	for field in inheritedfields:
+		if not field in parent_item:
+			if inherit_void:
+				child_item[field] = None
 			else:
-				try:
-					child_item[field] = parent_item[field]
-				except KeyError:
-					print("Field missing: '{}' not present in parent item '{}...'".format(field, parent_item['title'][:50]))
-					pass
-		child_item = sb.updateSbItem(child_item)
+				print("Field '{}' does not exist in parent and inherit_void is set to False so the current value will be preserved in child '{}...'.".format(field, child_item['title'][:50]))
+		else:
+			try:
+				child_item[field] = parent_item[field]
+			except Exception as e:
+				print(e)
+				pass
+	child_item = sb.updateSbItem(child_item)
 	return child_item
 
 def find_or_create_child(sb, parentid, child_title, verbose=False):
@@ -406,6 +408,22 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		if verbose:
 			print("Creating page '{}...' because it was not found in page {}.".format(child_title[:50], parentid))
 	return child_item
+
+def upload_data(sb, item, xml_file, replace=True, verbose=False):
+	# Upload all files matching the XML filename to SB page.
+	# E.g. xml_file = 'path/data_name.ext.xml' will upload all files beginning with 'data_name'
+	# optionally remove all present files
+	if replace:
+		# Remove all files (and facets) from child page
+		item = remove_all_files(sb, item, verbose)
+	# List all files matching XML
+	dataname = xml_file.split('.')[0]
+	up_files = glob.glob(dataname + '*')
+	# Upload all files pertaining to data to child page
+	if verbose:
+		print('UPLOADING: {} ...'.format(os.path.basename(dataname)))
+	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
+	return item
 
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 	# Upload shapefile files to SB page, optionally remove all present files
@@ -517,6 +535,7 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
 	return dict_IDtoJSON
 
 def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, replace=True, imagefile=False):
+	# NOT USED as of 3/8/17
 	# Get values
 	parent_item = flexibly_get_item(sb, parent)
 	# Get DOI link from parent_item
@@ -648,7 +667,7 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
 #
 ###################################################
 def delete_all_children(sb, parentid, verbose=False):
-	# Recursively delete all SB items that are children of the input page.
+	# Recursively delete all SB items that are descendants of the input page.
 	cids = sb.get_child_ids(parentid)
 	for cid in cids:
 		try:
@@ -701,6 +720,7 @@ def landing_page_from_parentdir(parentdir, parent_xml, previewImage, new_values)
 	return landing_item, imagefile
 
 def universal_inherit(sb, top_id, inheritedfields, verbose=False):
+	# Given an SB ID, pass on selected fields to all descendants; doesn't look for parents
 	for cid in sb.get_child_ids(top_id):
 		citem = sb.get_item(cid)
 		if verbose:
@@ -713,6 +733,8 @@ def universal_inherit(sb, top_id, inheritedfields, verbose=False):
 	return True
 
 def apply_topdown(sb, top_id, function, verbose=False):
+	# Given an SB ID, do function to all descendants; doesn't look for parents
+	#FIXME: does it work to simply use function name as argument?
 	for cid in sb.get_child_ids(top_id):
 		citem = sb.get_item(cid)
 		if verbose:
@@ -725,6 +747,8 @@ def apply_topdown(sb, top_id, function, verbose=False):
 	return True
 
 def apply_bottomup(sb, top_id, function, verbose=False):
+	# Given an SB ID, do function to all ancestors; doesn't look for children
+	#FIXME: does it work to simply use function name as argument?
 	for cid in sb.get_child_ids(top_id):
 		try:
 			apply_bottomup(sb, cid, function, verbose)

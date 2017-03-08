@@ -184,7 +184,7 @@ for root, dirs, files in os.walk(parentdir):
 					sb = pysb.SbSession(env=None).login(useremail,password)
 				except NameError:
 					sb = pysb.SbSession(env=None).loginc(useremail)
-			# Get values
+			# 1. GET VALUES
 			parentid = dict_DIRtoID[d]
 			new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
 			# Create (or find) new data page based on title in XML
@@ -195,7 +195,7 @@ for root, dirs, files in os.walk(parentdir):
 				#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
 			except:
 				pass
-			# Make updates
+			# 2. MAKE UPDATES
 			# Update XML
 			if update_XML: 								# Update XML file to include new child ID and DOI
 				new_values['child_id'] = data_item['id'] 		# add SB UID to values that will be updated in XML
@@ -203,9 +203,8 @@ for root, dirs, files in os.walk(parentdir):
 				find_and_replace_text(xml_file, 'http:', 'https:') 			# Replace 'http:' with 'https:'
 				find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
 			# Upload to ScienceBase
-			if update_data: # Upload data files (FIXME: currently only shapefile)
-				#if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
-				data_item = upload_shp(sb, data_item, xml_file, replace=True, verbose=verbose)
+			if update_data: # Upload all files in dir that match basename of XML file
+				data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
 				try:
 					sb.replace_file(xml_file, data_item)
@@ -214,6 +213,8 @@ for root, dirs, files in os.walk(parentdir):
 				# sb.upload_files_and_upsert_item(data_item, [xml_file])
 			# Pass parent fields on to child
 			data_item = inherit_SBfields(sb, data_item, data_inherits, verbose=verbose)
+			if 'previewImage' in data_inherits and "imagefile" in locals():
+				data_item = sb.upload_file_to_item(data_item, imagefile)
 			if verbose:
 				now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
 				print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))

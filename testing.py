@@ -33,8 +33,15 @@ from config_autoSB import *
 
 parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 
+# Inherit non-existent webLinks
+landing_item = sb.get_item(landing_id)
+landing_item['relatedItems']
+
+child_id = '582ca4a8e4b04d580bd378f1'
+child_item = sb.get_item(child_id)
+
 # Python 3:
-# ixmllist = glob.iglob(os.path.join(root,'**','*.xml'), recursive=True)
+# ixmllist = glob.iglob(os.path.join(parentdir,'**','*.xml'), recursive=True)
 
 # Revise the XML, except for the values created by SB
 # Recursively list all XML files in parentdir
@@ -42,6 +49,15 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+
+# Revise metadata to have one attrdomv containertag per edom
+xmllist[2] # shoreline.shp.xml
+metadata_root, tree, xml_file = get_root_flexibly(xmllist[2])
+metadata_root
+# for adomv, if len(edom) > 1:
+elem = metadata_root.findall(containertag)[0]
+
+
 
 # Change each XML file
 for xml_file in xmllist:

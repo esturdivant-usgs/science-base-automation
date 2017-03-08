@@ -58,12 +58,13 @@ pubdate = '2017'
 #   OPTIONAL - Page inheritance
 #-------------------------------------------------------------------------------
 # SB fields that will be copied (inherited) from landing page to sub-pages (subparents), which are different from data pages.
-# Defaults: citation, contacts, body (='abstract' in XML; 'summary' in SB), purpose, webLinks
-subparent_inherits = ['citation','contacts','body','purpose'] #'webLinks'
+# Recommended: citation, contacts, body (='abstract' in XML; 'summary' in SB), purpose, webLinks
+# relatedItems = Associated items
+subparent_inherits = ['citation', 'contacts', 'body', 'purpose', 'webLinks', 'relatedItems']
 
 # SB fields that data pages inherit from their parent page. All other fields will be automatically populated from the XML.
-# Defaults: citation, body.
-data_inherits = ['citation','contacts', 'body'] # include ,'webLinks'?
+# Recommended: citation, body, webLinks
+data_inherits = ['citation','contacts', 'body', 'webLinks', 'relatedItems']
 
 # SB fields that will be populated from the XML file in the top directory, assuming an error-free XML is present.
 # Note that body = abstract. The Summary item on SB will automatically be created from body.
