@@ -34,11 +34,10 @@ from config_autoSB import *
 parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 
 # Inherit non-existent webLinks
-landing_item = sb.get_item(landing_id)
-landing_item['relatedItems']
-
-child_id = '582ca4a8e4b04d580bd378f1'
-child_item = sb.get_item(child_id)
+# landing_item = sb.get_item(landing_id)
+#
+# child_id = '582ca4a8e4b04d580bd378f1'
+# child_item = sb.get_item(child_id)
 
 # Python 3:
 # ixmllist = glob.iglob(os.path.join(parentdir,'**','*.xml'), recursive=True)
@@ -49,6 +48,39 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+
+
+
+xml_file = xmllist[6]
+
+update_xml(xml_file, locals(), verbose=True)
+
+find_and_replace_from_dict(xml_file, find_n_replace)
+
+
+for rstr, flist in find_n_replace.iteritems():
+	for fstr in flist:
+		find_and_replace_text(xml_file, fstr, rstr)
+
+
+
+
+fr_list = list()
+for rstr, flist in find_n_replace.iteritems():
+	if type(flist) is str:
+		flist = [flist]
+	for fstr in flist:
+		fr_list.append((fstr, rstr))
+
+f1 = open(xml_file, 'r')
+f2 = open(xml_file+'.tmp', 'w')
+for line in f1:
+	for fstr, rstr in fr_list:
+		line = line.replace(fstr, rstr)
+	f2.write(line)
+f1.close()
+f2.close()
+
 
 # Change each XML file
 for xml_file in xmllist:

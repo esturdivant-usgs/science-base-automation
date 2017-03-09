@@ -266,20 +266,26 @@ def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
     os.remove(fname+'.tmp')
     return fname
 
+def find_and_replace_from_dict(fname, find_dict):
+	# Takes dictionary of {replace_value: [find_str, find_str2]}
+	os.rename(fname, fname+'.tmp')
+	with open(fname+'.tmp', 'r') as f1:
+		with open(fname, 'w') as f2:
+			for line in f1:
+				for rstr, flist in find_dict.iteritems():
+					if type(flist) is str:
+						flist = [flist]
+					for fstr in flist:
+						line = line.replace(fstr, rstr)
+				f2.write(line)
+	os.remove(fname+'.tmp')
+	return fname
+
 def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
 	# Parse metadata
 	metadata_root, tree, xml_file = get_root_flexibly(xml_file)
-	# try:
-	# 	tree = etree.parse(xml_file) # parse metadata using etree
-	# except etree.XMLSyntaxError as e:
-	# 	print "XML Syntax Error while trying to parse XML file: {}".format(e)
-	# 	return False
-	# except Exception as e:
-	# 	print "Exception while trying to parse XML file: {}".format(e)
-	# 	return False
-	# metadata_root=tree.getroot()
 	# Work through metadata elements
 	elem2newvalue = map_newvals2xml(new_values)
 	for newval, elemfind in elem2newvalue.items(): # Update elements with new ID text
@@ -307,6 +313,8 @@ def update_xml(xml_file, new_values, verbose=False):
 	metadata_root = fix_attrdomv_error(metadata_root)
 	# Overwrite XML file with new XML
 	tree.write(xml_file)
+	if "find_and_replace" in new_values:
+		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
 	if verbose:
 		print("UPDATED XML: {}".format(xml_file))
 	return xml_file

@@ -49,6 +49,8 @@ landing_item = sb.get_item(landing_id)
 new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 if 'pubdate' in locals():
 	new_values['pubdate'] = pubdate
+if 'find_and_replace' in locals():
+	new_values['find_and_replace'] = find_and_replace
 if 'metadata_additions' in locals():
 	new_values['metadata_additions'] = metadata_additions
 if "metadata_replacements" in locals():
@@ -197,11 +199,9 @@ for root, dirs, files in os.walk(parentdir):
 				pass
 			# 2. MAKE UPDATES
 			# Update XML
-			if update_XML: 								# Update XML file to include new child ID and DOI
-				new_values['child_id'] = data_item['id'] 		# add SB UID to values that will be updated in XML
+			if update_XML:
+				new_values['child_id'] = data_item['id']  # add SB UID to be updated in XML
 				update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-				find_and_replace_text(xml_file, 'http:', 'https:') 			# Replace 'http:' with 'https:'
-				find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
 			# Upload to ScienceBase
 			if update_data: # Upload all files in dir that match basename of XML file
 				data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)

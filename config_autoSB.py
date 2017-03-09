@@ -32,18 +32,18 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
-landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
+# landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
 #landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
-parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
+# parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/F78P5XNK" #GOM
-dr_doi = "10.5066/F74X55X7" #SE Atlantic
+# dr_doi = "10.5066/F74X55X7" #SE Atlantic
 
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
 pubdate = '2017'
@@ -55,7 +55,7 @@ pubdate = '2017'
 #previewImage = r'/Users/esturdivant/Desktop/SE_ATLANTIC/NASCP_SEAtlantic.png'
 
 #-------------------------------------------------------------------------------
-#   OPTIONAL - Page inheritance
+#   OPTIONAL - ScienceBase page inheritance
 #-------------------------------------------------------------------------------
 # SB fields that will be copied (inherited) from landing page to sub-pages (subparents), which are different from data pages.
 # Recommended: citation, contacts, body (='abstract' in XML; 'summary' in SB), purpose, webLinks
@@ -86,18 +86,26 @@ update_landing_page      = False # True if values on the landing page should be 
 replace_subpages         = False # True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
 
 # ------------------------------------------------------------------------------
-# Additions and replacements for metadata XML
+#   OPTIONAL - XML changes
 # ------------------------------------------------------------------------------
 # Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element.
 # Appending will not remove any elements.
 
+# Find and replace values in XML
+find_and_replace = {'E.A. Himmelstoss':['Emily Himmelstoss', 'Emily A. Himmelstoss', 'E. A. Himmelstoss'],
+                'M.G. Kratzmann': ['Meredith Kratzmann', 'Meredith G. Kratzmann', 'M. G. Kratzmann'],
+                'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+                'Change&#8212; A GIS': ['Change: A GIS', 'Change:  A GIS'],
+                'https:': 'http:',
+                'doi.org': 'dx.doi.org'}
+
 # If an element needs to be removed. This will occur before additions or replacements
-# remove_fills = {'./idinfo/crossref':['AUTHOR', 'Meredith Kratzmann']}
+remove_fills = {'./idinfo/crossref':['AUTHOR', 'doi.org/10.3133/ofr20171015']}
 
 # Example of a new cross reference:
 new_crossref = """
     <crossref><citeinfo>
-        <origin>Emily Himmelstoss</origin>
+        <origin>E.A. Himmelstoss</origin>
         <origin>Meredith Kratzmann</origin>
         <origin>E. Robert Thieler</origin>
         <pubdate>2017</pubdate>
@@ -110,7 +118,7 @@ new_crossref = """
         <onlink>https://doi.org/10.3133/ofr20171015</onlink>
     </citeinfo></crossref>
     """
-# metadata_additions = {'./idinfo':new_crossref}
+metadata_additions = {'./idinfo':new_crossref}
 
 # Example of a new distribution information:
 new_distrib = """
@@ -134,7 +142,7 @@ new_distrib = """
 		</cntinfo>
 	</distrib>
     """
-# metadata_replacements = {'./distinfo':new_distrib}
+metadata_replacements = {'./distinfo':new_distrib}
 
 """
 Initialize
