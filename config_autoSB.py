@@ -31,18 +31,18 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-# landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
+landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
 landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
 #landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-# parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
+parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-# dr_doi = "10.5066/F78P5XNK" #GOM
+dr_doi = "10.5066/F78P5XNK" #GOM
 dr_doi = "10.5066/F74X55X7" #SE Atlantic
 
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
@@ -64,7 +64,7 @@ subparent_inherits = ['citation', 'contacts', 'body', 'purpose', 'webLinks', 're
 
 # SB fields that data pages inherit from their parent page. All other fields will be automatically populated from the XML.
 # Recommended: citation, body, webLinks
-data_inherits = ['citation','contacts', 'body', 'webLinks', 'relatedItems']
+data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 
 # SB fields that will be populated from the XML file in the top directory, assuming an error-free XML is present.
 # Note that body = abstract. The Summary item on SB will automatically be created from body.
@@ -92,7 +92,7 @@ replace_subpages         = False # True to delete all child pages before running
 # Appending will not remove any elements.
 
 # If an element needs to be removed. This will occur before additions or replacements
-remove_fills = {'./idinfo/crossref':['AUTHOR', 'Meredith Kratzmann']}
+# remove_fills = {'./idinfo/crossref':['AUTHOR', 'Meredith Kratzmann']}
 
 # Example of a new cross reference:
 new_crossref = """
@@ -110,7 +110,7 @@ new_crossref = """
         <onlink>https://doi.org/10.3133/ofr20171015</onlink>
     </citeinfo></crossref>
     """
-metadata_additions = {'./idinfo':new_crossref}
+# metadata_additions = {'./idinfo':new_crossref}
 
 # Example of a new distribution information:
 new_distrib = """
@@ -134,7 +134,7 @@ new_distrib = """
 		</cntinfo>
 	</distrib>
     """
-metadata_replacements = {'./distinfo':new_distrib}
+# metadata_replacements = {'./distinfo':new_distrib}
 
 """
 Initialize

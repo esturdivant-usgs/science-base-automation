@@ -17,7 +17,7 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml',
+__all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
@@ -92,6 +92,27 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	elem = metadata_root.findall(containertag)[0]
 	elem.append(new_elem) # append new tag to container element
 	# Either overwrite XML file with new XML or return the updated metadata_root
+	if type(xml_file) is str:
+	    tree.write(xml_file)
+	    return xml_file
+	else:
+	    return metadata_root
+
+def fix_attrdomv_error(in_metadata, verbose=False):
+	# Fix attrdomv so that each has only one subelement
+	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+	attrdomv = metadata_root.findall('./eainfo/detailed/attr/attrdomv')
+	for elem in attrdomv:
+		subelems = elem.getchildren()
+		if len(subelems) > 1:
+			if verbose:
+				print('fixing error in Attribute Domain Values...')
+			parent = elem.getparent()
+			for child in subelems:
+				new_elem = parent.makeelement(elem.tag)
+				new_elem.insert(0, child)
+				parent.append(new_elem)
+			parent.remove(elem)
 	if type(xml_file) is str:
 	    tree.write(xml_file)
 	    return xml_file
@@ -283,6 +304,7 @@ def update_xml(xml_file, new_values, verbose=False):
 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
 	if "metadata_replacements" in new_values:
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
+	metadata_root = fix_attrdomv_error(metadata_root)
 	# Overwrite XML file with new XML
 	tree.write(xml_file)
 	if verbose:

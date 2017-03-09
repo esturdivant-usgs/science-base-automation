@@ -50,15 +50,6 @@ for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
 
-# Revise metadata to have one attrdomv containertag per edom
-xmllist[2] # shoreline.shp.xml
-metadata_root, tree, xml_file = get_root_flexibly(xmllist[2])
-metadata_root
-# for adomv, if len(edom) > 1:
-elem = metadata_root.findall(containertag)[0]
-
-
-
 # Change each XML file
 for xml_file in xmllist:
 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
