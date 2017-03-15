@@ -45,6 +45,11 @@ parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 dr_doi = "10.5066/F78P5XNK" #GOM
 # dr_doi = "10.5066/F74X55X7" #SE Atlantic
 
+# useremail = raw_input('ScienceBase username (should be entire USGS email): ')
+# landing_id = raw_input('ScienceBase ID of landing page (58055db4e4b0824b2d1c1ee2): ')
+# parentdir = raw_input("Path to parent directory (r'/Users/esturdivant/Desktop/GOM_final'): ")
+# dr_doi = raw_input("DOI of data release (e.g. 10.5066/F78P5XNK): ")
+
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
 pubdate = '2017'
 
@@ -79,6 +84,7 @@ update_subpages = False # False to save time if  SB pages already exist
 update_XML      = False # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 verbose         = True
+update_extent   = True
 
 # Default False:
 add_preview_image_to_all = False # True to put the first image file encountered in a directory on its corresponding page
@@ -158,4 +164,5 @@ if not "landing_id" in locals():
 	try:
 		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
 	except:
-		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
+		print("""Either the ID (landing_id) or the URL (landing_link) of the
+            ScienceBase landing page must be specified in config_autoSB.py.""")

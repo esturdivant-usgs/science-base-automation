@@ -28,7 +28,8 @@ __all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fi
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
 		   'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
 		   'delete_all_children', 'remove_all_child_pages',
-		   'landing_page_from_parentdir', 'universal_inherit', 'apply_topdown',
+		   'landing_page_from_parentdir', 'universal_inherit', 'inherit_topdown',
+		   'apply_topdown',
 		   'apply_bottomup']
 
 
@@ -404,9 +405,9 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False
 	# Upsert inheritedfield from parent to child by retrieving parent_item based on child
 	# Modified 3/8/17: if field does not exist in parent, remove in child
 	# If field is entered incorrecly, no errors will be thrown, but the page will not be updated.
-	if verbose:
-		print("Inheriting fields from parent '{}...'".format(child_item['title'][:50]))
 	parent_item = flexibly_get_item(sb, child_item['parentId'])
+	if verbose:
+		print("Inheriting fields from parent '{}...'".format(parent_item['title'][:40]))
 	for field in inheritedfields:
 		if not field in parent_item:
 			if inherit_void:
@@ -428,7 +429,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print("FOUND: page '{}...'.".format(child_title[:50]))
+				print("FOUND: page '{}...'.".format(child_title))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -448,10 +449,11 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 		item = remove_all_files(sb, item, verbose)
 	# List all files matching XML
 	dataname = xml_file.split('.')[0]
-	up_files = glob.glob(dataname + '.*')
+	searchstr = dataname + '.*'
+	up_files = glob.glob(searchstr)
 	# Upload all files pertaining to data to child page
 	if verbose:
-		print('UPLOADING: {} ...'.format(os.path.basename(dataname)))
+		print("UPLOADING: files matching '{}'".format(os.path.basename(searchstr)))
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
 	return item
 
@@ -590,14 +592,14 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 		child_item = inherit_SBfields(sb, child_item, inheritedfields)
 	return child_item # Return new JSON
 
-def update_datapage(sb, page, xml_file, inheritedfields=False, replace=True):
+def update_datapage(sb, page, xml_file, inheritedfields=False, replace=True, verbose=True):
 	#FIXME This is not currently being used. Why not?
 	parent_item = flexibly_get_item(sb, page)
 	if replace:
 		item = sb.replace_file(xml_file,item) # replace_file() does not work well
 	if inheritedfields:
 		parent_item = sb.get_item(item['parentId'])
-		item = inherit_SBfields(sb, item, inheritedfields)
+		item = inherit_SBfields(sb, item, inheritedfields, verbose=verbose)
 	return item # Return new JSON
 
 def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID, dict_IDtoJSON):
@@ -714,6 +716,8 @@ def delete_all_children(sb, parentid, verbose=False):
 	return True
 
 def remove_all_child_pages(useremail=False, landing_link=False):
+	# Stand-alone function to wipe page tree;
+	# Calls delete_all_children()
 	if not useremail:
 		useremail = raw_input("SB username (should be entire USGS email): ")
 	if not landing_link:
@@ -749,15 +753,45 @@ def landing_page_from_parentdir(parentdir, parent_xml, previewImage, new_values)
 			print("Exception while trying to upload file {}: {}".format(imagefile, e))
 	return landing_item, imagefile
 
-def universal_inherit(sb, top_id, inheritedfields, verbose=False):
+def qc(sb, item, qcfields, verbose=False):
+	cnt = 0
+	for field in qcfields:
+		if not field in item.keys():
+			cnt += 1
+			pagelist.append(item['id'])
+			print("MISSING: field '{}' in page '{}'.".format(field, item['title']))
+	if not cnt:
+		if verbose:
+			print("Page '{}' has all desired fields.".format(item['title']))
+		return
+	else:
+		return item['id']
+
+def qc_pages(sb, top_id, qcfields, deficient_pages=[], verbose=False):
 	# Given an SB ID, pass on selected fields to all descendants; doesn't look for parents
 	for cid in sb.get_child_ids(top_id):
 		citem = sb.get_item(cid)
-		if verbose:
-			print('Inheriting fields for "{}" from its parent page'.format(citem['title']))
-		inherit_SBfields(sb, citem)
+		deficient = qc(sb, citem, qcfields, verbose)
+		deficient_pages.append(deficient)
 		try:
-			universal_inherit(sb, cid, inheritedfields, verbose)
+			deficient_pages = qc_pages(sb, cid, qcfields, deficient_pages, verbose)
+		except Exception as e:
+			print("EXCEPTION: {}".format(e))
+	return deficient_pages
+
+def inherit_topdown(sb, top_id, parent_inherits, child_inherits, verbose=False):
+	# Given an SB ID, pass on selected fields to all descendants
+	item = sb.get_item(top_id)
+	for cid in sb.get_child_ids(top_id):
+		citem = sb.get_item(cid)
+		# Pass on fields to the next generation
+		if not citem['hasChildren']: # child_inherits fields to youngest generation
+			inherit_SBfields(sb, citem, child_inherits, verbose)
+		else: # parent_inherits fields to all pages
+			inherit_SBfields(sb, citem, parent_inherits, verbose)
+		# Move to the next generation
+		try:
+			inherit_topdown(sb, cid, parent_inherits, child_inherits, verbose)
 		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 	return True

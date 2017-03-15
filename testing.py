@@ -31,16 +31,29 @@ sys.path.append(sb_auto_dir) # Add the script location to the system path just t
 from autoSB import *
 from config_autoSB import *
 
-parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
+landing_item = sb.get_item(landing_id)
+child_id = '582ca4b7e4b04d580bd3790b'
+child_item = sb.get_item(child_id)
 
-# Inherit non-existent webLinks
-# landing_item = sb.get_item(landing_id)
-#
-# child_id = '582ca4a8e4b04d580bd378f1'
-# child_item = sb.get_item(child_id)
+inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=True)
 
-# Python 3:
-# ixmllist = glob.iglob(os.path.join(parentdir,'**','*.xml'), recursive=True)
+def qc_pages(sb, top_id, qcfields, deficient_pages=[], verbose=False):
+	# Given an SB ID, pass on selected fields to all descendants; doesn't look for parents
+	for cid in sb.get_child_ids(top_id):
+		citem = sb.get_item(cid)
+		deficient = qc(sb, citem, qcfields, verbose)
+		deficient_pages.append(deficient)
+		try:
+			deficient_pages = qc_pages(sb, cid, qcfields, deficient_pages, verbose)
+		except Exception as e:
+			print("EXCEPTION: {}".format(e))
+	return deficient_pages
+
+
+qcfields = ['citation', 'contacts', 'body', 'relatedItems', 'facets']
+pagelist = qc_pages(sb, landing_id, qcfields, verbose=True)
+
+
 
 # Revise the XML, except for the values created by SB
 # Recursively list all XML files in parentdir
@@ -48,66 +61,3 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
-
-
-
-xml_file = xmllist[6]
-
-update_xml(xml_file, locals(), verbose=True)
-
-find_and_replace_from_dict(xml_file, find_n_replace)
-
-
-for rstr, flist in find_n_replace.iteritems():
-	for fstr in flist:
-		find_and_replace_text(xml_file, fstr, rstr)
-
-
-
-
-fr_list = list()
-for rstr, flist in find_n_replace.iteritems():
-	if type(flist) is str:
-		flist = [flist]
-	for fstr in flist:
-		fr_list.append((fstr, rstr))
-
-f1 = open(xml_file, 'r')
-f2 = open(xml_file+'.tmp', 'w')
-for line in f1:
-	for fstr, rstr in fr_list:
-		line = line.replace(fstr, rstr)
-	f2.write(line)
-f1.close()
-f2.close()
-
-
-# Change each XML file
-for xml_file in xmllist:
-	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
-	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
-	tree = etree.parse(xml_file)
-	metadata_root = tree.getroot()
-	if "remove_fills" in locals():
-		[remove_xml_element(metadata_root, path, fill_text) for path, fill_text in remove_fills.items()]
-	if "metadata_additions" in locals():
-		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
-	if "metadata_replacements" in locals():
-		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
-	tree.write(xml_file)
-
-remove_fills = {'./idinfo/crossref':['AUTHOR', 'Meredith Kratzmann']}
-
-for xml_file in xmllist[3:7]:
-	tree = etree.parse(xml_file)
-	metadata_root = tree.getroot()
-	if "remove_fills" in locals():
-		[remove_xml_element(metadata_root, path, ftext) for path, ftext in remove_fills.items()]
-	tree.write(xml_file)
-
-if not "landing_id" in locals():
-	try:
-		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
-	except:
-		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
-delete_all_children(sb, landing_id)

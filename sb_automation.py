@@ -36,12 +36,6 @@ from config_autoSB import *
 #%% Initialize SB session
 sb = log_in(useremail)
 """
-# #%% Find landing page
-# if not "landing_id" in locals():
-# 	try:
-# 		landing_id = os.path.split(landing_link)[1] # get ID for parent page from link
-# 	except:
-# 		print('Either the ID (landing_id) or the URL (landing_link) of the ScienceBase landing page must be specified in config_autoSB.py.')
 # get JSON item for parent page
 landing_item = sb.get_item(landing_id)
 #print("CITATION: {}".format(landing_item['citation'])) # print to QC citation
@@ -108,7 +102,7 @@ if update_subpages:
 			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
 			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
 			subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
-			subpage = inherit_SBfields(sb, subpage, subparent_inherits)
+			# subpage = inherit_SBfields(sb, subpage, subparent_inherits, verbose=verbose, inherit_void=True)
 			if 'previewImage' in subparent_inherits and "imagefile" in locals():
 				subpage = sb.upload_file_to_item(subpage, imagefile)
 			# store values in dictionaries
@@ -212,7 +206,8 @@ for root, dirs, files in os.walk(parentdir):
 					print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
 				# sb.upload_files_and_upsert_item(data_item, [xml_file])
 			# Pass parent fields on to child
-			data_item = inherit_SBfields(sb, data_item, data_inherits, verbose=verbose)
+			#FIXME: looks like webLinks is not wiped when parent is blank when update_subpages=False
+			# data_item = inherit_SBfields(sb, data_item, data_inherits, verbose=verbose, inherit_void=True)
 			if 'previewImage' in data_inherits and "imagefile" in locals():
 				data_item = sb.upload_file_to_item(data_item, imagefile)
 			if verbose:
@@ -224,12 +219,13 @@ for root, dirs, files in os.walk(parentdir):
 			dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
 
 #%% Pass down fields from parents to children
-# print("\nPassing down fields from parents to children...")
-# universal_inherit(sb, top_id, data_inherits)
+print("\nPassing down fields from parents to children...")
+inherit_topdown(sb, top_id, subparent_inherits, data_inherits, verbose=verbose, inherit_void=True)
 
 #%% BOUNDING BOX
-print("\nGetting extent of child data for parent pages...")
-set_parent_extent(sb, landing_id, verbose=verbose)
+if update_extent:
+	print("\nGetting extent of child data for parent pages...")
+	set_parent_extent(sb, landing_id, verbose=verbose)
 
 # Preview Image
 if add_preview_image_to_all:
