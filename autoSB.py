@@ -448,7 +448,7 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 		item = remove_all_files(sb, item, verbose)
 	# List all files matching XML
 	dataname = xml_file.split('.')[0]
-	up_files = glob.glob(dataname + '*')
+	up_files = glob.glob(dataname + '.*')
 	# Upload all files pertaining to data to child page
 	if verbose:
 		print('UPLOADING: {} ...'.format(os.path.basename(dataname)))

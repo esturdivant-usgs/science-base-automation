@@ -75,8 +75,8 @@ landing_fields_from_xml = []
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if  SB pages already exist
-update_XML      = True # False to save time if XML already has the most up-to-date values.
+update_subpages = False # False to save time if  SB pages already exist
+update_XML      = False # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 verbose         = True
 
@@ -100,7 +100,7 @@ find_and_replace = {'E.A. Himmelstoss':['Emily Himmelstoss', 'Emily A. Himmelsto
                 'doi.org': 'dx.doi.org'}
 
 # If an element needs to be removed. This will occur before additions or replacements
-remove_fills = {'./idinfo/crossref':['AUTHOR', 'doi.org/10.3133/ofr20171015']}
+# remove_fills = {'./idinfo/crossref':['AUTHOR', 'doi.org/10.3133/ofr20171015']}
 
 # Example of a new cross reference:
 new_crossref = """
@@ -118,7 +118,7 @@ new_crossref = """
         <onlink>https://doi.org/10.3133/ofr20171015</onlink>
     </citeinfo></crossref>
     """
-metadata_additions = {'./idinfo':new_crossref}
+# metadata_additions = {'./idinfo':new_crossref}
 
 # Example of a new distribution information:
 new_distrib = """
@@ -142,7 +142,7 @@ new_distrib = """
 		</cntinfo>
 	</distrib>
     """
-metadata_replacements = {'./distinfo':new_distrib}
+# metadata_replacements = {'./distinfo':new_distrib}
 
 """
 Initialize
