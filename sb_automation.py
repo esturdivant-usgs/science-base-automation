@@ -102,7 +102,6 @@ if update_subpages:
 			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
 			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
 			subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
-			# subpage = inherit_SBfields(sb, subpage, subparent_inherits, verbose=verbose, inherit_void=True)
 			if 'previewImage' in subparent_inherits and "imagefile" in locals():
 				subpage = sb.upload_file_to_item(subpage, imagefile)
 			# store values in dictionaries
@@ -205,9 +204,6 @@ for root, dirs, files in os.walk(parentdir):
 				except e:
 					print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
 				# sb.upload_files_and_upsert_item(data_item, [xml_file])
-			# Pass parent fields on to child
-			#FIXME: looks like webLinks is not wiped when parent is blank when update_subpages=False
-			# data_item = inherit_SBfields(sb, data_item, data_inherits, verbose=verbose, inherit_void=True)
 			if 'previewImage' in data_inherits and "imagefile" in locals():
 				data_item = sb.upload_file_to_item(data_item, imagefile)
 			if verbose:
