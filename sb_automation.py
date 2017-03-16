@@ -235,4 +235,12 @@ with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
 with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
 	pickle.dump(dict_PARtoCHILDS, f)
 
-print('All done! View the result at {}'.format(landing_link))
+#%% QA/QC
+if quality_check_pages:
+	qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
+	print('Checking that each page has: \n{}'.format(qcfields_dict))
+	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
+
+
+now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+print('\n{}\nAll done! View the result at {}'.format(now_str, landing_link))

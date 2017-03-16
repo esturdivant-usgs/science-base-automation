@@ -31,19 +31,19 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
-# landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
+# landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
+landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
 #landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
-# parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
+parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/F78P5XNK" #GOM
-# dr_doi = "10.5066/F74X55X7" #SE Atlantic
+dr_doi = "10.5066/F74X55X7" #SE Atlantic
 
 # useremail = raw_input('ScienceBase username (should be entire USGS email): ')
 # landing_id = raw_input('ScienceBase ID of landing page (58055db4e4b0824b2d1c1ee2): ')
@@ -76,6 +76,8 @@ data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 # Default: [].
 landing_fields_from_xml = []
 
+qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
+
 #-------------------------------------------------------------------------------
 # Time-saving options
 #-------------------------------------------------------------------------------
@@ -85,11 +87,13 @@ update_XML      = False # False to save time if XML already has the most up-to-d
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 verbose         = True
 update_extent   = True
+quality_check_pages      = True # False to save time if you feel good/want to keep it simple
 
 # Default False:
 add_preview_image_to_all = False # True to put the first image file encountered in a directory on its corresponding page
 update_landing_page      = False # True if values on the landing page should be updated from XML file in the parent directory
 replace_subpages         = False # True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
+
 
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes

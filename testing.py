@@ -31,29 +31,16 @@ sys.path.append(sb_auto_dir) # Add the script location to the system path just t
 from autoSB import *
 from config_autoSB import *
 
+
+if quality_check_pages:
+	qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
+	print('Checking that each page has: \n{}'.format(qcfields_dict))
+	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
+
+
 landing_item = sb.get_item(landing_id)
-child_id = '582ca4b7e4b04d580bd3790b'
+child_id = '58b89028e4b01ccd5500c263'
 child_item = sb.get_item(child_id)
-
-inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=True)
-
-def qc_pages(sb, top_id, qcfields, deficient_pages=[], verbose=False):
-	# Given an SB ID, pass on selected fields to all descendants; doesn't look for parents
-	for cid in sb.get_child_ids(top_id):
-		citem = sb.get_item(cid)
-		deficient = qc(sb, citem, qcfields, verbose)
-		deficient_pages.append(deficient)
-		try:
-			deficient_pages = qc_pages(sb, cid, qcfields, deficient_pages, verbose)
-		except Exception as e:
-			print("EXCEPTION: {}".format(e))
-	return deficient_pages
-
-
-qcfields = ['citation', 'contacts', 'body', 'relatedItems', 'facets']
-pagelist = qc_pages(sb, landing_id, qcfields, verbose=True)
-
-
 
 # Revise the XML, except for the values created by SB
 # Recursively list all XML files in parentdir

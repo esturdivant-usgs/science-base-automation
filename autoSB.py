@@ -28,7 +28,8 @@ __all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fi
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
 		   'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
 		   'delete_all_children', 'remove_all_child_pages',
-		   'landing_page_from_parentdir', 'universal_inherit', 'inherit_topdown',
+		   'check_fields', 'check_fields2', 'check_fields3', 'check_fields2_topdown',
+		   'landing_page_from_parentdir', 'inherit_topdown',
 		   'apply_topdown',
 		   'apply_bottomup']
 
@@ -753,12 +754,11 @@ def landing_page_from_parentdir(parentdir, parent_xml, previewImage, new_values)
 			print("Exception while trying to upload file {}: {}".format(imagefile, e))
 	return landing_item, imagefile
 
-def qc(sb, item, qcfields, verbose=False):
+def check_fields(sb, item, qcfields, verbose=False):
 	cnt = 0
 	for field in qcfields:
 		if not field in item.keys():
 			cnt += 1
-			pagelist.append(item['id'])
 			print("MISSING: field '{}' in page '{}'.".format(field, item['title']))
 	if not cnt:
 		if verbose:
@@ -767,14 +767,49 @@ def qc(sb, item, qcfields, verbose=False):
 	else:
 		return item['id']
 
-def qc_pages(sb, top_id, qcfields, deficient_pages=[], verbose=False):
+def check_fields2(sb, item, qcfieldsdict, verbose=False):
+	# Checks for fields in page as specified by qcfieldsdict
+	page = item['title']
+	print("\nEvaluating '{}'".format(page))
+	for f, num in qcfieldsdict.iteritems():
+		if not num:
+			if f in item.keys(): # field should not be present
+				print("PRESENT: field '{}'".format(f))
+			else:
+				if verbose:
+					print("...good! field '{}' not in page '{}'.".format(f, page))
+		else: # field should be present
+			if not f in item.keys():
+				print("MISSING: field '{}'".format(f, ))
+			elif not num == len(item[f]):
+				print("NOT QUITE: field '{}' has {} entries.".format(f, len(item[f])))
+			else:
+				if verbose:
+					print("'{}' looks good.".format(page))
+				return
+	else:
+		return item['id']
+
+def check_fields3(sb, item, qcfields, verbose=False):
+	page = item['title']
+	print("\nEvaluating '{}'".format(page))
+	error = 0
+	for f in qcfields:
+		if not f in item.keys():
+			error += 1
+			print("{}: 0".format(f, page))
+		else:
+			print("{}: {}".format(f, len(item[f])))
+	return item['id']
+
+def check_fields2_topdown(sb, top_id, qcfields, deficient_pages=[], verbose=False):
 	# Given an SB ID, pass on selected fields to all descendants; doesn't look for parents
 	for cid in sb.get_child_ids(top_id):
 		citem = sb.get_item(cid)
-		deficient = qc(sb, citem, qcfields, verbose)
+		deficient = check_fields2(sb, citem, qcfields, verbose)
 		deficient_pages.append(deficient)
 		try:
-			deficient_pages = qc_pages(sb, cid, qcfields, deficient_pages, verbose)
+			deficient_pages = check_fields2_topdown(sb, cid, qcfields, deficient_pages, verbose)
 		except Exception as e:
 			print("EXCEPTION: {}".format(e))
 	return deficient_pages
