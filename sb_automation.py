@@ -216,7 +216,7 @@ for root, dirs, files in os.walk(parentdir):
 
 #%% Pass down fields from parents to children
 print("\nPassing down fields from parents to children...")
-inherit_topdown(sb, top_id, subparent_inherits, data_inherits, verbose=verbose, inherit_void=True)
+inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)
 
 #%% BOUNDING BOX
 if update_extent:

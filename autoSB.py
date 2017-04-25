@@ -17,7 +17,8 @@ import json
 import pickle
 import datetime
 
-__all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
+__all__ = ['trunc',
+		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
@@ -40,6 +41,10 @@ __all__ = ['get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fi
 # Work with XML
 #
 ###################################################
+def trunc(string, length=40):
+	string = (string[:length-3] + '...') if len(string) > length else string
+	return(string)
+
 def get_title_from_data(xml_file, metadata_root=False):
 	try:
 		if not metadata_root:
@@ -408,13 +413,13 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False
 	# If field is entered incorrecly, no errors will be thrown, but the page will not be updated.
 	parent_item = flexibly_get_item(sb, child_item['parentId'])
 	if verbose:
-		print("Inheriting fields from parent '{}...'".format(parent_item['title'][:40]))
+		print("Inheriting fields from parent '{}'".format(trunc(parent_item['title'])))
 	for field in inheritedfields:
 		if not field in parent_item:
 			if inherit_void:
 				child_item[field] = None
 			else:
-				print("Field '{}' does not exist in parent and inherit_void is set to False so the current value will be preserved in child '{}...'.".format(field, child_item['title'][:50]))
+				print("Field '{}' does not exist in parent and inherit_void is set to False so the current value will be preserved in child '{}'.".format(field, trunc(child_item['title'])))
 		else:
 			try:
 				child_item[field] = parent_item[field]
@@ -430,7 +435,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item = sb.get_item(child_id)
 		if child_item['title'] == child_title:
 			if verbose:
-				print("FOUND: page '{}...'.".format(child_title))
+				print("FOUND: page '{}'.".format(trunc(child_title)))
 			break
 	else: # If child doesn't already exist, create
 		child_item = {}
@@ -438,7 +443,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item['title'] = child_title
 		child_item = sb.create_item(child_item)
 		if verbose:
-			print("Creating page '{}...' because it was not found in page {}.".format(child_title[:50], parentid))
+			print("Creating page '{}' because it was not found in page {}.".format(trunc(child_title, 40), parentid))
 	return child_item
 
 def upload_data(sb, item, xml_file, replace=True, verbose=False):

@@ -30,13 +30,12 @@ sb_auto_dir = '/Users/esturdivant/GitHub/science-base-automation'
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure
 from autoSB import *
 from config_autoSB import *
-
+from Tkinter import *
 
 if quality_check_pages:
 	qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
 	print('Checking that each page has: \n{}'.format(qcfields_dict))
 	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
-
 
 landing_item = sb.get_item(landing_id)
 child_id = '58b89028e4b01ccd5500c263'
@@ -48,3 +47,38 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+
+
+"""
+Tkinter learning
+"""
+# Button widget with counter
+counter = 0
+def counter_label(label):
+  def count():
+    global counter
+    counter += 1
+    label.config(text=str(counter))
+    label.after(1000, count)
+  count()
+
+root = Tk() # Tk root widget initializes Tkinter. Appears as window with title bar after calling root.mainloop()
+root.title("Counting Seconds")
+label = Label(root, fg="green")
+label.pack()
+counter_label(label)
+button = Button(root, text='Stop', width=25, command=root.destroy)
+button.pack()
+
+# Entry widget
+master = Tk()
+Label(master, text="First Name").grid(row=0)
+Label(master, text="Last Name").grid(row=1)
+
+e1 = Entry(master)
+e2 = Entry(master)
+
+e1.grid(row=0, column=1)
+e2.grid(row=1, column=1)
+
+mainloop( )
