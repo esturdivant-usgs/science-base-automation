@@ -31,19 +31,16 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-# landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
-landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
+landing_link = "https://www.sciencebase.gov/catalog/item/59a05400e4b038630d030442" # real page - GOM
 #landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
-parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
+parentdir = r'/Users/emilysturdivant/Documents/USGS/BlackBeach_data_pub/data_release_revisedAugust' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-dr_doi = "10.5066/F78P5XNK" #GOM
-dr_doi = "10.5066/F74X55X7" #SE Atlantic
+dr_doi = "10.5066/F7KW5F04" #GOM
 
 # useremail = raw_input('ScienceBase username (should be entire USGS email): ')
 # landing_id = raw_input('ScienceBase ID of landing page (58055db4e4b0824b2d1c1ee2): ')
@@ -57,7 +54,9 @@ pubdate = '2017'
 #edition = '1.0'
 
 # Image file (with path) to be used as preview image. If commented out, the preview image will be ignored.
-#previewImage = r'/Users/esturdivant/Desktop/SE_ATLANTIC/NASCP_SEAtlantic.png'
+# File name of browse graphic; assumes that it is within parentdir
+previewImage = 'bb20160318_parentpage_browse.png'
+previewImage = os.path.join(parentdir, previewImage)
 
 #-------------------------------------------------------------------------------
 #   OPTIONAL - ScienceBase page inheritance
@@ -65,7 +64,7 @@ pubdate = '2017'
 # SB fields that will be copied (inherited) from landing page to sub-pages (subparents), which are different from data pages.
 # Recommended: citation, contacts, body (='abstract' in XML; 'summary' in SB), purpose, webLinks
 # relatedItems = Associated items
-subparent_inherits = ['citation', 'contacts', 'body', 'purpose', 'webLinks', 'relatedItems']
+subparent_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems'] #'purpose', 
 
 # SB fields that data pages inherit from their parent page. All other fields will be automatically populated from the XML.
 # Recommended: citation, body, webLinks
