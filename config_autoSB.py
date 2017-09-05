@@ -33,13 +33,14 @@ useremail = 'esturdivant@usgs.gov'
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 # landing_link = "https://www.sciencebase.gov/catalog/item/58055db4e4b0824b2d1c1ee2" # real page - GOM
 landing_link = "https://www.sciencebase.gov/catalog/item/58055f50e4b0824b2d1c1ee7" # real page - SE Atlantic
-#landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
+landing_link = "https://www.sciencebase.gov/catalog/item/59021ed1e4b0c2e071a99cac" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Users/esturdivant/Desktop/GOM_final' # OSX
 parentdir = r'/Users/esturdivant/Desktop/SEATL_final' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
+parentdir = r'/Users/esturdivant/Desktop/GOM_test' # testing directory
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/F78P5XNK" #GOM
