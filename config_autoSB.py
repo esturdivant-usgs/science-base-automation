@@ -38,6 +38,7 @@ landing_link = "https://www.sciencebase.gov/catalog/item/59a05400e4b038630d03044
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Users/emilysturdivant/Documents/USGS/BlackBeach_data_pub/data_release_revisedAugust' # OSX
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
+parentdir = r'/Users/esturdivant/Desktop/GOM_test' # testing directory
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/F7KW5F04" #GOM
@@ -64,7 +65,7 @@ previewImage = os.path.join(parentdir, previewImage)
 # SB fields that will be copied (inherited) from landing page to sub-pages (subparents), which are different from data pages.
 # Recommended: citation, contacts, body (='abstract' in XML; 'summary' in SB), purpose, webLinks
 # relatedItems = Associated items
-subparent_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems'] #'purpose', 
+subparent_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems'] #'purpose',
 
 # SB fields that data pages inherit from their parent page. All other fields will be automatically populated from the XML.
 # Recommended: citation, body, webLinks
