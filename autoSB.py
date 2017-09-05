@@ -455,6 +455,7 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 		item = remove_all_files(sb, item, verbose)
 	# List all files matching XML
 	dataname = xml_file.split('.')[0]
+	dataname = dataname.split('_meta')[0]
 	searchstr = dataname + '.*'
 	up_files = glob.glob(searchstr)
 	# Upload all files pertaining to data to child page
@@ -553,14 +554,14 @@ def set_parent_extent(sb, top_id, verbose=False):
 def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=False, verbose=False):
 	# Upload all image files to their respective pages.
 	# 1. find all image files in folder tree
-	# 2. for each image, try to upload it to it
+	# 2. for each image, try to upload it
 	for (root, dirs, files) in os.walk(parentdir):
 		for d in dirs:
 			imagelist = glob.glob(os.path.join(root,d,'*.png'))
 			imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
 			imagelist.extend(glob.glob(os.path.join(root,d,'*.gif')))
 			for f in imagelist:
-				sb = log_in(useremail)
+				# sb = log_in(useremail)
 				try:
 					item = sb.get_item(dict_DIRtoID[d])
 				except:

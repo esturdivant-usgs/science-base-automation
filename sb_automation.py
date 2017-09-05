@@ -26,8 +26,10 @@ import json
 import pickle
 import datetime
 import sys
-sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
-#sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
+try:
+	sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
+except:
+	sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import *
@@ -185,6 +187,13 @@ for root, dirs, files in os.walk(parentdir):
 			# Create (or find) new data page based on title in XML
 			data_title = get_title_from_data(xml_file) # get title from XML
 			data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+			# if page_per_filename:
+			# 	# Create (or find) new data page based on title in XML
+			# 	data_title = get_title_from_data(xml_file) # get title from XML
+			# 	data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+			# else:
+			# 	data_id = landing_id # parent of 'parentid'
+			# 	data_item = find_or_create_child(sb, data_id, d, verbose=verbose)
 			try: #FIXME: add this to a function in a more generalized way?
 				data_item["dates"][0]["dateString"]= new_values['pubdate']
 				#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
