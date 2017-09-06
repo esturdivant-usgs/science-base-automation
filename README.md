@@ -96,7 +96,7 @@ __In your Python IDE of choice:__ Open the script and run it line by line or how
 - Loops through the XML files to create or find a data page. For each XML file (excluding the landing page XML), it:
 	- creates (or finds) a data page, 
 	- revises the XML to: include DOI and URLs for the landing page, data page, and direct data download; replaces any instance of 'http:' with 'https:'; adds a new element (such as new cross reference) to the XML
-	- uploads the shapefile files to the new page, 
+	- uploads files matching the XML filename to the new page, except those greater than an indicated maximum file size.
 	- copies fields from the parent page to the data page as indicated in the input parameters.
 
 - Sets bounding box coordinates for parents based on the spatial extent of the data in their child pages. 
