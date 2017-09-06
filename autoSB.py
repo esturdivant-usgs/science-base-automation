@@ -23,7 +23,7 @@ __all__ = ['trunc',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
-		   'upload_data', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
+		   'upload_data', 'upload_files_matching_xml', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
@@ -252,7 +252,7 @@ def map_newvals2xml(new_values):
 		page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
 		directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
 		# add values
-		val2xml[directdownload_link] = {citelink:2, networkr:1}
+		val2xml[directdownload_link] = {networkr:1}
 		val2xml[page_url] = {citelink: 1, networkr: 1}
 	# Edition
 	if 'edition' in new_values.keys():
@@ -464,6 +464,31 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
 	return item
 
+def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
+	# Upload all files matching the XML filename to SB page.
+	# E.g. xml_file = 'path/data_name.ext.xml' will upload all files beginning with 'data_name'
+	# optionally remove all present files
+	if replace:
+		# Remove all files (and facets) from child page
+		item = remove_all_files(sb, item, verbose)
+	# List all files matching XML
+	dataname = xml_file.split('.')[0]
+	dataname = dataname.split('_meta')[0]
+	searchstr = dataname + '*'
+	up_files = glob.glob(searchstr)
+	bigfiles = []
+	for f in up_files:
+		if os.path.getsize(f) > max_MBsize*1000000: # megabyte = byte/1000000
+			bigfiles.append(os.path.basename(f))
+			up_files.remove(f)
+	# Upload all files pertaining to data to child page
+	if verbose:
+		print("UPLOADING: files matching '{}'".format(os.path.basename(searchstr)))
+		if len(bigfiles)>0:
+			print("**TO DO** File {} is to big to upload here. Please manually upload afterward.".format(bigfiles))
+	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
+	return item, bigfiles
+
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 	# Upload shapefile files to SB page, optionally remove all present files
 	data_name = os.path.splitext(os.path.split(xml_file)[1])[0]
@@ -486,13 +511,14 @@ def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 	return item
 
 def get_parent_bounds(sb, parent_id, verbose=False):
+	# UPDATED 9/6/17: added "and i < len(kids)", changed 1 to i in second loop, and added "if not parent_bounds: parent_bounds = bbox"
 	item = sb.get_item(parent_id)
 	kids = sb.get_child_ids(parent_id)
 	if len(kids) > 0:
 		# Initialize parent_bounds with first child
 		i = 0
 		found = False
-		while not found:
+		while not found and i < len(kids): # stop when bounding box is found in item or when there are no item left to search
 			try:
 				child = sb.get_item(kids[i])
 			except:
@@ -507,9 +533,9 @@ def get_parent_bounds(sb, parent_id, verbose=False):
 			else:
 				i += 1
 				print("Child item '{}'' does not have 'spatial' or 'facets' fields.".format(child['title']))
-		if len(kids) > 1:
+		if len(kids) > i:
 			# Loop through kids
-			for cid in kids[1:]:
+			for cid in kids[i:]:
 				child = sb.get_item(cid)
 				if 'facets' in child:
 					bbox = child['facets'][0]['boundingBox'] # {u'minX': -81.43, u'minY': 28.374, u'maxX': -80.51, u'maxY': 30.70}
@@ -517,20 +543,26 @@ def get_parent_bounds(sb, parent_id, verbose=False):
 					bbox = child['spatial']['boundingBox']
 				else:
 					continue
+				if not parent_bounds: # if the first step didn't find a parent, set parent_bounds to current
+					parent_bounds = bbox
 				for corner in parent_bounds:
 					if 'min' in corner:
 						parent_bounds[corner] = min(bbox[corner], parent_bounds[corner])
 					if 'max' in corner:
 						parent_bounds[corner] = max(bbox[corner], parent_bounds[corner])
 		# Update parent bounding box
-		try:
-			item['spatial']['boundingBox'] = parent_bounds
-		except KeyError:
-			item['spatial'] = {}
-			item['spatial']['boundingBox'] = parent_bounds
-		item = sb.updateSbItem(item)
-		if verbose:
-			print('Updated bounding box for parent "{}"'.format(item['title']))
+		if 'parent_bounds' in locals():
+			try:
+				item['spatial']['boundingBox'] = parent_bounds
+			except KeyError:
+				if parent_bounds:
+					item['spatial'] = {}
+					item['spatial']['boundingBox'] = parent_bounds
+			item = sb.updateSbItem(item)
+			if verbose:
+				print('Updated bounding box for parent "{}"'.format(item['title']))
+		else:
+			parent_bounds = {}
 		return parent_bounds
 
 def get_idlist_bottomup(sb, top_id):
@@ -557,9 +589,12 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
 	# 2. for each image, try to upload it
 	for (root, dirs, files) in os.walk(parentdir):
 		for d in dirs:
-			imagelist = glob.glob(os.path.join(root,d,'*.png'))
-			imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
-			imagelist.extend(glob.glob(os.path.join(root,d,'*.gif')))
+			imagelist = glob.glob(os.path.join(root,d,'browse*.png'))
+			imagelist.extend(glob.glob(os.path.join(root,d,'browse*.jpg')))
+			imagelist.extend(glob.glob(os.path.join(root,d,'browse*.gif')))
+			# imagelist = glob.glob(os.path.join(root,d,'*.png'))
+			# imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
+			# imagelist.extend(glob.glob(os.path.join(root,d,'*.gif')))
 			for f in imagelist:
 				# sb = log_in(useremail)
 				try:

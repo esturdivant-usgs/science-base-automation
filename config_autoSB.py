@@ -32,12 +32,12 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
-# landing_link = "https://www.sciencebase.gov/catalog/item/59a05400e4b038630d030442"
+landing_link = "https://www.sciencebase.gov/catalog/item/59a05400e4b038630d030442"
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Users/emilysturdivant/Documents/USGS/BlackBeach_data_pub/data_release_revisedAugust' # OSX Laptop
-parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_4upload_1' # OSX Desktop
+parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_4upload_3' # OSX Desktop
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -76,18 +76,19 @@ data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 # Default: [].
 landing_fields_from_xml = []
 
-qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
+qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 
 #-------------------------------------------------------------------------------
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if  SB pages already exist
+update_subpages = False # False to save time if  SB pages already exist
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
+max_MBsize = 200
 verbose         = True
-update_extent   = True
-quality_check_pages      = True # False to save time if you feel good/want to keep it simple
+update_extent   = False
+quality_check_pages      = False # False to save time if you feel good/want to keep it simple
 # page_per_filename   = False
 
 # Default False:
@@ -103,7 +104,7 @@ replace_subpages         = False # True to delete all child pages before running
 # Appending will not remove any elements.
 
 # Find and replace values in XML
-find_and_replace = {'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+find_and_replace = {#'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
                 'https:': 'http:',
                 'doi.org': 'dx.doi.org'}
 

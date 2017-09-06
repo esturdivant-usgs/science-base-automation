@@ -95,22 +95,31 @@ if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json
 	update_subpages = True
 if update_subpages:
 	# Initialize dictionaries that will store relationships: directories/file:ID, ID:JSON item, parentID:childIDs
+	# org_map = {'DIRtoID': {os.path.basename(parentdir): landing_id}, # Initialize top dir/file:ID entry to dict
+	# 			'IDtoJSON': {landing_id: landing_item}, # Initialize with landing page
+	# 			'PARtoCHILDS': {}}
 	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
 	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
 	dict_PARtoCHILDS = {} # Initialize empty parentID:childIDs dictionary
 	# Create sub-parent container pages. If pages already exist, they will not be recreated.
 	for (root, dirs, files) in os.walk(parentdir):
 		for dirname in dirs:
+			# parent_id = org_map['DIRtoID'][os.path.basename(root)] # get ID for parent
 			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
 			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
 			subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
 			if 'previewImage' in subparent_inherits and "imagefile" in locals():
 				subpage = sb.upload_file_to_item(subpage, imagefile)
 			# store values in dictionaries
+			# org_map['DIRtoID'][dirname] = subpage['id']
+			# org_map['IDtoJSON'][subpage['id']] = subpage
+			# org_map['PARtoCHILDS'].setdefault(parent_id, set()).add(subpage['id'])
 			dict_DIRtoID[dirname] = subpage['id']
 			dict_IDtoJSON[subpage['id']] = subpage
 			dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
 	# Save dictionaries
+	# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
+	# 	json.dump(org_map, f)
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
 		json.dump(dict_DIRtoID, f)
 	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
@@ -118,6 +127,8 @@ if update_subpages:
 	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
 		pickle.dump(dict_PARtoCHILDS, f)
 else: # Import pre-created dictionaries if all SB pages exist
+	# with open(os.path.join(parentdir,'org_map.json'), 'r') as f:
+	# 	org_map = json.load(f)
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
 	with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
@@ -143,6 +154,9 @@ if not sb.is_logged_in():
 
 if verbose:
 	print('Checking for directory: ID dictionary...')
+# if not "org_map" in locals():
+# 	with open(os.path.join(parentdir,'org_map.json'), 'r') as f:
+# 		org_map = json.load(f)
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
@@ -182,6 +196,7 @@ for root, dirs, files in os.walk(parentdir):
 				except NameError:
 					sb = pysb.SbSession(env=None).loginc(useremail)
 			# 1. GET VALUES
+			# parentid = org_map['DIRtoID'][d]
 			parentid = dict_DIRtoID[d]
 			new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
 			# Create (or find) new data page based on title in XML
@@ -206,7 +221,13 @@ for root, dirs, files in os.walk(parentdir):
 				update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 			# Upload to ScienceBase
 			if update_data: # Upload all files in dir that match basename of XML file
-				data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
+				# data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
+				data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
+				if bigfiles1:
+					if not 'bigfiles' in locals():
+						bigfiles = []
+					else:
+						bigfiles += bigfiles1
 			elif update_XML: # If XML was updated, but data was not uploaded, replace only XML.
 				try:
 					sb.replace_file(xml_file, data_item)
@@ -219,6 +240,9 @@ for root, dirs, files in os.walk(parentdir):
 				now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
 				print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
 			# store values in dictionaries
+			# org_map['DIRtoID'][xml_file] = data_item['id']
+			# org_map['IDtoJSON'][data_item['id']] = data_item
+			# org_map['PARtoCHILDS'].setdefault(parentid, set()).add(data_item['id'])
 			dict_DIRtoID[xml_file] = data_item['id']
 			dict_IDtoJSON[data_item['id']] = data_item
 			dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
@@ -234,9 +258,12 @@ if update_extent:
 
 # Preview Image
 if add_preview_image_to_all:
+	# org_map['IDtoJSON'] = upload_all_previewImages(sb, parentdir, org_map['DIRtoID'], org_map['IDtoJSON'])
 	dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
 
 # Save dictionaries
+# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
+# 	json.dump(org_map, f)
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
 	json.dump(dict_DIRtoID, f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
@@ -253,3 +280,6 @@ if quality_check_pages:
 
 now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
 print('\n{}\nAll done! View the result at {}'.format(now_str, landing_link))
+if 'bigfiles' in locals():
+	if len(bigfiles) > 0:
+		print("These files were too large to upload so you'll need to use the large file uploader: {}".format(bigfiles))
