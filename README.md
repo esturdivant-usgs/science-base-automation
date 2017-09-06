@@ -16,10 +16,10 @@ PYSB, SB python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/br
 ### Limitations
 (besides soon-to-be-discovered bugs)
 
-- It only uploads shapefile (including dbf) and XML files. This will be easy to modify; it just hasn’t been done yet. 
 - The metadata population routine is hard-coded to a specific metadata template, which should match the structure created by TKME.
 - The bounding box routine is not consistently successful. - You may want to comment it out.
 - The script overwrites XML files without creating an archive. 
+- It does not change the XML files within zipped files nor recreate the zip file with the updated XML. You will need to do this afterward to make sure that the XML is in the zip file is updated.
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release. 
