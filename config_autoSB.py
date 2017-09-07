@@ -92,7 +92,7 @@ quality_check_pages      = False # False to save time if you feel good/want to k
 # page_per_filename   = False
 
 # Default False:
-add_preview_image_to_all = True # True to put first image file encountered in a directory on its corresponding page
+add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
 update_landing_page      = False # True if values on the landing page should be updated from XML file in the parent directory
 replace_subpages         = False # True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
 

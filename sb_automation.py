@@ -27,15 +27,16 @@ import pickle
 import datetime
 import sys
 try:
-	sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
+    sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
 except:
-	sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
+    sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import *
 
-"""
+
 #%% Initialize SB session
+"""
 sb = log_in(useremail)
 """
 # get JSON item for parent page
@@ -54,6 +55,7 @@ if "metadata_replacements" in locals():
 if "remove_fills" in locals():
 	new_values['remove_fills'] = remove_fills
 
+#%% Work with landing page and XML
 """
 Work with landing page and XML
 """
@@ -78,6 +80,7 @@ if update_landing_page: #this block is not necessary; remove from simplified ver
 	# Check for metadata and image files in landing directory
 	landing_item = update_landing_page(parentdir, parent_xml, imagefile, new_values)
 
+#%% Create SB page structure
 """
 Create SB page structure: nested child pages following directory hierarchy
 Inputs: parent directory, landing page ID
@@ -89,7 +92,7 @@ if not sb.is_logged_in():
 		sb = pysb.SbSession(env=None).login(useremail,password)
 	except NameError:
 		sb = pysb.SbSession(env=None).loginc(useremail)
-
+#%%
 if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json.json')):
 	print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
 	update_subpages = True
@@ -136,7 +139,7 @@ else: # Import pre-created dictionaries if all SB pages exist
 	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
 		dict_PARtoCHILDS = pickle.load(f)
 
-
+#%% Create and populate data pages
 """
 Create and populate data pages
 Inputs: parent directory, landing page ID, dictionary of new values (new_values)
@@ -179,7 +182,8 @@ xml_cnt = len(xmllist)
 # 	tree.write(xml_file)
 # 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
 # 	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
-
+                        
+#%%
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
 	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')

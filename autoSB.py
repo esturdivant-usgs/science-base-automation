@@ -487,6 +487,8 @@ def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True,
 		if len(bigfiles)>0:
 			print("**TO DO** File {} is to big to upload here. Please manually upload afterward.".format(bigfiles))
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
+	if verbose:
+		print("UPLOAD COMPLETED.".format(os.path.basename(searchstr)))
 	return item, bigfiles
 
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
