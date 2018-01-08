@@ -214,13 +214,13 @@ def xml_write_wrapper(in_metadata, new_elem, containertag='./distinfo'):
 
 def map_newvals2xml(new_values):
 	# Create dictionary of {new value: {XPath to element: position of element in list retrieved by XPath}}
-	# """
-	# To update XML elements with new text:
-	# 	for newval, elemfind in val2xml.items():
-	# 		for elempath, i in elemfind.items():
-	# 			metadata_root.findall(elempath)[i].text = newval
-	# Currently hard-wired; will need to be adapted to match metadata scheme.
-	# """
+	"""
+	To update XML elements with new text:
+		for newval, elemfind in val2xml.items():
+			for elempath, i in elemfind.items():
+				metadata_root.findall(elempath)[i].text = newval
+	Currently hard-wired; will need to be adapted to match metadata scheme.
+	"""
 	# Hard-wire path in metadata to each element
 	seriesid = './idinfo/citation/citeinfo/serinfo/issue' # Citation / Series / Issue Identification
 	citelink = './idinfo/citation/citeinfo/onlink' # Citation / Online Linkage
@@ -396,7 +396,7 @@ def flexibly_get_item(sb, mystery_id, output='item'):
 	elif type(mystery_id) is dict: # If input is JSON...
 		item = mystery_id
 		item_id = item['id']
-	
+	# Return ID, URL, or JSON item (default)
 	if output.lower() == 'id':
 		return item_id
 	elif output.lower() == 'url':

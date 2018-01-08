@@ -99,17 +99,21 @@ replace_subpages         = False # True to delete all child pages before running
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes
 # ------------------------------------------------------------------------------
-# Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element.
-# Appending will not remove any elements.
+# To change the "Suggested citation" in the Other Citation Information, choose one of two options: either use the find_and_replace variable or the new_othercit variable, see below.
 
-# Find and replace values in XML
-# find_and_replace = {#'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
-#                 'https:': 'http:',
-#                 'doi.org': 'dx.doi.org'}
+# FIND AND REPLACE. {key='desired value': value=['list of','values','to replace']}
+find_and_replace = {
+'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/xxx', 'https://doi.org/10.5066/xxxx', 'https://doi.org/10.5066/xxxxx', 'https://doi.org/xxx'],
+# 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+# 'https:': 'http:',
+'doi.org': 'dx.doi.org'
+}
 
-# If an element needs to be removed. This will occur before additions or replacements
+# REMOVE ELEMENT. If an element needs to be removed, this will occur before additions or replacements
 # remove_fills = {'./idinfo/crossref':['AUTHOR', 'doi.org/10.3133/ofr20171015']}
 
+# APPEND ELEMENT.
+# Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element. Appending will not remove any elements.
 # Example of a new cross reference:
 # new_crossref = """
 #     <crossref><citeinfo>
@@ -127,6 +131,12 @@ replace_subpages         = False # True to delete all child pages before running
 #     </citeinfo></crossref>
 #     """
 # metadata_additions = {'./idinfo':new_crossref}
+
+# REPLACE ELEMENT. Replace suggested citation:
+# new_othercit = """<othercit>
+#                 Suggested citation: Lastname, F.M., {}, Title: U.S. Geological Survey data release, https://doi.org/{}.
+#                 </othercit>""".format(pubdate, dr_doi)
+# metadata_replacements = {'./idinfo/citation/citeinfo':new_othercit}
 
 # Example of a new distribution information:
 # new_distrib = """
