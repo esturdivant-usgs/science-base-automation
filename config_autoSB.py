@@ -83,7 +83,6 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 update_subpages = True # False to save time if  SB pages already exist
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
-
 update_extent   = True
 quality_check_pages      = True # False to save time if you feel good/want to keep it simple
 verbose         = True

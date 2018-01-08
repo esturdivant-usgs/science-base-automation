@@ -53,7 +53,7 @@ def get_title_from_data(xml_file, metadata_root=False):
 		title = metadata_root.findall('./idinfo/citation/citeinfo/title')[0].text # Get title of child from XML
 		return title
 	except Exception as e:
-		print >> sys.stderr, "Exception while trying to parse XML file ({}): {}".format(xml_file, e)
+		print("Exception while trying to parse XML file ({}): {}".format(xml_file, e), file=sys.stderr)
 		return False
 
 def get_root_flexibly(in_metadata):
@@ -66,10 +66,10 @@ def get_root_flexibly(in_metadata):
 		try:
 			tree = etree.parse(xml_file) # parse metadata using etree
 		except etree.XMLSyntaxError as e:
-			print "XML Syntax Error while trying to parse XML file: {}".format(e)
+			print("XML Syntax Error while trying to parse XML file: {}".format(e))
 			return False
 		except Exception as e:
-			print "Exception while trying to parse XML file: {}".format(e)
+			print("Exception while trying to parse XML file: {}".format(e))
 			return False
 		metadata_root=tree.getroot()
 	else:
@@ -390,12 +390,13 @@ def log_in(username=False, password=False):
 
 def flexibly_get_item(sb, mystery_id, output='item'):
 	# Given input of either ID or JSON, return ID, link, and JSON item
-	if type(mystery_id) is str or type(mystery_id) is unicode:
+	if type(mystery_id) is str: # If input is ID...
 		item_id = mystery_id
 		item = sb.get_item(item_id)
-	elif type(mystery_id) is dict:
+	elif type(mystery_id) is dict: # If input is JSON...
 		item = mystery_id
 		item_id = item['id']
+	
 	if output.lower() == 'id':
 		return item_id
 	elif output.lower() == 'url':
