@@ -32,13 +32,11 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
-landing_link = "https://www.sciencebase.gov/catalog/item/59a05400e4b038630d030442"
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Users/emilysturdivant/Documents/USGS/BlackBeach_data_pub/data_release_revisedAugust' # OSX Laptop
-parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_4upload_3' # OSX Desktop
-#parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS
+parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept' # OSX format
+#parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/F7KW5F04"
@@ -82,14 +80,16 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = False # False to save time if  SB pages already exist
+update_subpages = True # False to save time if  SB pages already exist
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
-max_MBsize = 200
+
+update_extent   = True
+quality_check_pages      = True # False to save time if you feel good/want to keep it simple
 verbose         = True
-update_extent   = False
-quality_check_pages      = False # False to save time if you feel good/want to keep it simple
 # page_per_filename   = False
+
+max_MBsize = 0.05 # 2000 mb is the suggested threshold above which to use the large file uploader.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
@@ -104,9 +104,9 @@ replace_subpages         = False # True to delete all child pages before running
 # Appending will not remove any elements.
 
 # Find and replace values in XML
-find_and_replace = {#'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
-                'https:': 'http:',
-                'doi.org': 'dx.doi.org'}
+# find_and_replace = {#'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+#                 'https:': 'http:',
+#                 'doi.org': 'dx.doi.org'}
 
 # If an element needs to be removed. This will occur before additions or replacements
 # remove_fills = {'./idinfo/crossref':['AUTHOR', 'doi.org/10.3133/ofr20171015']}

@@ -23,7 +23,7 @@ __all__ = ['trunc',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
-		   'upload_data', 'upload_files_matching_xml', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
+		   'upload_data','replace_files_by_ext', 'upload_files_matching_xml', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
@@ -231,7 +231,9 @@ def map_newvals2xml(new_values):
 	pubdate = './idinfo/citation/citeinfo/pubdate' # Citation / Publish date
 	caldate = './idinfo/timeperd/timeinfo/sngdate/caldate'
 	networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
+	accinstr = './distinfo/stdorder/digform/digtopt/onlinopt/accinstr'
 	metadate = './metainfo/metd' # Metadata Date
+	browsen = './idinfo/browse/browsen'
 	# Initialize storage dictionary
 	val2xml = {}
 	# DOI values
@@ -245,20 +247,26 @@ def map_newvals2xml(new_values):
 	# Landing URL
 	if 'landing_id' in new_values.keys():
 		landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['landing_id'])
-		val2xml[landing_link] = {lwork_link: 1, networkr: 0}
+		val2xml[landing_link] = {lwork_link: 1}
 	# Data page URL
 	if 'child_id' in new_values.keys():
 		# get URLs
 		page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
 		directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
 		# add values
+		val2xml[page_url] = {citelink: 1, networkr: 0}
 		val2xml[directdownload_link] = {networkr:1}
-		val2xml[page_url] = {citelink: 1, networkr: 1}
+		access_str = 'The first link is to the page containing the data, the second link downloads all data available from the page as a zip file, and the third link is to the publication landing page.'
+		val2xml[access_str] = {accinstr: 0}
+		# Browse graphic
+		if 'browse_file' in new_values.keys():
+			browse_link = '{}/?name={}'.format(directdownload_link, new_values['browse_file'])
+			val2xml[browse_link] = {browsen:0}
 	# Edition
 	if 'edition' in new_values.keys():
 		val2xml[new_values['edition']] = {edition:0}
 	if 'pubdate' in new_values.keys():
-		val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0, caldate:0}
+		val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0} # removed caldate
 	# Date and time of update
 	now_str = datetime.datetime.now().strftime("%Y%m%d")
 	val2xml[now_str] = {metadate: 0}
@@ -291,6 +299,9 @@ def find_and_replace_from_dict(fname, find_dict):
 def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
+	# save original xml_file
+	if not os.path.exists(xml_file+'_orig'):
+		shutil.copy(xml_file, xml_file+'_orig')
 	# Parse metadata
 	metadata_root, tree, xml_file = get_root_flexibly(xml_file)
 	# Work through metadata elements
@@ -464,6 +475,18 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
 	return item
 
+def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
+    for root, dirs, files in os.walk(parentdir):
+        for d in dirs:
+            xmllist = glob.glob(os.path.join(root, d, match_str))
+            for xml_file in xmllist:
+                parentid = dict_DIRtoID[d]
+                data_title = get_title_from_data(xml_file) # get title from XML
+                data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+                sb.replace_file(xml_file, data_item)
+                print("REPLACED: {}".format(os.path.basename(xml_file)))
+    return
+
 def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
 	# Upload all files matching the XML filename to SB page.
 	# E.g. xml_file = 'path/data_name.ext.xml' will upload all files beginning with 'data_name'
@@ -474,11 +497,12 @@ def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True,
 	# List all files matching XML
 	dataname = xml_file.split('.')[0]
 	dataname = dataname.split('_meta')[0]
-	searchstr = dataname + '*'
-	up_files = glob.glob(searchstr)
+	# up_files = glob.glob(searchstr)
+	up_files = [fn for fn in glob.iglob(dataname + '*')
+				if not os.path.endswith('_orig')]
 	bigfiles = []
 	for f in up_files:
-		if os.path.getsize(f) > max_MBsize*1000000: # megabyte = byte/1000000
+		if os.path.getsize(f) > max_MBsize*1000000: # convert megabytes to bytes
 			bigfiles.append(os.path.basename(f))
 			up_files.remove(f)
 	# Upload all files pertaining to data to child page

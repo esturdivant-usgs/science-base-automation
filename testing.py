@@ -35,8 +35,24 @@ from autoSB import *
 from config_autoSB import *
 from Tkinter import *
 
+
+
+#%%
+landing_id
+subparent_inherits
+data_inherits
+inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)
+
+
+#%% Upload all XML files without updating them.
+parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept' # OSX Desktop
+with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+	dict_DIRtoID = json.load(f)
+
+replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml') # only replaces the file if the file is already on the data page.
+
 #%% Temp: upload images.zip
-xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_4upload_3/Field Data (images and reference points)/bb20160318_UAS_images_meta.xml'
+xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept/Field Data (images and reference points)/bb20160318_UAS_images_meta.xml'
 d = 'Field Data (images and reference points)'
 
 if not sb.is_logged_in():
@@ -46,37 +62,17 @@ if not sb.is_logged_in():
 	except NameError:
 		sb = pysb.SbSession(env=None).loginc(useremail)
 
-# get JSON item for parent page
-landing_item = sb.get_item(landing_id)
-#print("CITATION: {}".format(landing_item['citation'])) # print to QC citation
-# make dictionary of ID and URL values to update in XML
-new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
-if 'pubdate' in locals():
-	new_values['pubdate'] = pubdate
-if 'find_and_replace' in locals():
-	new_values['find_and_replace'] = find_and_replace
-if 'metadata_additions' in locals():
-	new_values['metadata_additions'] = metadata_additions
-if "metadata_replacements" in locals():
-	new_values['metadata_replacements'] = metadata_replacements
-if "remove_fills" in locals():
-	new_values['remove_fills'] = remove_fills
-
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 	dict_DIRtoID = json.load(f)
-with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-	dict_IDtoJSON = json.load(f)
-with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
-	dict_PARtoCHILDS = pickle.load(f)
-
 
 parentid = dict_DIRtoID[d]
-new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
 # Create (or find) new data page based on title in XML
 data_title = get_title_from_data(xml_file) # get title from XML
 data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
 # Upload to ScienceBase
 data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=2000, replace=True, verbose=verbose)
+
+
 
 #%% DEM
 
@@ -119,6 +115,80 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+
+#%% Count XML files and modify metadata
+xmllist = []
+for root, dirs, files in os.walk(parentdir):
+	for d in dirs:
+		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+xml_cnt = len(xmllist)
+# for xml_file in xmllist:
+# 	tree = etree.parse(xml_file)
+# 	metadata_root = tree.getroot()
+# 	if "remove_fills" in locals():
+# 		[remove_xml_element(metadata_root, path, ftext) for path, ftext in remove_fills.items()])
+# 	if "metadata_additions" in locals():
+# 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
+# 	if "metadata_replacements" in locals():
+# 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
+# 	tree.write(xml_file)
+# 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
+# 	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
+
+xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept_sb/SfM products (point cloud, orthomosaic, and DEM)/bb20160318_sfm_orthomosaic_meta.xml'
+os.path.basename(os.path.dirname(xml_file))
+cnt = 0
+# for xml_file in xmllist:
+cnt += 1
+if not sb.is_logged_in():
+    print('Logging back in...')
+    try:
+        sb = pysb.SbSession(env=None).login(useremail,password)
+    except NameError:
+        sb = pysb.SbSession(env=None).loginc(useremail)
+d = os.path.basename(os.path.dirname(xml_file))
+parentid = dict_DIRtoID[d]
+new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
+# Create (or find) new data page based on title in XML
+data_title = get_title_from_data(xml_file) # get title from XML
+data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+try:
+    data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+    #data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
+except:
+    pass
+# 2. MAKE UPDATES
+# Update XML
+if update_XML:
+    # Check for Browse graphic
+    dataname = xml_file.split('.')[0]
+    dataname = dataname.split('_meta')[0]
+    browse_file = glob.glob(dataname + '*browse*')[0]
+    if len(browse_file) > 0:
+        new_values['browse_file'] = browse_file
+    # add SB UID to be updated in XML
+    new_values['child_id'] = data_item['id']
+    update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+# Upload to ScienceBase
+if update_data:
+    # Upload all files in dir that match basename of XML file
+    # data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
+    data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
+    if bigfiles1:
+        if not 'bigfiles' in locals():
+            bigfiles = []
+        else:
+            bigfiles += bigfiles1
+elif update_XML:
+    # If XML was updated, but data was not uploaded, replace only XML.
+    try:
+        sb.replace_file(xml_file, data_item) # Does not update SB page to match metadata
+    except e:
+        print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
+    # sb.upload_files_and_upsert_item(data_item, [xml_file])
+if verbose:
+    now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+    print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
 
 
 """
