@@ -27,9 +27,9 @@ import pickle
 import datetime
 import sys
 try:
-    sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
+	sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
 except:
-    sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
+	sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import *
@@ -177,78 +177,76 @@ if verbose:
 	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
 cnt = 0
 for root, dirs, files in os.walk(parentdir):
-    for d in dirs:
-        xmllist = glob.glob(os.path.join(root, d, '*.xml'))
-        for xml_file in xmllist:
-            cnt += 1
-            if not sb.is_logged_in():
-                print('Logging back in...')
-                try:
-                    sb = pysb.SbSession(env=None).login(useremail,password)
-                except NameError:
-                    sb = pysb.SbSession(env=None).loginc(useremail)
-            # 1. GET VALUES
-            # parentid = org_map['DIRtoID'][d]
-            parentid = dict_DIRtoID[d]
-            new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
-            # Create (or find) new data page based on title in XML
-            data_title = get_title_from_data(xml_file) # get title from XML
-            data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
-            # if page_per_filename:
-            # 	# Create (or find) new data page based on title in XML
-            # 	data_title = get_title_from_data(xml_file) # get title from XML
-            # 	data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
-            # else:
-            # 	data_id = landing_id # parent of 'parentid'
-            # 	data_item = find_or_create_child(sb, data_id, d, verbose=verbose)
-            try:
-                data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
-                #data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
-            except:
-                pass
-            # 2. MAKE UPDATES
-            # Update XML
-            if update_XML:
-                # Check for Browse graphic
-                dataname = xml_file.split('.')[0]
-                dataname = dataname.split('_meta')[0]
-                browse_file = glob.glob(dataname + '*browse*')[0]
-                if len(browse_file) > 0:
-                    new_values['browse_file'] = browse_file
-                # add SB UID to be updated in XML
-                new_values['child_id'] = data_item['id']
-                update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-            # Upload to ScienceBase
-            if update_data:
-                # Upload all files in dir that match basename of XML file
-                # data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
+	for d in dirs:
+		xmllist = glob.glob(os.path.join(root, d, '*.xml'))
+		for xml_file in xmllist:
+			cnt += 1
+			if not sb.is_logged_in():
+				print('Logging back in...')
+				try:
+					sb = pysb.SbSession(env=None).login(useremail,password)
+				except NameError:
+					sb = pysb.SbSession(env=None).loginc(useremail)
+			# 1. GET VALUES
+			# parentid = org_map['DIRtoID'][d]
+			parentid = dict_DIRtoID[d]
+			new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
+			# Create (or find) new data page based on title in XML
+			data_title = get_title_from_data(xml_file) # get title from XML
+			data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+			# if page_per_filename:
+			# 	# Create (or find) new data page based on title in XML
+			# 	data_title = get_title_from_data(xml_file) # get title from XML
+			# 	data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+			# else:
+			# 	data_id = landing_id # parent of 'parentid'
+			# 	data_item = find_or_create_child(sb, data_id, d, verbose=verbose)
+			try:
+				data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+				#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
+			except:
+				pass
+			# 2. MAKE UPDATES
+			# Update XML
+			if update_XML:
+				# Check for Browse graphic
+				dataname = xml_file.split('.')[0]
+				dataname = dataname.split('_meta')[0]
+				browse_file = glob.glob(dataname + '*browse*')[0]
+				if len(browse_file) > 0:
+					new_values['browse_file'] = browse_file
+				# add SB UID to be updated in XML
+				new_values['child_id'] = data_item['id']
+				update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+			# Upload to ScienceBase
+			if update_data:
+				# Upload all files in dir that match basename of XML file
+				# data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
 				data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 				if bigfiles1:
 					if not 'bigfiles' in locals():
 						bigfiles = []
 					else:
 						bigfiles += bigfiles1
-            elif update_XML:
-                # If XML was updated, but data was not uploaded, replace only XML.
-                try:
-                    sb.replace_file(xml_file, data_item) # Does not update SB page to match metadata
-                except e:
-                    print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
-                # sb.upload_files_and_upsert_item(data_item, [xml_file])
-            if 'previewImage' in data_inherits and "imagefile" in locals():
-                data_item = sb.upload_file_to_item(data_item, imagefile)
-            if verbose:
-                now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-                print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
-            # store values in dictionaries
-            # org_map['DIRtoID'][xml_file] = data_item['id']
-            # org_map['IDtoJSON'][data_item['id']] = data_item
-            # org_map['PARtoCHILDS'].setdefault(parentid, set()).add(data_item['id'])
-            dict_DIRtoID[xml_file] = data_item['id']
-            dict_IDtoJSON[data_item['id']] = data_item
-            dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
-
-xmllist[1]
+			elif update_XML:
+				# If XML was updated, but data was not uploaded, replace only XML.
+				try:
+					sb.replace_file(xml_file, data_item) # Does not update SB page to match metadata
+				except e:
+					print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
+				# sb.upload_files_and_upsert_item(data_item, [xml_file])
+			if 'previewImage' in data_inherits and "imagefile" in locals():
+				data_item = sb.upload_file_to_item(data_item, imagefile)
+			if verbose:
+				now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+				print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
+			# store values in dictionaries
+			# org_map['DIRtoID'][xml_file] = data_item['id']
+			# org_map['IDtoJSON'][data_item['id']] = data_item
+			# org_map['PARtoCHILDS'].setdefault(parentid, set()).add(data_item['id'])
+			dict_DIRtoID[xml_file] = data_item['id']
+			dict_IDtoJSON[data_item['id']] = data_item
+			dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
 
 #%% Pass down fields from parents to children
 print("\nPassing down fields from parents to children...")

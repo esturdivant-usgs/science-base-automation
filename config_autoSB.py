@@ -31,11 +31,11 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/58868c92e4b0cad700058da1" # testing page
+landing_link = "https://www.sciencebase.gov/catalog/item/580a2b32e4b0f497e7906380" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept' # OSX format
+parentdir = r'/Volumes/stor/Projects/iPlover/iPlover_DR_2016/test_dir4upload' # OSX format
 #parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -94,7 +94,6 @@ max_MBsize = 0.05 # 2000 mb is the suggested threshold above which to use the la
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
 update_landing_page      = False # True if values on the landing page should be updated from XML file in the parent directory
 replace_subpages         = False # True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
-
 
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes

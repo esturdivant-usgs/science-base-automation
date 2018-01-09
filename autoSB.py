@@ -287,7 +287,7 @@ def find_and_replace_from_dict(fname, find_dict):
 	with open(fname+'.tmp', 'r') as f1:
 		with open(fname, 'w') as f2:
 			for line in f1:
-				for rstr, flist in find_dict.iteritems():
+				for rstr, flist in find_dict.items():
 					if type(flist) is str:
 						flist = [flist]
 					for fstr in flist:
@@ -438,7 +438,7 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False
 			except Exception as e:
 				print(e)
 				pass
-	child_item = sb.updateSbItem(child_item)
+	child_item = sb.update_item(child_item)
 	return child_item
 
 def find_or_create_child(sb, parentid, child_title, verbose=False):
@@ -585,7 +585,7 @@ def get_parent_bounds(sb, parent_id, verbose=False):
 				if parent_bounds:
 					item['spatial'] = {}
 					item['spatial']['boundingBox'] = parent_bounds
-			item = sb.updateSbItem(item)
+			item = sb.update_item(item)
 			if verbose:
 				print('Updated bounding box for parent "{}"'.format(item['title']))
 		else:
@@ -702,7 +702,7 @@ def remove_all_files(sb, pageid, verbose=False):
 	item = flexibly_get_item(sb, pageid)
 	item['files'] = []
 	item['facets'] = []
-	item=sb.updateSbItem(item)
+	item=sb.update_item(item)
 	if verbose:
 		print('REMOVED: any files or facets on page "{}".'.format(item['title']))
 	return item
@@ -812,7 +812,7 @@ def landing_page_from_parentdir(parentdir, parent_xml, previewImage, new_values)
 		if 'body' not in landing_item.keys():
 			try: # update SB landing page with specific fields from XML
 				landing_item = get_fields_from_xml(sb, landing_item, parent_xml, landing_fields_from_xml)
-				landing_item=sb.updateSbItem(landing_item)
+				landing_item=sb.update_item(landing_item)
 			except Exception as e:
 				print(e)
 	if imagefile:
@@ -839,7 +839,7 @@ def check_fields2(sb, item, qcfieldsdict, verbose=False):
 	# Checks for fields in page as specified by qcfieldsdict
 	page = item['title']
 	print("\nEvaluating '{}'".format(page))
-	for f, num in qcfieldsdict.iteritems():
+	for f, num in qcfieldsdict.items():
 		if not num:
 			if f in item.keys(): # field should not be present
 				print("PRESENT: field '{}'".format(f))
