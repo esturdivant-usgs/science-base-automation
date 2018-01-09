@@ -62,19 +62,18 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
 ### 4. Run script sb_automation.py! 
-#### Install additional required python modules: lxml, pysb, science-base-automation.
+#### INSTALL
+Install additional required python modules: lxml, pysb, science-base-automation. sb_automation is compatible with Python 3 on OSX and Windows.
 
-sb_automation is compatible with Python 3 on OSX and Windows.
+Download/fork/clone __science-base-automation__.
 
-__Download/fork/clone science-base-automation__
-
-__Install lxml and pysb using pip (requires Git):__
+Install __lxml__ and __pysb__ using pip (requires Git):
 
 	easy_install pip
 	pip install lxml 
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 	
-__Using Conda... __
+... or using Conda...
 
 	conda create -n sb_py3 python=3 lxml
 	source activate sb_py3 # OSX. Windows would be activate sb_py3
