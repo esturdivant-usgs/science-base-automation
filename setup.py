@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='science-base-automation',
-      version='1.0',
+      version='0.1',
       description='Automatically create and populate ScienceBase pages with metadata and data files based on standards at USGS Woods Hole Coastal and Marine Science Center.',
       author='Emily Sturdivant',
       author_email='esturdivant@usgs.gov',

@@ -101,19 +101,18 @@ replace_subpages         = False # True to delete all child pages before running
 # To change the "Suggested citation" in the Other Citation Information, choose one of two options: either use the find_and_replace variable or the new_othercit variable, see below.
 
 # FIND AND REPLACE. {key='desired value': value=['list of','values','to replace']}
-find_and_replace = {
-'https://doi.org/{}'.format(dr_doi): ['https://doi.org/XXXXX'],
-'DOI:{}'.format(dr_doi): ['DOI:XXXXXX'],
-# 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
-# 'https:': 'http:',
-'doi.org': 'dx.doi.org'
-}
+find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/XXXXX'],
+    'DOI:{}'.format(dr_doi): ['DOI:XXXXX'],
+    # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+    # 'https:': 'http:',
+    'doi.org': 'dx.doi.org'
+    }
 
 # REMOVE ELEMENT. If an element needs to be removed, this will occur before additions or replacements
 # remove_fills = {'./idinfo/crossref':['AUTHOR', 'doi.org/10.3133/ofr20171015']}
 
 # APPEND ELEMENT.
-# Add {container: new XML element} item to metadata_additions dictionary for each element to appended to the container element. Appending will not remove any elements.
+# Add {container: new XML element} item to metadata_additions dictionary for each element to be appended to the container element. Appending will not remove any elements.
 # Example of a new cross reference:
 # new_crossref = """
 #     <crossref><citeinfo>

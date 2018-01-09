@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+Please see README.md (https://github.com/esturdivant-usgs/science-base-automation) for detailed instructions.
+
 sb_automation.py
 
 By: Emily Sturdivant, esturdivant@usgs.gov
-Last modified: 1/10/17
 
 OVERVIEW: Script creates child pages that mimic the directory structure and
 populates the pages using a combination of fields from the landing page and the metadata.
