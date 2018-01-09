@@ -146,7 +146,7 @@ Inputs: parent directory, landing page ID, dictionary of new values (new_values)
 For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 """
 if verbose:
-	print('checking log in information...')
+	print('---\nChecking log in information...')
 #sb = log_in(useremail) #FIXME
 if not sb.is_logged_in():
 	print('Logging back in...')
@@ -164,12 +164,8 @@ if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
 
-xmllist = []
-for root, dirs, files in os.walk(parentdir):
-	for d in dirs:
-		xmllist += glob.glob(os.path.join(root,d,'*.xml'))
-xml_cnt = len(xmllist)
-
+# List XML files
+xmllist_all = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 
 #%%
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
@@ -179,6 +175,7 @@ cnt = 0
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 		xmllist = glob.glob(os.path.join(root, d, '*.xml'))
+		print("Found {} XML files in dir {}.".format(xml_cnt, d))
 		for xml_file in xmllist:
 			cnt += 1
 			if not sb.is_logged_in():
@@ -239,7 +236,7 @@ for root, dirs, files in os.walk(parentdir):
 				data_item = sb.upload_file_to_item(data_item, imagefile)
 			if verbose:
 				now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-				print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
+				print('Completed {} out of {} xml files at {}.\n'.format(cnt, len(xmllist_all), now_str))
 			# store values in dictionaries
 			# org_map['DIRtoID'][xml_file] = data_item['id']
 			# org_map['IDtoJSON'][data_item['id']] = data_item
@@ -248,8 +245,82 @@ for root, dirs, files in os.walk(parentdir):
 			dict_IDtoJSON[data_item['id']] = data_item
 			dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
 
+#
+# for xml_file in xmllist:
+# 	cnt += 1
+#
+# 	if not sb.is_logged_in():
+# 		print('Logging back in...')
+# 		try:
+# 			sb = pysb.SbSession(env=None).login(useremail,password)
+# 		except NameError:
+# 			sb = pysb.SbSession(env=None).loginc(useremail)
+#
+#     # 1. GET VALUES from XML
+#     # if not xml_file.parent == Path(parentdir):
+#     parentid = dict_DIRtoID[xml_file.parent.stem]
+#     new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
+#
+#     # Get title of data by parsing XML
+#     data_title = get_title_from_data(xml_file)
+#
+#     # Create (or find) data page based on title
+#     data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose)
+#
+#     # If pubdate in new_values, set it as the date for the SB page
+# 	try:
+# 		data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+# 	except:
+# 		pass
+#
+# 	# 2. MAKE UPDATES
+# 	# Update XML
+# 	if update_XML:
+#         # add SB UID to be updated in XML
+# 		new_values['child_id'] = data_item['id']
+#
+# 		# Look for browse graphic
+#         searchstr = xml_file.stem.split('_meta')[0] + '*browse*'
+#         try:
+#             browse_file = sorted(xml_file.parent.glob(searchstr))[0]
+#             new_values['browse_file'] = browse_file.name
+#         except Exception as e:
+#             print("{}\nWe weren't able to upload a browse image for page {}.".format(e, xml_file.parent.stem))
+#
+#         # Make the changes to the XML based on the new_values dictionary
+# 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+#
+# 	# Upload data to ScienceBase
+# 	if update_data:
+# 		# Upload all files in dir that match basename of XML file. Record list of files that were not uploaded because they were above the threshold set by max_MBsize
+# 		data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
+# 		if bigfiles1:
+# 			if not 'bigfiles' in locals():
+# 				bigfiles = []
+#             bigfiles += bigfiles1
+#
+#     # Upload XML to ScienceBase
+# 	elif update_XML:
+# 		# If XML was updated, but data was not uploaded, replace only XML.
+# 		try:
+# 			sb.replace_file(xml_file, data_item) # Does not update SB page to match metadata
+# 		except e:
+# 			print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
+# 	if 'previewImage' in data_inherits and "imagefile" in locals():
+# 		data_item = sb.upload_file_to_item(data_item, imagefile)
+# 	if verbose:
+# 		now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+# 		print('Completed {} out of {} xml files at {}.\n'.format(cnt, len(xmllist_all), now_str))
+# 	# store values in dictionaries
+# 	# org_map['DIRtoID'][xml_file] = data_item['id']
+# 	# org_map['IDtoJSON'][data_item['id']] = data_item
+# 	# org_map['PARtoCHILDS'].setdefault(parentid, set()).add(data_item['id'])
+# 	dict_DIRtoID[xml_file] = data_item['id']
+# 	dict_IDtoJSON[data_item['id']] = data_item
+# 	dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
+
 #%% Pass down fields from parents to children
-print("\nPassing down fields from parents to children...")
+print("\n---\nPassing down fields from parents to children...")
 inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)
 
 #%% BOUNDING BOX

@@ -31,7 +31,7 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/580a2b32e4b0f497e7906380" # testing page
+landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
@@ -88,7 +88,7 @@ quality_check_pages      = True # False to save time if you feel good/want to ke
 verbose         = True
 # page_per_filename   = False
 
-max_MBsize = 0.05 # 2000 mb is the suggested threshold above which to use the large file uploader.
+max_MBsize = 20 # 2000 mb is the suggested threshold above which to use the large file uploader.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
@@ -102,7 +102,8 @@ replace_subpages         = False # True to delete all child pages before running
 
 # FIND AND REPLACE. {key='desired value': value=['list of','values','to replace']}
 find_and_replace = {
-'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/xxx', 'https://doi.org/10.5066/xxxx', 'https://doi.org/10.5066/xxxxx', 'https://doi.org/xxx'],
+'https://doi.org/{}'.format(dr_doi): ['https://doi.org/XXXXX'],
+'DOI:{}'.format(dr_doi): ['DOI:XXXXXX'],
 # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
 # 'https:': 'http:',
 'doi.org': 'dx.doi.org'
