@@ -62,28 +62,36 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
 ### 4. Run script sb_automation.py! 
-#### Install required python modules, including this one (lxml, pysb, science-base-automation).
+#### Install additional required python modules: lxml, pysb, science-base-automation.
 
-sb_automation is compatible with Python 2.7 and 3 on OSX and Windows. Python packages required that are not automatically included in python installation are lxml and pysb. It uses the standard python modules os, glob, json, pickle, and sys. 
+sb_automation is compatible with Python 3 on OSX and Windows.
 
-##### Download/fork/clone science-base-automation
+__Download/fork/clone science-base-automation__
 
-##### Install lxml and pysb using pip (requires Git):
+__Install lxml and pysb using pip (requires Git):__
 
 	easy_install pip
 	pip install lxml 
 	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+	
+__Using Conda... __
 
-#### RUN	
+	conda create -n sb_py3 python=3 lxml
+	source activate sb_py3 # OSX. Windows would be activate sb_py3
+	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+
+#### RUN
 __In your bash console (Terminal on OSX):__
 
-	
+	# If using Conda:
+	source activate sb_py3 # OSX. Windows would be activate sb_py3
+	# Start here if not using Conda:
 	cd [path]\[to]\science-base-automation
 	python sb_automation.py
 	
 __From Finder:__ Right click and run with your python launcher of choice. 
 
-__In your Python IDE of choice:__ Open the script and run it line by line or however you choose. 
+__In your Python IDE of choice:__ Open the script (sb_automation.py) and run it line by line or however you choose. 
 
 ### 5. Check ScienceBase pages and make manual modifications.   
 
