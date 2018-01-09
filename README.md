@@ -33,7 +33,7 @@ Each directory name will become the title of a ScienceBase page except for the t
 Ensure there is one and only one XML file for each desired SB page. These XML files should pass MP error checking.
 NOTE: The script will overwrite XML files. You may want to save a separate archive of the original XML files.
 
-The code makes some assumptions about your naming system. It uses the XML metadata files to identify and group files within datasets. It considers any file with a .xml extension to be metadata. It assumes that the dataset basename is everything before either 
+The code makes some assumptions about your naming system. It uses the XML metadata files to identify and group files within datasets. It considers any file with a .xml extension to be metadata. It assumes that the dataset basename is everything before either the first '.' or before '\_meta'. Thus, a shapefile might include the files data.shp, data.dbf, and either data.shp.xml or data_meta.xml. If the metadata file is data_meta.xml or data.shp.xml, the code will upload all files beginning with 'data'. The browse graphic should be a file with image format (png, jpb, gif, etc.) with lowercase 'browse' proceeding (directly or indirectly) the data basename. E.g. data_browse.png. 
 
 ### 2. Set up a ScienceBase landing page.
 Create the data release landing page before running the script.
@@ -153,12 +153,14 @@ Each directory will become a ScienceBase page within your data release. The dire
 
 			<idinfo><citation><citeinfo><title>Coastal baseline for North Carolina…</title></citeinfo></citation></idinfo> - excerpt of title element from within metadata file
 		- NCcentral_baseline.shx - 1st data file
+		- NCcentral_baseline_browse.png - browse graphic for 1st data file
 		- NCcentral_shorelines.cpg - 2nd data file
 		- NCcentral_shorelines.dbf - 2nd data file
 		- NCcentral_shorelines.prj - 2nd data file
 		- NCcentral_shorelines.sbn - 2nd data file
 		- NCcentral_shorelines.shp - 2nd data file
 		- NCcentral_shorelines.shp.xml - metadata for 2nd data file
+		
 
 			<idinfo><citation><citeinfo><title>Shorelines of North Carolina…</title></citeinfo></citation></idinfo>” - excerpt of title element from within metadata file
 		- NCcentral_shorelines.shx - 2nd data file
