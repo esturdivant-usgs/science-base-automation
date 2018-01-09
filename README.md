@@ -1,12 +1,6 @@
 # science-base-automation
 __Automatically create and populate ScienceBase pages with metadata and data files.__ Given a ScienceBase (SB) landing page and a directory tree with data and metadata, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, and populates the SB pages from the data.
 
-## Quick Start
-
-	conda create -n sb_py3
-	source activate sb_py3
-	pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 ### Links
 SB Item values: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Core+Model
@@ -74,6 +68,14 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 ### 4. Run script sb_automation.py!
 #### INSTALL
 Install additional required python modules: lxml, pysb, science-base-automation. sb_automation is compatible with Python 3 on OSX and Windows.
+
+Install directly. 
+
+	conda create -n sb_py3
+	source activate sb_py3
+	pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
+	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+
 
 Download/fork/clone __science-base-automation__.
 
