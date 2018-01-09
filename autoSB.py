@@ -11,6 +11,7 @@ OVERVIEW: Functions used in sb_automation.py
 import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
 import os
 import sys
+import shutil
 import glob
 from lxml import etree
 import json

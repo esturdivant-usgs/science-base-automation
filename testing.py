@@ -243,9 +243,13 @@ root
 # Recursively list all XML files in parentdir
 parentdir = r'/Volumes/stor/Projects/iPlover/iPlover_DR_2016/test_dir4upload' # OSX format
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-
-
 xml_file = xmllist[0]
+xml_file
+os.path.basename(os.path.split(xml_file)[0])
+searchstr = xml_file.split('.')[0].split('_meta')[0] + '*browse*'
+searchstr
+browse_file = glob.glob(searchstr)[0]
+new_values['browse_file'] = browse_file.split('/')[-1]
 
 
 # Using pathlib
