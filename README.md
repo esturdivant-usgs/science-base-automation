@@ -3,8 +3,10 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 
 ## Quick Start
 
-
-pip install -e git+https://github.com/esturdivant-usgs/science-base-automation.git
+	conda create -n sb_py3
+	source activate sb_py3
+	pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
+	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 ### Links
 SB Item values: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Core+Model
