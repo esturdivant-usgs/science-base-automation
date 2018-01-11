@@ -1,12 +1,6 @@
 # science-base-automation
 __Automatically create and populate ScienceBase pages with metadata and data files.__ Given a ScienceBase (SB) landing page and a directory tree with data and metadata, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, and populates the SB pages from the data.
 
-
-### Links
-SB Item values: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Core+Model
-
-PYSB, SB python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/browse
-
 ### Overall process
 1. Set up a local directory structure for your data release.
 2. Set up a ScienceBase landing page.
@@ -29,8 +23,8 @@ Each directory name will become the title of a ScienceBase page except for the t
 Ensure there is one and only one XML file for each desired SB page. These XML files should pass MP error checking.
 NOTE: The script will overwrite XML files. You may want to save a separate archive of the original XML files.
 
-- filenames should follow this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively.
-- you can use placeholder values in the XML files and provide find and replace values in the find_and_replace variable in config_autoSB.py. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
+- Filenames should use this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively.
+- You can use placeholder values in the XML files with the find_and_replace variable in config_autoSB.py. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
 
 ### 2. Set up a ScienceBase landing page.
 Create the data release landing page before running the script.
@@ -106,6 +100,7 @@ __In your Python IDE of choice:__ Open the script (sb_automation.py) and run it 
 
 ### 5. Check ScienceBase pages and make manual modifications.   
 
+If you want to start fresh, an easy way to delete all items pertaining to the parent page, is to set `parentdir` to an empty directory and set the variable `replace_subpages` to True. 
 
 ## What the script does:
 - Starts a ScienceBase session.
@@ -181,6 +176,7 @@ Each directory will become a ScienceBase page within your data release. The dire
 ### ScienceBase features
 
 Reference for ScienceBase item services: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Services
+PYSB, the ScienceBase python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/browse
 
 #### Intelligent content from uploaded files
 ScienceBase automatically detects the file type and in some cases the contents of uploaded files and makes intelligent decisions about how to use them. For instance, an image file uploaded to a page will be used as the preview image. It will pull information from an XML file to populate fields, and it will detect components of a shapefile or raster file and present them as a shapefile or raster “facet”, which can be downloaded as a package. Even if an XML file is later removed from the Files, the fields populated from it will remain.
