@@ -358,8 +358,199 @@ for xml_file in xmllist:
 	dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
 
 
-
-
-
-
 ####
+#%% 2/14/18 - Restructure function to be more intuitive: go through each section of FGDC metadata
+def map_newvals2xml(new_values):
+# Create dictionary of {new value: {XPath to element: position of element in list retrieved by XPath}}
+"""
+To update XML elements with new text:
+	for newval, elemfind in val2xml.items():
+		for elempath, i in elemfind.items():
+			metadata_root.findall(elempath)[i].text = newval
+Currently hard-wired; will need to be adapted to match metadata scheme.
+"""
+# Hard-wire path in metadata to each element
+seriesid = './idinfo/citation/citeinfo/serinfo/issue' # Citation / Series / Issue Identification
+citelink = './idinfo/citation/citeinfo/onlink' # Citation / Online Linkage
+lwork_link = './idinfo/citation/citeinfo/lworkcit/citeinfo/onlink' # Larger Work / Online Linkage
+lwork_serID = './idinfo/citation/citeinfo/lworkcit/citeinfo/serinfo/issue' # Larger Work / Series / Issue Identification
+lwork_pubdate = './idinfo/citation/citeinfo/lworkcit/citeinfo/pubdate' # Larger Work / Publish date
+edition = './idinfo/citation/citeinfo/edition' # Citation / Edition
+pubdate = './idinfo/citation/citeinfo/pubdate' # Citation / Publish date
+caldate = './idinfo/timeperd/timeinfo/sngdate/caldate'
+networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
+accinstr = './distinfo/stdorder/digform/digtopt/onlinopt/accinstr'
+metadate = './metainfo/metd' # Metadata Date
+browsen = './idinfo/browse/browsen'
+# Initialize storage dictionary
+val2xml = {}
+
+
+
+
+
+
+# DOI values
+if 'doi' in new_values.keys():
+	# get DOI values (as issue and URL)
+	doi_issue = "DOI:{}".format(new_values['doi'])
+	doi_url = "https://doi.org/{}".format(new_values['doi'])
+	# add new DOI values as {DOI:XXXXX:{'./idinfo/.../issue':0}}
+	val2xml[doi_issue] = {seriesid:0, lwork_serID:0}
+	val2xml[doi_url] = {citelink: 0, lwork_link: 0, networkr: 2}
+# Landing URL
+if 'landing_id' in new_values.keys():
+	landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['landing_id'])
+	val2xml[landing_link] = {lwork_link: 1}
+# Data page URL
+if 'child_id' in new_values.keys():
+	# get URLs
+	page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
+	directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
+	# add values
+	val2xml[page_url] = {citelink: 1, networkr: 0}
+	val2xml[directdownload_link] = {networkr:1}
+	access_str = 'The first link is to the page containing the data, the second link downloads all data available from the page as a zip file, and the third link is to the publication landing page.'
+	val2xml[access_str] = {accinstr: 0}
+	# Browse graphic
+	if 'browse_file' in new_values.keys():
+		browse_link = '{}/?name={}'.format(directdownload_link, new_values['browse_file'])
+		val2xml[browse_link] = {browsen:0}
+# Edition
+if 'edition' in new_values.keys():
+	val2xml[new_values['edition']] = {edition:0}
+if 'pubdate' in new_values.keys():
+	val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0} # removed caldate
+# Date and time of update
+now_str = datetime.datetime.now().strftime("%Y%m%d")
+val2xml[now_str] = {metadate: 0}
+
+return val2xml
+
+
+
+
+# digital transfer information
+networkr = './distinfo/stdorder/digform/digtopt/onlinopt/computer/networka/networkr' # Network Resource Name
+accinstr = './distinfo/stdorder/digform/digtopt/onlinopt/accinstr'
+i = 0
+acc_inst = 'The URLs in the network address section provide the following, respectively: '
+if 'child_id' in new_values.keys():
+    # link to containing page
+    page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
+    i = i
+    update_xml_tagtext(metadata_root, page_url, networkr, i)
+    acc_inst += 'Link number {} is to the page containing the data. '.format(i+1)
+    # direct download everything on page
+    directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
+    i += 1
+    update_xml_tagtext(metadata_root, directdownload_link, networkr, i)
+    acc_inst += 'Link number {} downloads all data available from the page as a zip file. '.format(i+1)
+# link DOI, landing page
+doi_url = "https://doi.org/{}".format(new_values['doi'])
+i += 1
+update_xml_tagtext(metadata_root, doi_url, networkr, i)
+acc_inst += 'Link number {} downloads all data available from the page as a zip file. '.format(i+1)
+
+def update_xml_tagtext(metadata_root, newval, fstr='./distinfo', idx=0): # Add or update the values of each element
+    try:
+        metadata_root.findall(fstr)[i].text = newval
+    except IndexError: # if the element does not yet exist, create the element
+        try:
+            container, tag = os.path.split(fstr)
+            elem = metadata_root.find(container)
+            elem.append(etree.Element(tag))
+            metadata_root.findall(fstr)[i].text = newval
+        except:
+            pass
+    except:
+        pass
+
+
+#%% 2/14/18 - Only create subpage if there is an XML file in the directory (or in a sub-directory) (issue #29)
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+for xml_file in xmllist:
+    dirname = os.path.basename(os.path.split(xml_file)[0])
+
+
+xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept/SfM products (point cloud, orthomosaic, and DEM)/bb20160318_sfm_orthomosaic_meta.xml'
+
+# xmlpath = os.path.split(xml_file)[0]
+# dirname = os.path.basename(xmlpath)
+# dirname
+# oneupdir = os.path.split(xmlpath)[0]
+# # check whether this dir is the parentdir
+# os.path.split(parentdir)[0]
+
+
+
+#TODO: working HERE! 2/14 end of day
+# try this with relative path (starting at parentdir)
+xml_relfile = os.path.relpath(xml_file, os.path.split(parentdir)[0]) # path from parentdir to XML file
+xml_relfile
+dirchain = os.path.split(xml_relfile, '\\') #FIXME: goal: list the chain of directories to arrive at XML from parentdir; doesn't yet work because split only splits path into two parts.
+dirchain
+# child of parent
+dirname = dirchain[0]
+# for every directory, do the following:
+parent_id = dict_DIRtoID[os.path.basename(parentdir)] # get ID for parent
+subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
+dict_DIRtoID[dirname] = subpage['id']
+dict_IDtoJSON[subpage['id']] = subpage
+dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
+
+# grandchild of parent
+dirname = dirchain[1]
+# for every directory, do the following:
+parent_id = dict_DIRtoID[os.path.basename(parentdir)] # get ID for parent
+subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
+dict_DIRtoID[dirname] = subpage['id']
+dict_IDtoJSON[subpage['id']] = subpage
+dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
+
+
+
+# Original code (in sb_automation)
+if update_subpages:
+	# Initialize dictionaries that will store relationships: directories/file:ID, ID:JSON item, parentID:childIDs
+	# org_map = {'DIRtoID': {os.path.basename(parentdir): landing_id}, # Initialize top dir/file:ID entry to dict
+	# 			'IDtoJSON': {landing_id: landing_item}, # Initialize with landing page
+	# 			'PARtoCHILDS': {}}
+	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
+	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
+	dict_PARtoCHILDS = {} # Initialize empty parentID:childIDs dictionary
+	# Create sub-parent container pages. If pages already exist, they will not be recreated.
+	for (root, dirs, files) in os.walk(parentdir):
+		for dirname in dirs:
+            if xml in files:
+    			# parent_id = org_map['DIRtoID'][os.path.basename(root)] # get ID for parent
+    			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
+    			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
+    			subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
+    			if 'previewImage' in subparent_inherits and "imagefile" in locals():
+    				subpage = sb.upload_file_to_item(subpage, imagefile)
+    			# store values in dictionaries
+    			# org_map['DIRtoID'][dirname] = subpage['id']
+    			# org_map['IDtoJSON'][subpage['id']] = subpage
+    			# org_map['PARtoCHILDS'].setdefault(parent_id, set()).add(subpage['id'])
+    			dict_DIRtoID[dirname] = subpage['id']
+    			dict_IDtoJSON[subpage['id']] = subpage
+    			dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
+	# Save dictionaries
+	# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
+	# 	json.dump(org_map, f)
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+		json.dump(dict_DIRtoID, f)
+	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
+		json.dump(dict_IDtoJSON, f)
+	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
+		pickle.dump(dict_PARtoCHILDS, f)
+else: # Import pre-created dictionaries if all SB pages exist
+	# with open(os.path.join(parentdir,'org_map.json'), 'r') as f:
+	# 	org_map = json.load(f)
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+		dict_DIRtoID = json.load(f)
+	with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
+		dict_IDtoJSON = json.load(f)
+	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
+		dict_PARtoCHILDS = pickle.load(f)

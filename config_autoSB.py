@@ -35,8 +35,8 @@ landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b91
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/iPlover/iPlover_DR_2016/test_dir4upload' # OSX format
-#parentdir = "c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
+parentdir = r'/Volumes/stor/Projects/ScienceBaseAutomation/test_localdir' # OSX format
+#parentdir = r"c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/F7KW5F04"
@@ -88,7 +88,7 @@ quality_check_pages      = True # False to save time if you feel good/want to ke
 verbose         = True
 # page_per_filename   = False
 
-max_MBsize = 20 # 2000 mb is the suggested threshold above which to use the large file uploader.
+max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the large file uploader.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page

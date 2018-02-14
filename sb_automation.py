@@ -62,7 +62,7 @@ if "remove_fills" in locals():
 Work with landing page and XML
 """
 # Remove all child pages
-if replace_subpages: # If this is used, you may have to wait a long time before the removal takes full effect.
+if replace_subpages: # If this is used, you may have to wait before the removal takes full effect.
 	delete_all_children(sb, landing_id)
 	landing_item = remove_all_files(sb, landing_id)
 # Set imagefile
