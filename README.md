@@ -26,7 +26,7 @@ NOTE: The script will overwrite XML files. You may want to save a separate archi
 - Filenames should use this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively.
 - You can use placeholder values in the XML files with the find_and_replace variable in config_autoSB.py. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
 
-![Contribution guidelines for this project](docs/filestructure_eg.png)
+![Example file structure for SB upload](docs/filestructure_eg.png)
 
 ### 2. Set up a ScienceBase landing page.
 Create the data release landing page before running the script.
