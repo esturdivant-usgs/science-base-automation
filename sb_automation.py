@@ -62,11 +62,12 @@ if "remove_fills" in locals():
 Work with landing page and XML
 """
 # Remove all child pages
-if replace_subpages: # If this is used, you may have to wait before the removal takes full effect.
-	delete_all_children(sb, landing_id)
-	landing_item = remove_all_files(sb, landing_id)
+if replace_subpages:
+    print(delete_all_children(sb, landing_id))
+    landing_item = remove_all_files(sb, landing_id)
+
 # Set imagefile
-if 'previewImage' in data_inherits:
+if 'previewImage' in subparent_inherits:
 	for f in os.listdir(parentdir):
 		if f.lower().endswith(('png','jpg','gif')):
 			imagefile = os.path.join(parentdir,f)
@@ -78,68 +79,35 @@ elif "previewImage" in locals():
 else:
 	imagefile = False
 
-if update_landing_page: #this block is not necessary; remove from simplified version
-	# Check for metadata and image files in landing directory
-	landing_item = update_landing_page(parentdir, parent_xml, imagefile, new_values)
-
 #%% Create SB page structure
 """
 Create SB page structure: nested child pages following directory hierarchy
 Inputs: parent directory, landing page ID
 This one should overwrite the entire data release (excluding the landing page).
 """
+# Check whether logged in.
 if not sb.is_logged_in():
 	print('Logging back in...')
 	try:
 		sb = pysb.SbSession(env=None).login(useremail,password)
 	except NameError:
 		sb = pysb.SbSession(env=None).loginc(useremail)
-#%%
+
+# If there's no id_to_json.json file available, we need to create the subpage structure.
 if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json.json')):
 	print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
 	update_subpages = True
+
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 if update_subpages:
-	# Initialize dictionaries that will store relationships: directories/file:ID, ID:JSON item, parentID:childIDs
-	# org_map = {'DIRtoID': {os.path.basename(parentdir): landing_id}, # Initialize top dir/file:ID entry to dict
-	# 			'IDtoJSON': {landing_id: landing_item}, # Initialize with landing page
-	# 			'PARtoCHILDS': {}}
-	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
-	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
-	dict_PARtoCHILDS = {} # Initialize empty parentID:childIDs dictionary
-	# Create sub-parent container pages. If pages already exist, they will not be recreated.
-	for (root, dirs, files) in os.walk(parentdir):
-		for dirname in dirs:
-			# parent_id = org_map['DIRtoID'][os.path.basename(root)] # get ID for parent
-			parent_id = dict_DIRtoID[os.path.basename(root)] # get ID for parent
-			#print('Finding/creating page for "{}" in "{}" (ID: {})'.format(dirname, os.path.basename(root), parent_id))
-			subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
-			if 'previewImage' in subparent_inherits and "imagefile" in locals():
-				subpage = sb.upload_file_to_item(subpage, imagefile)
-			# store values in dictionaries
-			# org_map['DIRtoID'][dirname] = subpage['id']
-			# org_map['IDtoJSON'][subpage['id']] = subpage
-			# org_map['PARtoCHILDS'].setdefault(parent_id, set()).add(subpage['id'])
-			dict_DIRtoID[dirname] = subpage['id']
-			dict_IDtoJSON[subpage['id']] = subpage
-			dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
-	# Save dictionaries
-	# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
-	# 	json.dump(org_map, f)
-	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-		json.dump(dict_DIRtoID, f)
-	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-		json.dump(dict_IDtoJSON, f)
-	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
-		pickle.dump(dict_PARtoCHILDS, f)
+    dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
 else: # Import pre-created dictionaries if all SB pages exist
-	# with open(os.path.join(parentdir,'org_map.json'), 'r') as f:
-	# 	org_map = json.load(f)
-	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-		dict_DIRtoID = json.load(f)
-	with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-		dict_IDtoJSON = json.load(f)
-	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
-		dict_PARtoCHILDS = pickle.load(f)
+    with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+        dict_DIRtoID = json.load(f)
+    with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
+        dict_IDtoJSON = json.load(f)
+    with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
+        dict_PARtoCHILDS = pickle.load(f)
 
 #%% Create and populate data pages
 """
@@ -177,6 +145,7 @@ cnt = 0
 
 for xml_file in xmllist:
 	cnt += 1
+	print("File {}: {}".format(cnt, xml_file))
 	if not sb.is_logged_in():
 		print('Logging back in...')
 		try:
@@ -207,7 +176,7 @@ for xml_file in xmllist:
 			browse_file = glob.glob(searchstr)[0]
 			new_values['browse_file'] = browse_file.split('/')[-1]
 		except Exception as e:
-			print("{}\nWe weren't able to upload a browse image for page {}.".format(e, dirname))
+			print("We weren't able to upload a browse image for page {}. Exception report as '{}'".format(dirname, e))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 	# Upload data to ScienceBase
@@ -269,8 +238,9 @@ if quality_check_pages:
 	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
 
 
-now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+now_str = datetime.datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
 print('\n{}\nAll done! View the result at {}'.format(now_str, landing_link))
 if 'bigfiles' in locals():
 	if len(bigfiles) > 0:
-		print("These files were too large to upload so you'll need to use the large file uploader: {}".format(bigfiles))
+		print("These files were too large to upload so you'll need to use the large file uploader:")
+		print(*bigfiles, sep = "\n")

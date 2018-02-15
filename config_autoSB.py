@@ -80,7 +80,7 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if  SB pages already exist
+update_subpages = True # False to save time if the page structure is already established.
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
@@ -92,8 +92,7 @@ max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the la
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
-update_landing_page      = False # True if values on the landing page should be updated from XML file in the parent directory
-replace_subpages         = False # True to delete all child pages before running. Not necessary. Use cautiously; deleted items seem to linger in the SB memory so it is best to run the function delete_all_children(sb, landing_id) a few minutes before running the script.
+replace_subpages         = True # True to delete all child pages before running. Not necessary.
 
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes

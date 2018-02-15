@@ -18,12 +18,12 @@ import json
 import pickle
 import datetime
 
-__all__ = ['trunc',
+__all__ = ['splitall', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
-		   'get_DOI_from_item', 'inherit_SBfields', 'find_or_create_child',
+		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'upload_data','replace_files_by_ext', 'upload_files_matching_xml', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
@@ -37,6 +37,21 @@ __all__ = ['trunc',
 
 
 #%% Functions
+def splitall(path):
+    allparts = []
+    while 1:
+        parts = os.path.split(path)
+        if parts[0] == path:  # sentinel for absolute paths
+            allparts.insert(0, parts[0])
+            break
+        elif parts[1] == path: # sentinel for relative paths
+            allparts.insert(0, parts[1])
+            break
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+    return(allparts)
+
 ###################################################
 #
 # Work with XML
@@ -300,7 +315,7 @@ def find_and_replace_from_dict(fname, find_dict):
 def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
-	# save original xml_file
+	# save original xml_file, but don't overwrite if an original already present
 	if not os.path.exists(xml_file+'_orig'):
 		shutil.copy(xml_file, xml_file+'_orig')
 	# Parse metadata
@@ -420,6 +435,42 @@ def get_DOI_from_item(item):
 		i += 1
 	return doi
 
+def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True):
+	landing_item = sb.get_item(landing_id)
+	# Initialize dictionaries
+	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
+	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
+	dict_PARtoCHILDS = {} # Initialize empty parentID:childIDs dictionary
+	dirpath_list = []
+	for xml_file in xmllist:
+	    # get relative path from parentdir to XML, including parentdir and excluding XML file
+	    dirpath = os.path.relpath(os.path.split(xml_file)[0], os.path.split(parentdir)[0])
+	    # Isolate each dir and its root and find or create its SB page.
+	    dirchain = splitall(dirpath)
+	    for i in range(0, len(dirchain)-1):
+	        root = dirchain[i]
+	        dirname = dirchain[i+1]
+	        # Only execute for relative paths to XML that have not already been executed (stored in dirpath_list)
+	        if os.path.join(root, dirname) not in dirpath_list:
+	            dirpath_list.append(os.path.join(root, dirname))
+	            # for every directory, do the following:
+	            parent_id = dict_DIRtoID[root] # get ID for parent
+	            subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
+	            if not imagefile == False:
+	                subpage = sb.upload_file_to_item(subpage, imagefile)
+	            # store values in dictionaries
+	            dict_DIRtoID[dirname] = subpage['id']
+	            dict_IDtoJSON[subpage['id']] = subpage
+	            dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
+	# Save dictionaries
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+	    json.dump(dict_DIRtoID, f)
+	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
+	    json.dump(dict_IDtoJSON, f)
+	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
+	    pickle.dump(dict_PARtoCHILDS, f)
+	return(dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS)
+
 def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False, inherit_void=True):
 	# Upsert inheritedfield from parent to child by retrieving parent_item based on child
 	# Modified 3/8/17: if field does not exist in parent, remove in child
@@ -456,7 +507,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item['title'] = child_title
 		child_item = sb.create_item(child_item)
 		if verbose:
-			print("Creating page '{}' because it was not found in page {}.".format(trunc(child_title, 40), parentid))
+			print("CREATED PAGE: '{}' in '{}.'".format(trunc(child_title, 40), sb.get_item(parentid)['title']))
 	return child_item
 
 def upload_data(sb, item, xml_file, replace=True, verbose=False):
@@ -501,7 +552,7 @@ def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True,
 	dataname = dataname.split('_meta')[0]
 	# up_files = glob.glob(searchstr)
 	up_files = [fn for fn in glob.iglob(dataname + '*')
-				if not fn.endswith('_orig')]
+				if not fn.endswith('_orig') and not os.path.isdir(fn)]
 	bigfiles = []
 	for f in up_files:
 		if os.path.getsize(f) > max_MBsize*1000000: # convert megabytes to bytes
@@ -769,21 +820,25 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
 #
 ###################################################
 def delete_all_children(sb, parentid, verbose=False):
-	# Recursively delete all SB items that are descendants of the input page.
-	cids = sb.get_child_ids(parentid)
-	for cid in cids:
-		try:
-			delete_all_children(sb, cid)
-		except Exception as e:
-			print("EXCEPTION: {}".format(e))
-	sb.delete_items(cids)
-	ptitle = sb.get_item(parentid)['title']
-	if len(cids) > 0:
-		print("{} children hanging on in {}, \nbut they should vanish soon?".format(len(cids), ptitle))
-	else:
-		if verbose:
-			print("Eradicated all kids from {}!".format(ptitle))
-	return True
+    # Recursively delete all SB items that are descendants of the input page.
+	# Waits up to 5 seconds for the child items to be deleted.
+    cids = sb.get_child_ids(parentid)
+    for cid in cids:
+        try:
+            delete_all_children(sb, cid)
+        except Exception as e:
+            print("EXCEPTION: {}".format(e))
+    sb.delete_items(cids)
+    ptitle = sb.get_item(parentid)['title']
+    # Wait up to 5 seconds for the child items to be deleted
+    start = datetime.datetime.now()
+    duration = 0
+    while duration < 6:
+        duration = (datetime.datetime.now() - start).seconds
+        if len(sb.get_child_ids(parentid)) < 1:
+            exit_message = "DELETED: all child items from parent page '{}.'".format(ptitle)
+            break
+    return(exit_message)
 
 def remove_all_child_pages(useremail=False, landing_link=False):
 	# Stand-alone function to wipe page tree;
