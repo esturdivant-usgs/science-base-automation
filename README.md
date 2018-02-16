@@ -70,6 +70,7 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 Install additional required python modules: lxml, pysb, science-base-automation. sb_automation is compatible with Python 3 on OSX and Windows.
 
 Don't do this yet...
+
 		Install directly. 
 
 			conda create -n sb_py3 python=3
