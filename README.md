@@ -56,6 +56,7 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- max_MBsize - maximum file size (in MB) to upload
 	- update_landing_page
 	- replace_subpages
+	- restore_original_xml
 
 - Optional...
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
