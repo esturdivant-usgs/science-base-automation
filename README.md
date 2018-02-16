@@ -11,20 +11,15 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 ### Limitations
 (besides soon-to-be-discovered bugs)
 
-- The metadata population routine is hard-coded to a specific metadata template, which should match the structure created by TKME.
-- The bounding box routine is not consistently successful. - You may want to comment it out.
-- The script overwrites XML files without creating an archive.
+- The metadata population routine is hard-coded to the FGDC CSDGM structure.
 - It does not change the XML files within zipped files nor recreate the zip file with the updated XML. You will need to do this afterward to make sure that the XML is in the zip file is updated.
+- It does not add networkr links to individual files on the data page. 
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release.
-See below for an explanation of how SB pages will mimic the directory structure.
-Each directory name will become the title of a ScienceBase page except for the top directory/landing page.
-Ensure there is one and only one XML file for each desired SB page. These XML files should pass MP error checking.
-NOTE: The script will overwrite XML files. You may want to save a separate archive of the original XML files.
+See below for an explanation of how SB pages will mimic the directory structure. Each directory within the parent directory that contains (at some level) an XML file will become a ScienceBase page within the landing page. An SB page will be created for each XML file. The page will be located within the page corresponding to its containing directory. The title of that page is taken from the title of the dataset recorded in the XML file. Ensure there is one and only one XML file for each desired SB page. These XML files should pass MP error checking.
 
-- Filenames should use this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively.
-- You can use placeholder values in the XML files with the find_and_replace variable in config_autoSB.py. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
+- Filenames should use this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively. If the metadata filename is data_1.shp.xml, all files in the folder containing the XML file that begin with 'data_1' will be uploaded. This would include data_12.shp
 
 ![Example file structure for SB upload](docs/filestructure_eg.png)
 
@@ -62,6 +57,7 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- restore_original_xml
 
 - Optional...
+	- find_and_replace - dictionary of {find pattern : replace string} values to replaced in all XML files.
 	- metadata_additions - dictionary of {container tag : element XML} items to be added to all XML files.
 	- metadata_replacements - dictionary of {container tag : element XML} items to be replaced in all XML files.
 
@@ -198,3 +194,5 @@ If a facet was created, a URL for direct download of the all files in the facets
 
 
 	parentdir = r'/Volumes/myserverfolder/data_release'
+
+- Although not necessary, you can use find_and_replace variable in config_autoSB.py to replace text in the XML based on placeholder values. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
