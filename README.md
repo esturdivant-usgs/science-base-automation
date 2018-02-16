@@ -69,12 +69,13 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 #### INSTALL
 Install additional required python modules: lxml, pysb, science-base-automation. sb_automation is compatible with Python 3 on OSX and Windows.
 
-Install directly. 
+Don't do this yet...
+		Install directly. 
 
-	conda create -n sb_py3
-	source activate sb_py3
-	pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+			conda create -n sb_py3 python=3
+			source activate sb_py3
+			pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
+			pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 
 Download/fork/clone __science-base-automation__.
