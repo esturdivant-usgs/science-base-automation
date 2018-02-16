@@ -53,8 +53,11 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 	- update_subpages
 	- update_XML
 	- update_data
+	- update_extent
+	- quality_check_pages
+	- verbose
 	- max_MBsize - maximum file size (in MB) to upload
-	- update_landing_page
+	- add_preview_image_to_all
 	- replace_subpages
 	- restore_original_xml
 
