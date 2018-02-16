@@ -13,9 +13,6 @@ Currently, the script creates a new child page for each metadata file.
 
 REQUIRES: pysb, lxml, config_autoSB.py, autoSB.py
 To install pysb with pip: pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-
-ALTERNATIVE: only create child page from metadata if data files also exist...
-...or if there are multiple metadata files in the directory.
 """
 
 #%% Import packages
@@ -27,6 +24,7 @@ import json
 import pickle
 import datetime
 import sys
+import shutil
 from pathlib import Path
 try:
 	sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
@@ -98,7 +96,9 @@ if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json
 	print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
 	update_subpages = True
 
+# List XML files
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+
 if update_subpages:
     dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
 else: # Import pre-created dictionaries if all SB pages exist
@@ -127,15 +127,9 @@ if not sb.is_logged_in():
 
 if verbose:
 	print('Checking for directory: ID dictionary...')
-# if not "org_map" in locals():
-# 	with open(os.path.join(parentdir,'org_map.json'), 'r') as f:
-# 		org_map = json.load(f)
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
-
-# List XML files
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 
 #%%
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
@@ -144,6 +138,8 @@ if verbose:
 cnt = 0
 
 for xml_file in xmllist:
+	if restore_original_xml and os.path.exists(xml_file+'_orig'):
+		shutil.copy(xml_file+'_orig', xml_file)
 	cnt += 1
 	print("File {}: {}".format(cnt, xml_file))
 	if not sb.is_logged_in():
@@ -176,9 +172,13 @@ for xml_file in xmllist:
 			browse_file = glob.glob(searchstr)[0]
 			new_values['browse_file'] = browse_file.split('/')[-1]
 		except Exception as e:
-			print("We weren't able to upload a browse image for page {}. Exception report as '{}'".format(dirname, e))
+			print("We weren't able to upload a browse image for page {}. Exception reported as '{}'".format(dirname, e))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+		if "find_and_replace" in new_values:
+			find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
+		if verbose:
+			print("UPDATED XML: {}".format(xml_file))
 	# Upload data to ScienceBase
 	if update_data:
 		# Upload all files in dir that match basename of XML file. Record list of files that were not uploaded because they were above the threshold set by max_MBsize
@@ -200,9 +200,6 @@ for xml_file in xmllist:
 		now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
 		print('Completed {} out of {} xml files at {}.\n'.format(cnt, len(xmllist), now_str))
 	# store values in dictionaries
-	# org_map['DIRtoID'][xml_file] = data_item['id']
-	# org_map['IDtoJSON'][data_item['id']] = data_item
-	# org_map['PARtoCHILDS'].setdefault(parentid, set()).add(data_item['id'])
 	dict_DIRtoID[xml_file] = data_item['id']
 	dict_IDtoJSON[data_item['id']] = data_item
 	dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])

@@ -93,6 +93,7 @@ max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the la
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
 replace_subpages         = True # True to delete all child pages before running. Not necessary.
+restore_original_xml     = True # True to restore original files saved on the first run of the code. Not necessary.
 
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes

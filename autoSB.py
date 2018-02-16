@@ -21,7 +21,8 @@ import datetime
 __all__ = ['splitall', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
-		   'find_and_replace_text', 'update_xml', 'json_from_xml',
+		   'find_and_replace_text', 'find_and_replace_from_dict',
+		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'upload_data','replace_files_by_ext', 'upload_files_matching_xml', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
@@ -272,7 +273,7 @@ def map_newvals2xml(new_values):
 		# add values
 		val2xml[page_url] = {citelink: 1, networkr: 0}
 		val2xml[directdownload_link] = {networkr:1}
-		access_str = 'The first link is to the page containing the data, the second link downloads all data available from the page as a zip file, and the third link is to the publication landing page.'
+		access_str = 'The first link is to the page containing the data. The second is a direct link to download all data available from the page as a zip file. And the final link is to the publication landing page.'
 		val2xml[access_str] = {accinstr: 0}
 		# Browse graphic
 		if 'browse_file' in new_values.keys():
@@ -312,31 +313,59 @@ def find_and_replace_from_dict(fname, find_dict):
 	os.remove(fname+'.tmp')
 	return fname
 
+def update_xml_tagtext(metadata_root, newval, fstr='./distinfo', idx=0):
+	# Add or update the values of each element
+	try:
+		metadata_root.findall(fstr)[idx].text = newval
+	except IndexError: # if the element does not yet exist, create the element
+		try:
+			container, tag = os.path.split(fstr)
+			elem = metadata_root.find(container)
+			elem.append(etree.Element(tag))
+			metadata_root.findall(fstr)[idx].text = newval
+		except Exception as e:
+			print('Exception raised: {}'.format(e))
+			pass
+	except Exception as e:
+		print('Exception raised: {}'.format(e))
+		pass
+
+def flip_dict(in_dict, verbose=False):
+    # convert nested dictionary structure
+    # rework the dictionary to {tag fstring: {index: new value}}
+    out_dict = {}
+    for newval, elemfind in in_dict.items(): # Update elements with new ID text
+        for fstr, idx in elemfind.items():
+            if not fstr in out_dict:
+                if verbose:
+                    print(fstr)
+                out_dict[fstr] = {idx: newval}
+            else:
+                if verbose:
+                    print('  {}: {}'.format(idx, newval))
+                out_dict[fstr][idx] = newval
+    return(out_dict)
+
 def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
-	# uses dictionary of newval:{findpath:index}, e.g. {DOI:XXXXX:{'./idinfo/.../issue':0}}
-	# save original xml_file, but don't overwrite if an original already present
+	# 1. Save the original xml_file if an original is not already present
 	if not os.path.exists(xml_file+'_orig'):
 		shutil.copy(xml_file, xml_file+'_orig')
-	# Parse metadata
+
+	# 2. Parse metadata
 	metadata_root, tree, xml_file = get_root_flexibly(xml_file)
-	# Work through metadata elements
-	elem2newvalue = map_newvals2xml(new_values)
-	for newval, elemfind in elem2newvalue.items(): # Update elements with new ID text
-		# Add or update the values of each element
-		for fstr, i in elemfind.items():
-			try:
-				metadata_root.findall(fstr)[i].text = newval
-			except IndexError: # if the element does not yet exist, create the element
-				try:
-					container, tag = os.path.split(fstr)
-					elem = metadata_root.find(container)
-					elem.append(etree.Element(tag))
-					metadata_root.findall(fstr)[i].text = newval
-				except:
-					pass
-			except:
-				pass
+
+	# 3. Map the new values to their appropriate metadata elements
+	e2nv = map_newvals2xml(new_values)
+	e2nv_flipped = flip_dict(e2nv, verbose=False)
+
+	# 4. Update elements with new text values
+	for fstr, idx_val in e2nv_flipped.items():
+	    for idx in sorted(idx_val):
+	        newval = idx_val[idx]
+	        # Update elements with new text value
+	        update_xml_tagtext(metadata_root, newval, fstr, idx)
+
 	# Could be moved to main script execution
 	if "remove_fills" in new_values:
 		[remove_xml_element(metadata_root, path, ftext) for path, ftext in new_values['remove_fills'].items()]
@@ -344,14 +373,13 @@ def update_xml(xml_file, new_values, verbose=False):
 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
 	if "metadata_replacements" in new_values:
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
+
+	# Fix common error in which attrdomv has multiple subelements
 	metadata_root = fix_attrdomv_error(metadata_root)
-	# Overwrite XML file with new XML
+
+	# Save changes - overwrite XML file with new XML
 	tree.write(xml_file)
-	if "find_and_replace" in new_values:
-		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
-	if verbose:
-		print("UPDATED XML: {}".format(xml_file))
-	return xml_file
+	return(xml_file)
 
 def json_from_xml():
 	#FIXME: Currently hard-wired; will need to adapted to match metadata scheme.
