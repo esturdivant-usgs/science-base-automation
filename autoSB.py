@@ -18,7 +18,7 @@ import json
 import pickle
 import datetime
 
-__all__ = ['splitall', 'trunc',
+__all__ = ['splitall', 'splitall2', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
@@ -52,6 +52,22 @@ def splitall(path):
             path = parts[0]
             allparts.insert(0, parts[1])
     return(allparts)
+
+def splitall2(path):
+	# lists directory paths, each item ends with one more directory on the path
+    allparts2 = []
+    while 1:
+        parts = os.path.split(path)
+        if parts[0] == path:  # sentinel for absolute paths
+            allparts2.insert(0, path)
+            break
+        elif parts[1] == path: # sentinel for relative paths
+            allparts2.insert(0, path)
+            break
+        else:
+            allparts2.insert(0, path)
+            path = parts[0]
+    return(allparts2)
 
 ###################################################
 #
@@ -469,34 +485,27 @@ def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True
 	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
 	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
 	dict_PARtoCHILDS = {} # Initialize empty parentID:childIDs dictionary
-	dirpath_list = []
 	for xml_file in xmllist:
-	    # get relative path from parentdir to XML, including parentdir and excluding XML file
-	    dirpath = os.path.relpath(os.path.split(xml_file)[0], os.path.split(parentdir)[0])
-	    # Isolate each dir and its root and find or create its SB page.
-	    dirchain = splitall(dirpath)
-	    for i in range(0, len(dirchain)-1):
-	        root = dirchain[i]
-	        dirname = dirchain[i+1]
-	        # Only execute for relative paths to XML that have not already been executed (stored in dirpath_list)
-	        if os.path.join(root, dirname) not in dirpath_list:
-	            dirpath_list.append(os.path.join(root, dirname))
-	            # for every directory, do the following:
-	            parent_id = dict_DIRtoID[root] # get ID for parent
-	            subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
-	            if not imagefile == False:
-	                subpage = sb.upload_file_to_item(subpage, imagefile)
-	            # store values in dictionaries
-	            dict_DIRtoID[dirname] = subpage['id']
-	            dict_IDtoJSON[subpage['id']] = subpage
-	            dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
+		# get relative path from parentdir to XML, including parentdir
+		relpath = os.path.relpath(xml_file, os.path.dirname(parentdir))
+		# Find or create the SB page for each directory
+		dirchain = splitall2(os.path.dirname(relpath))
+		for dirpath in dirchain[1:]:
+			parent_id = dict_DIRtoID[os.path.dirname(dirpath)] # get ID for parent
+			subpage = find_or_create_child(sb, parent_id, os.path.basename(dirpath), verbose=verbose) # get JSON for subpage based on parent ID and dirpath
+			if not imagefile == False:
+			    subpage = sb.upload_file_to_item(subpage, imagefile)
+			# store values in dictionaries
+			dict_DIRtoID[dirpath] = subpage['id']
+			dict_IDtoJSON[subpage['id']] = subpage
+			dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
 	# Save dictionaries
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-	    json.dump(dict_DIRtoID, f)
+		json.dump(dict_DIRtoID, f)
 	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-	    json.dump(dict_IDtoJSON, f)
+		json.dump(dict_IDtoJSON, f)
 	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
-	    pickle.dump(dict_PARtoCHILDS, f)
+		pickle.dump(dict_PARtoCHILDS, f)
 	return(dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS)
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False, inherit_void=True):
@@ -519,7 +528,7 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False
 				print(e)
 				pass
 	child_item = sb.update_item(child_item)
-	return child_item
+	return(child_item)
 
 def find_or_create_child(sb, parentid, child_title, verbose=False):
 	# Find or create new child page
@@ -557,16 +566,18 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 	return item
 
 def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
-    for root, dirs, files in os.walk(parentdir):
-        for d in dirs:
-            xmllist = glob.glob(os.path.join(root, d, match_str))
-            for xml_file in xmllist:
-                parentid = dict_DIRtoID[d]
-                data_title = get_title_from_data(xml_file) # get title from XML
-                data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
-                sb.replace_file(xml_file, data_item)
-                print("REPLACED: {}".format(os.path.basename(xml_file)))
-    return
+	for root, dirs, files in os.walk(parentdir):
+	    for d in dirs:
+	        path = os.path.join(root, d)
+	        reldirpath = os.path.relpath(path, os.path.dirname(parentdir))
+	        xmllist = glob.glob(os.path.join(path, match_str))
+	        for xml_file in xmllist:
+	            parentid = dict_DIRtoID[reldirpath]
+	            data_title = get_title_from_data(xml_file) # get title from XML
+	            data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+	            sb.replace_file(xml_file, data_item)
+	            print("REPLACED: {}".format(os.path.basename(xml_file)))
+	return
 
 def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
 	# Upload all files matching the XML filename to SB page.
@@ -598,8 +609,8 @@ def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True,
 
 def upload_shp(sb, item, xml_file, replace=True, verbose=False):
 	# Upload shapefile files to SB page, optionally remove all present files
-	data_name = os.path.splitext(os.path.split(xml_file)[1])[0]
-	datapath = os.path.split(xml_file)[0]
+	data_name = os.path.splitext(os.path.basename(xml_file))[0]
+	datapath = os.path.dirname(xml_file)
 	if replace:
 		# Remove all files (and facets) from child page
 		item = remove_all_files(sb, item, verbose)
@@ -699,13 +710,14 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
 			imagelist = glob.glob(os.path.join(root,d,'browse*.png'))
 			imagelist.extend(glob.glob(os.path.join(root,d,'browse*.jpg')))
 			imagelist.extend(glob.glob(os.path.join(root,d,'browse*.gif')))
+			reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
 			# imagelist = glob.glob(os.path.join(root,d,'*.png'))
 			# imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
 			# imagelist.extend(glob.glob(os.path.join(root,d,'*.gif')))
 			for f in imagelist:
 				# sb = log_in(useremail)
 				try:
-					item = sb.get_item(dict_DIRtoID[d])
+					item = sb.get_item(dict_DIRtoID[reldirpath])
 				except:
 					title = d # dirname should correspond to page title
 					item = sb.find_items_by_title(title)['items'][0]
@@ -756,7 +768,8 @@ def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID
 	for (root, dirs, files) in os.walk(parentdir):
 		for d in dirs:
 			sb = log_in(useremail)
-			subpage = sb.get_item(dict_DIRtoID[d])
+			reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
+			subpage = sb.get_item(dict_DIRtoID[reldirpath])
 			subpage = inherit_SBfields(sb, subpage, subparent_inherits)
 			dict_IDtoJSON[subpage['id']] = subpage
 	return dict_IDtoJSON
@@ -764,7 +777,7 @@ def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID
 def update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent_inherits, dict_PARtoCHILDS):
 	# Populate data pages
 	for xmlpath, pageid in dict_DIRtoID.items():
-		if len(os.path.split(xmlpath)) > 1: # If dict key is XML file
+		if xmlpath.endswith('xml'): # If dict key is XML file
 			item = update_datapage(sb, pageid, xmlpath, inheritedfields=data_inherits, replace=True)
 		else: # If it's not an XML file, then it must be a directory
 			item = sb.get_item(dict_DIRtoID[xmlpath])
@@ -875,7 +888,7 @@ def remove_all_child_pages(useremail=False, landing_link=False):
 		useremail = raw_input("SB username (should be entire USGS email): ")
 	if not landing_link:
 		landing_link = raw_input("Landing page URL: ")
-	landing_id = os.path.split(landing_link)[1]
+	landing_id = os.path.basename(landing_link)
 	sb = log_in(useremail)
 	delete_all_children(sb, landing_id)
 	return landing_id

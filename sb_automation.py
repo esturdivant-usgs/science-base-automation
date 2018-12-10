@@ -149,7 +149,7 @@ for xml_file in xmllist:
 		except NameError:
 			sb = pysb.SbSession(env=None).loginc(useremail)
 	# 1. GET VALUES from XML
-	dirname = os.path.basename(os.path.split(xml_file)[0])
+	dirname = os.path.relpath(os.path.dirname(xml_file), os.path.dirname(parentdir))
 	parentid = dict_DIRtoID[dirname]
 	new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
 	# Get title of data by parsing XML
@@ -198,7 +198,7 @@ for xml_file in xmllist:
 		data_item = sb.upload_file_to_item(data_item, imagefile)
 	if verbose:
 		now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-		print('Completed {} out of {} xml files at {}.\n'.format(cnt, len(xmllist), now_str))
+		print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
 	# store values in dictionaries
 	dict_DIRtoID[xml_file] = data_item['id']
 	dict_IDtoJSON[data_item['id']] = data_item
