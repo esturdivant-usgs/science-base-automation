@@ -161,12 +161,13 @@ def fix_attrdomv_error(in_metadata, verbose=False):
 		return metadata_root
 
 def remove_xml_element(metadata_root, path='./', fill_text=['AUTHOR']):
-	# Remove any elements in path that contain fill text
-	# To be used as:
-	# tree = etree.parse(xml_file)
-	# metadata_root = tree.getroot()
-	# metadata_root = remove_xml_element(metadata_root)
-	# tree.write(xml_file)
+	# Remove XML elements in path that contain fill text
+	""" Example:
+	tree = etree.parse(xml_file)
+	metadata_root = tree.getroot()
+	metadata_root = remove_xml_element(metadata_root)
+	tree.write(xml_file)
+	"""
 	if type(fill_text) is str:
 		fill_text = [fill_text]
 	elif not type(fill_text) is list:
@@ -383,7 +384,7 @@ def update_xml(xml_file, new_values, verbose=False):
 			# Update elements with new text value
 			update_xml_tagtext(metadata_root, newval, fstr, idx)
 
-	# Could be moved to main script execution
+	#
 	if "remove_fills" in new_values:
 		[remove_xml_element(metadata_root, path, ftext) for path, ftext in new_values['remove_fills'].items()]
 	if "metadata_additions" in new_values:
@@ -485,7 +486,6 @@ def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True
 	# Initialize dictionaries
 	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
 	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
-	dict_PARtoCHILDS = {} # Initialize empty parentID:childIDs dictionary
 	for xml_file in xmllist:
 		# get relative path from parentdir to XML, including parentdir
 		relpath = os.path.relpath(xml_file, os.path.dirname(parentdir))
@@ -499,15 +499,12 @@ def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True
 			# store values in dictionaries
 			dict_DIRtoID[dirpath] = subpage['id']
 			dict_IDtoJSON[subpage['id']] = subpage
-			dict_PARtoCHILDS.setdefault(parent_id, set()).add(subpage['id'])
 	# Save dictionaries
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
 		json.dump(dict_DIRtoID, f)
 	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
 		json.dump(dict_IDtoJSON, f)
-	with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
-		pickle.dump(dict_PARtoCHILDS, f)
-	return(dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS)
+	return(dict_DIRtoID, dict_IDtoJSON)
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False, inherit_void=True):
 	# Upsert inheritedfield from parent to child by retrieving parent_item based on child
@@ -582,7 +579,7 @@ def upload_files(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=Fals
 	# Upload all files to child page
 	if verbose:
 		print("UPLOADING: files in directory '{}'".format(os.path.basename(datadir)))
-		if len(bigfiles)>0 and len(bigfiles)<2:
+		if len(bigfiles) == 1:
 			print("**TO DO** File {} is too big to upload here. Please manually upload afterward.".format(bigfiles))
 		elif len(bigfiles)>1:
 			print("**TO DO** Files {} are too big to upload here. Please manually upload afterward.".format(bigfiles))
@@ -857,6 +854,7 @@ def Update_XMLfromSB(sb, useremail, parentdir, fname_dir2id='dir_to_id.json', fn
 def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fname_dir2id='dir_to_id.json', fname_id2json='id_to_json.json', fname_par2childs='parentID_to_childrenIDs.txt'):
 	# Populate pages if SB page structure already exists.
 	# read data
+	# NOT USED 12/10/18
 	with open(os.path.join(parentdir,fname_dir2id), 'r') as f:
 		dict_DIRtoID = json.load(f)
 	with open(os.path.join(parentdir,fname_par2childs), 'r') as f:

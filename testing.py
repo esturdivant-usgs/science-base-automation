@@ -35,13 +35,60 @@ from autoSB import *
 from config_autoSB import * # Input sciencebase password
 # from Tkinter import *
 
+# sb = log_in(useremail)
+if not sb.is_logged_in():
+    print('Logging back in...')
+    try:
+        sb = pysb.SbSession(env=None).login(useremail, password)
+    except NameError:
+        sb = pysb.SbSession(env=None).loginc(useremail)
+cnt=0
+
+if not "dict_DIRtoID" in locals():
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+		dict_DIRtoID = json.load(f)
+
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+xml_file = xmllist[0]
+
+#%% for xml_file in xmllist:
+cnt += 1
+print("File {}: {}".format(cnt, xml_file))
+
+datadir = os.path.dirname(xml_file)
+sub_xmllist = glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)
+innerdirs = [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]
+if len(sub_xmllist) == 1 and not innerdirs:
+    print("One XML and no sub-directories...")
+
+datadir = os.path.dirname(xml_file)
+if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
+    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+    print("One XML and no sub-directories...")
+# convert the subparent into the data page
+
+pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+# get subparent item that will become data page
+data_item = flexibly_get_item(sb, pageid)
+
+# Get title of data from XML and change title
+data_title = get_title_from_data(xml_file)
+data_item['title'] = data_title
+data_item = sb.update_item(data_item)
 
 
-#%%
-landing_id
-subparent_inherits
-data_inherits
-inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #%% Upload all XML files without updating them.

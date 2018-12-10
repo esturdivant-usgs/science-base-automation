@@ -100,14 +100,12 @@ if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 
 if update_subpages:
-    dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
+    dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
 else: # Import pre-created dictionaries if all SB pages exist
     with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
         dict_DIRtoID = json.load(f)
     with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
         dict_IDtoJSON = json.load(f)
-    with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
-        dict_PARtoCHILDS = pickle.load(f)
 
 #%% Create and populate data pages
 """
@@ -138,10 +136,10 @@ if verbose:
 cnt = 0
 
 for xml_file in xmllist:
+	# Optionally restore original XML files.
 	if restore_original_xml and os.path.exists(xml_file+'_orig'):
 		shutil.copy(xml_file+'_orig', xml_file)
-	cnt += 1
-	print("File {}: {}".format(cnt, xml_file))
+	# Log into SB if it's timed out
 	if not sb.is_logged_in():
 		print('Logging back in...')
 		try:
@@ -149,21 +147,29 @@ for xml_file in xmllist:
 		except NameError:
 			sb = pysb.SbSession(env=None).loginc(useremail)
 	# 1. GET VALUES from XML
-	dirname = os.path.relpath(os.path.dirname(xml_file), os.path.dirname(parentdir))
-	parentid = dict_DIRtoID[dirname]
-	new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
-	# Get title of data by parsing XML
+	cnt += 1
+	print("File {}: {}".format(cnt, xml_file))
+	datadir = os.path.dirname(xml_file)
+	pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+	# Get title of data from XML
 	data_title = get_title_from_data(xml_file)
-	# Create (or find) data page based on title
-	data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose)
-	# If pubdate in new_values, set it as the date for the SB page
-	try:
-		data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
-	except:
-		pass
+	# Either change the title of the existing page (if only one metadata file)
+	if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
+	    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+		# Change subparent title to data title
+		data_item = flexibly_get_item(sb, pageid)
+		orig_title = data_item['title']
+		data_item['title'] = data_title
+		data_item = sb.update_item(data_item)
+		print("REPLACED: created page '{}' in place of {}".format(trunc(data_title), orig_title))
+	# Or create/find a new page to match the XML file
+	else:
+		# Create (or find) data page based on title
+		data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
 	# 2. MAKE UPDATES
 	# Update XML
 	if update_XML:
+		new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, pageid))
 		# add SB UID to be updated in XML
 		new_values['child_id'] = data_item['id']
 		# Look for browse graphic
@@ -172,7 +178,7 @@ for xml_file in xmllist:
 			browse_file = glob.glob(searchstr)[0]
 			new_values['browse_file'] = browse_file.split('/')[-1]
 		except Exception as e:
-			print("We weren't able to upload a browse image for page {}. Exception reported as '{}'".format(dirname, e))
+			print("We weren't able to upload a browse image for page {}. Exception reported as '{}'".format(data_title, e))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if "find_and_replace" in new_values:
@@ -181,6 +187,12 @@ for xml_file in xmllist:
 			print("UPDATED XML: {}".format(xml_file))
 	# Upload data to ScienceBase
 	if update_data:
+		# Update publication date in item
+		try:
+			# If pubdate in new_values, set it as the date for the SB page
+			data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+		except:
+			pass
 		# Upload all files in dir that match basename of XML file. Record list of files that were not uploaded because they were above the threshold set by max_MBsize
 		# data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 		data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
@@ -203,7 +215,6 @@ for xml_file in xmllist:
 	# store values in dictionaries
 	dict_DIRtoID[xml_file] = data_item['id']
 	dict_IDtoJSON[data_item['id']] = data_item
-	dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
 
 #%% Pass down fields from parents to children
 print("\n---\nPassing down fields from parents to children...")
@@ -226,8 +237,6 @@ with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
 	json.dump(dict_DIRtoID, f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
 	json.dump(dict_IDtoJSON, f)
-with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
-	pickle.dump(dict_PARtoCHILDS, f)
 
 #%% QA/QC
 if quality_check_pages:

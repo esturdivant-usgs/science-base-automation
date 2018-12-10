@@ -77,7 +77,7 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = False # False to save time if the page structure is already established.
+update_subpages = True # False to save time if the page structure is already established.
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
@@ -85,7 +85,7 @@ quality_check_pages      = True # False to save time if you feel good/want to ke
 verbose         = True
 # page_per_filename   = False
 
-max_MBsize = 200 # 2000 mb is the suggested threshold above which to use the large file uploader.
+max_MBsize = 100 # 2000 mb is the suggested threshold above which to use the large file uploader.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
