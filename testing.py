@@ -35,66 +35,6 @@ from autoSB import *
 from config_autoSB import * # Input sciencebase password
 # from Tkinter import *
 
-#%% setup_subparents: INPUTS
-sb
-parentdir
-landing_id
-
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-imagefile = False
-verbose=True
-
-
-#%% def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
-for root, dirs, files in os.walk(parentdir):
-    print('root: {} \ndirs: {}\nfiles: {}'.format(root, dirs, files))
-    for d in dirs:
-        path = os.path.join(root, d)
-        reldirpath = os.path.relpath(path, os.path.split(parentdir)[0])
-        print('RELPATH: {}'.format(reldirpath))
-
-        # xmllist = glob.glob(os.path.join(root, d, match_str))
-        # for xml_file in xmllist:
-        #     parentid = dict_DIRtoID[os.path.join(os.path.basename(root), d)]
-        #     data_title = get_title_from_data(xml_file) # get title from XML
-        #     data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
-        #     sb.replace_file(xml_file, data_item)
-        #     print("REPLACED: {}".format(os.path.basename(xml_file)))
-    # return
-
-
-def find_or_create_child(sb, parentid, child_title, verbose=False):
-	# Find or create new child page
-	for child_id in sb.get_child_ids(parentid): # Check if child page already exists
-		child_item = sb.get_item(child_id)
-		if child_item['title'] == child_title:
-			if verbose:
-				print("FOUND: page '{}'.".format(trunc(child_title)))
-			break
-	else: # If child doesn't already exist, create
-		child_item = {}
-		child_item['parentId'] = parentid
-		child_item['title'] = child_title
-		child_item = sb.create_item(child_item)
-		if verbose:
-			print("CREATED PAGE: '{}' in '{}.'".format(trunc(child_title, 40), sb.get_item(parentid)['title']))
-	return child_item
-
-
-# Save dictionaries
-with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-    json.dump(dict_DIRtoID, f)
-with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-    json.dump(dict_IDtoJSON, f)
-with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'ab+') as f:
-    pickle.dump(dict_PARtoCHILDS, f)
-return(dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS)
-
-
-
-
-
-
 
 
 #%%

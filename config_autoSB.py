@@ -32,7 +32,7 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
-# landing_link = "https://www.sciencebase.gov/catalog/item/5aeaf3a1e4b0860c0f727447"
+# landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7cb" # Deep Dive volume I
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
@@ -41,12 +41,7 @@ parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1/sb_upl
 #parentdir = r"c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-dr_doi = "10.5066/xxxx" # DOI for iPlover 2016
-
-# useremail = raw_input('ScienceBase username (should be entire USGS email): ')
-# landing_id = raw_input('ScienceBase ID of landing page (58055db4e4b0824b2d1c1ee2): ')
-# parentdir = raw_input("Path to parent directory (r'/Users/esturdivant/Desktop/GOM_final'): ")
-# dr_doi = raw_input("DOI of data release (e.g. 10.5066/F78P5XNK): ")
+dr_doi = "10.5066/P944FPA4" # DOI for Deep Dive volume I
 
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
 pubdate = '2019'
@@ -82,7 +77,7 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if the page structure is already established.
+update_subpages = False # False to save time if the page structure is already established.
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
@@ -90,7 +85,7 @@ quality_check_pages      = True # False to save time if you feel good/want to ke
 verbose         = True
 # page_per_filename   = False
 
-max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the large file uploader.
+max_MBsize = 200 # 2000 mb is the suggested threshold above which to use the large file uploader.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page

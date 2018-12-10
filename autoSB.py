@@ -25,7 +25,8 @@ __all__ = ['splitall', 'splitall2', 'trunc',
 		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
 		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
-		   'upload_data','replace_files_by_ext', 'upload_files_matching_xml', 'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
+		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
+		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
@@ -39,35 +40,35 @@ __all__ = ['splitall', 'splitall2', 'trunc',
 
 #%% Functions
 def splitall(path):
-    allparts = []
-    while 1:
-        parts = os.path.split(path)
-        if parts[0] == path:  # sentinel for absolute paths
-            allparts.insert(0, parts[0])
-            break
-        elif parts[1] == path: # sentinel for relative paths
-            allparts.insert(0, parts[1])
-            break
-        else:
-            path = parts[0]
-            allparts.insert(0, parts[1])
-    return(allparts)
+	allparts = []
+	while 1:
+		parts = os.path.split(path)
+		if parts[0] == path:  # sentinel for absolute paths
+			allparts.insert(0, parts[0])
+			break
+		elif parts[1] == path: # sentinel for relative paths
+			allparts.insert(0, parts[1])
+			break
+		else:
+			path = parts[0]
+			allparts.insert(0, parts[1])
+	return(allparts)
 
 def splitall2(path):
 	# lists directory paths, each item ends with one more directory on the path
-    allparts2 = []
-    while 1:
-        parts = os.path.split(path)
-        if parts[0] == path:  # sentinel for absolute paths
-            allparts2.insert(0, path)
-            break
-        elif parts[1] == path: # sentinel for relative paths
-            allparts2.insert(0, path)
-            break
-        else:
-            allparts2.insert(0, path)
-            path = parts[0]
-    return(allparts2)
+	allparts2 = []
+	while 1:
+		parts = os.path.split(path)
+		if parts[0] == path:  # sentinel for absolute paths
+			allparts2.insert(0, path)
+			break
+		elif parts[1] == path: # sentinel for relative paths
+			allparts2.insert(0, path)
+			break
+		else:
+			allparts2.insert(0, path)
+			path = parts[0]
+	return(allparts2)
 
 ###################################################
 #
@@ -125,18 +126,18 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	#     print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	if type(new_elem) is str:
-	    new_elem = etree.fromstring(new_elem)
+		new_elem = etree.fromstring(new_elem)
 	elif not type(new_elem) is etree._Element:
-	    raise TypeError("'new_elem' takes either strings or elements.")
+		raise TypeError("'new_elem' takes either strings or elements.")
 	# Append new_elem to containertag element
 	elem = metadata_root.findall(containertag)[0]
 	elem.append(new_elem) # append new tag to container element
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
-	    tree.write(xml_file)
-	    return xml_file
+		tree.write(xml_file)
+		return xml_file
 	else:
-	    return metadata_root
+		return metadata_root
 
 def fix_attrdomv_error(in_metadata, verbose=False):
 	# Fix attrdomv so that each has only one subelement
@@ -154,10 +155,10 @@ def fix_attrdomv_error(in_metadata, verbose=False):
 				parent.append(new_elem)
 			parent.remove(elem)
 	if type(xml_file) is str:
-	    tree.write(xml_file)
-	    return xml_file
+		tree.write(xml_file)
+		return xml_file
 	else:
-	    return metadata_root
+		return metadata_root
 
 def remove_xml_element(metadata_root, path='./', fill_text=['AUTHOR']):
 	# Remove any elements in path that contain fill text
@@ -187,14 +188,14 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# Whether in_metadata is a filename or an element, get metadata_root
 	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
 	# if type(in_metadata) is etree._Element:
-	# 	metadata_root = in_metadata
-	# 	xml_file =False
+	#     metadata_root = in_metadata
+	#     xml_file =False
 	# elif type(in_metadata) is str:
-	# 	xml_file = in_metadata
-	# 	tree = etree.parse(xml_file) # parse metadata using etree
-	# 	metadata_root=tree.getroot()
+	#     xml_file = in_metadata
+	#     tree = etree.parse(xml_file) # parse metadata using etree
+	#     metadata_root=tree.getroot()
 	# else:
-	# 	print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	#     print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	if type(new_elem) is str:
 		new_elem = etree.fromstring(new_elem)
@@ -228,14 +229,14 @@ def xml_write_wrapper(in_metadata, new_elem, containertag='./distinfo'):
 	# Whether in_metadata is a filename or an element, get metadata_root
 	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
 	# if type(in_metadata) is etree._Element:
-	# 	metadata_root = in_metadata
-	# 	xml_file =False
+	#     metadata_root = in_metadata
+	#     xml_file =False
 	# elif type(in_metadata) is str:
-	# 	xml_file = in_metadata
-	# 	tree = etree.parse(xml_file) # parse metadata using etree
-	# 	metadata_root=tree.getroot()
+	#     xml_file = in_metadata
+	#     tree = etree.parse(xml_file) # parse metadata using etree
+	#     metadata_root=tree.getroot()
 	# else:
-	# 	print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+	#     print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	replace_element_in_xml_for_wrapper(metadata_root, new_elem, containertag)
 	# Either overwrite XML file with new XML or return the updated metadata_root
@@ -306,13 +307,13 @@ def map_newvals2xml(new_values):
 	return val2xml
 
 def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
-    os.rename(fname, fname+'.tmp')
-    with open(fname+'.tmp', 'r') as f1:
-        with open(fname, 'w') as f2:
-            for line in f1:
-                f2.write(line.replace(findstr, replacestr))
-    os.remove(fname+'.tmp')
-    return fname
+	os.rename(fname, fname+'.tmp')
+	with open(fname+'.tmp', 'r') as f1:
+		with open(fname, 'w') as f2:
+			for line in f1:
+				f2.write(line.replace(findstr, replacestr))
+	os.remove(fname+'.tmp')
+	return fname
 
 def find_and_replace_from_dict(fname, find_dict):
 	# Takes dictionary of {replace_value: [find_str, find_str2]}
@@ -347,20 +348,20 @@ def update_xml_tagtext(metadata_root, newval, fstr='./distinfo', idx=0):
 		pass
 
 def flip_dict(in_dict, verbose=False):
-    # convert nested dictionary structure
-    # rework the dictionary to {tag fstring: {index: new value}}
-    out_dict = {}
-    for newval, elemfind in in_dict.items(): # Update elements with new ID text
-        for fstr, idx in elemfind.items():
-            if not fstr in out_dict:
-                if verbose:
-                    print(fstr)
-                out_dict[fstr] = {idx: newval}
-            else:
-                if verbose:
-                    print('  {}: {}'.format(idx, newval))
-                out_dict[fstr][idx] = newval
-    return(out_dict)
+	# convert nested dictionary structure
+	# rework the dictionary to {tag fstring: {index: new value}}
+	out_dict = {}
+	for newval, elemfind in in_dict.items(): # Update elements with new ID text
+		for fstr, idx in elemfind.items():
+			if not fstr in out_dict:
+				if verbose:
+					print(fstr)
+				out_dict[fstr] = {idx: newval}
+			else:
+				if verbose:
+					print('  {}: {}'.format(idx, newval))
+				out_dict[fstr][idx] = newval
+	return(out_dict)
 
 def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
@@ -377,10 +378,10 @@ def update_xml(xml_file, new_values, verbose=False):
 
 	# 4. Update elements with new text values
 	for fstr, idx_val in e2nv_flipped.items():
-	    for idx in sorted(idx_val):
-	        newval = idx_val[idx]
-	        # Update elements with new text value
-	        update_xml_tagtext(metadata_root, newval, fstr, idx)
+		for idx in sorted(idx_val):
+			newval = idx_val[idx]
+			# Update elements with new text value
+			update_xml_tagtext(metadata_root, newval, fstr, idx)
 
 	# Could be moved to main script execution
 	if "remove_fills" in new_values:
@@ -494,7 +495,7 @@ def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True
 			parent_id = dict_DIRtoID[os.path.dirname(dirpath)] # get ID for parent
 			subpage = find_or_create_child(sb, parent_id, os.path.basename(dirpath), verbose=verbose) # get JSON for subpage based on parent ID and dirpath
 			if not imagefile == False:
-			    subpage = sb.upload_file_to_item(subpage, imagefile)
+				subpage = sb.upload_file_to_item(subpage, imagefile)
 			# store values in dictionaries
 			dict_DIRtoID[dirpath] = subpage['id']
 			dict_IDtoJSON[subpage['id']] = subpage
@@ -547,37 +548,48 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 			print("CREATED PAGE: '{}' in '{}.'".format(trunc(child_title, 40), sb.get_item(parentid)['title']))
 	return child_item
 
-def upload_data(sb, item, xml_file, replace=True, verbose=False):
-	# Upload all files matching the XML filename to SB page.
-	# E.g. xml_file = 'path/data_name.ext.xml' will upload all files beginning with 'data_name'
-	# optionally remove all present files
+def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
+	for root, dirs, files in os.walk(parentdir):
+		for d in dirs:
+			path = os.path.join(root, d)
+			reldirpath = os.path.relpath(path, os.path.dirname(parentdir))
+			xmllist = glob.glob(os.path.join(path, match_str))
+			for xml_file in xmllist:
+				parentid = dict_DIRtoID[reldirpath]
+				data_title = get_title_from_data(xml_file) # get title from XML
+				data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+				sb.replace_file(xml_file, data_item)
+				print("REPLACED: {}".format(os.path.basename(xml_file)))
+	return
+
+def upload_files(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
+	# Upload all files in the directory to SB page.
 	if replace:
 		# Remove all files (and facets) from child page
 		item = remove_all_files(sb, item, verbose)
-	# List all files matching XML
-	dataname = xml_file.split('.')[0]
-	dataname = dataname.split('_meta')[0]
-	searchstr = dataname + '.*'
-	up_files = glob.glob(searchstr)
-	# Upload all files pertaining to data to child page
+	# List all files in directory, except original xml and other bad apples
+	datadir = os.path.dirname(xml_file)
+	up_files = [os.path.join(datadir, fn) for fn in os.listdir(datadir)
+				if not fn.endswith('_orig')
+				and not fn.endswith('DS_Store')
+				and not fn.endswith('.lock')
+				and os.path.isfile(os.path.join(datadir, fn))]
+	bigfiles = []
+	for fn in up_files:
+		if os.path.getsize(fn) > max_MBsize*1000000: # convert megabytes to bytes
+			bigfiles.append(os.path.basename(fn))
+			up_files.remove(fn)
+	# Upload all files to child page
 	if verbose:
-		print("UPLOADING: files matching '{}'".format(os.path.basename(searchstr)))
+		print("UPLOADING: files in directory '{}'".format(os.path.basename(datadir)))
+		if len(bigfiles)>0 and len(bigfiles)<2:
+			print("**TO DO** File {} is too big to upload here. Please manually upload afterward.".format(bigfiles))
+		elif len(bigfiles)>1:
+			print("**TO DO** Files {} are too big to upload here. Please manually upload afterward.".format(bigfiles))
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
-	return item
-
-def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
-	for root, dirs, files in os.walk(parentdir):
-	    for d in dirs:
-	        path = os.path.join(root, d)
-	        reldirpath = os.path.relpath(path, os.path.dirname(parentdir))
-	        xmllist = glob.glob(os.path.join(path, match_str))
-	        for xml_file in xmllist:
-	            parentid = dict_DIRtoID[reldirpath]
-	            data_title = get_title_from_data(xml_file) # get title from XML
-	            data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
-	            sb.replace_file(xml_file, data_item)
-	            print("REPLACED: {}".format(os.path.basename(xml_file)))
-	return
+	if verbose:
+		print("UPLOAD COMPLETED.")
+	return(item, bigfiles)
 
 def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
 	# Upload all files matching the XML filename to SB page.
@@ -600,8 +612,10 @@ def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True,
 	# Upload all files pertaining to data to child page
 	if verbose:
 		print("UPLOADING: files matching '{}'".format(os.path.basename(dataname + '*')))
-		if len(bigfiles)>0:
+		if len(bigfiles)>0 and len(bigfiles)<2:
 			print("**TO DO** File {} is too big to upload here. Please manually upload afterward.".format(bigfiles))
+		elif len(bigfiles)>1:
+			print("**TO DO** Files {} are too big to upload here. Please manually upload afterward.".format(bigfiles))
 	item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
 	if verbose:
 		print("UPLOAD COMPLETED.")
@@ -861,25 +875,25 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
 #
 ###################################################
 def delete_all_children(sb, parentid, verbose=False):
-    # Recursively delete all SB items that are descendants of the input page.
+	# Recursively delete all SB items that are descendants of the input page.
 	# Waits up to 5 seconds for the child items to be deleted.
-    cids = sb.get_child_ids(parentid)
-    for cid in cids:
-        try:
-            delete_all_children(sb, cid)
-        except Exception as e:
-            print("EXCEPTION: {}".format(e))
-    sb.delete_items(cids)
-    ptitle = sb.get_item(parentid)['title']
-    # Wait up to 5 seconds for the child items to be deleted
-    start = datetime.datetime.now()
-    duration = 0
-    while duration < 6:
-        duration = (datetime.datetime.now() - start).seconds
-        if len(sb.get_child_ids(parentid)) < 1:
-            exit_message = "DELETED: all child items from parent page '{}.'".format(ptitle)
-            break
-    return(exit_message)
+	cids = sb.get_child_ids(parentid)
+	for cid in cids:
+		try:
+			delete_all_children(sb, cid)
+		except Exception as e:
+			print("EXCEPTION: {}".format(e))
+	sb.delete_items(cids)
+	ptitle = sb.get_item(parentid)['title']
+	# Wait up to 5 seconds for the child items to be deleted
+	start = datetime.datetime.now()
+	duration = 0
+	while duration < 6:
+		duration = (datetime.datetime.now() - start).seconds
+		if len(sb.get_child_ids(parentid)) < 1:
+			exit_message = "DELETED: all child items from parent page '{}.'".format(ptitle)
+			break
+	return(exit_message)
 
 def remove_all_child_pages(useremail=False, landing_link=False):
 	# Stand-alone function to wipe page tree;
