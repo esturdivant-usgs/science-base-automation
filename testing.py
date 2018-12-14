@@ -51,9 +51,6 @@ if not "dict_DIRtoID" in locals():
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xml_file = xmllist[0]
 
-#%% for xml_file in xmllist:
-cnt += 1
-print("File {}: {}".format(cnt, xml_file))
 
 datadir = os.path.dirname(xml_file)
 sub_xmllist = glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)
@@ -76,13 +73,37 @@ data_title = get_title_from_data(xml_file)
 data_item['title'] = data_title
 data_item = sb.update_item(data_item)
 
+#%% values that could be extracted from the SB item:
+page_url = data_item['link']['url']
+facets = [fi['name'] for fi in data_item['facets']]
+
+
+[print(key) for key in data_item.keys()]
+
+data_item['browseTypes']
+data_item['browseCategories']
+for fi in data_item['files']:
+    print(fi['name'])
+for fi in data_item['facets']:
+    print(fi['name'])
+
+
+for link in data_item['distributionLinks']:
+    print(link['title'])
+    print(link['uri'])
+
+data_item['distributionLinks'][1]['uri']
 
 
 
+wayne_item = flexibly_get_item(sb, '5a946742e4b069906068fb47')
+wayne_item['distributionLinks'][1]['uri']
 
+soduspt_item = flexibly_get_item(sb, '5b1ede6ce4b092d965254a3f')
+soduspt_item['distributionLinks'][0]['uri']
 
-
-
+sp_item_dist = sb.get_item('5b1ede6ce4b092d965254a3f', params={'fields':'distributionLinks'})
+sp_item_dist
 
 
 

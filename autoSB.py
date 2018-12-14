@@ -718,9 +718,9 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
 	# 2. for each image, try to upload it
 	for (root, dirs, files) in os.walk(parentdir):
 		for d in dirs:
-			imagelist = glob.glob(os.path.join(root,d,'browse*.png'))
-			imagelist.extend(glob.glob(os.path.join(root,d,'browse*.jpg')))
-			imagelist.extend(glob.glob(os.path.join(root,d,'browse*.gif')))
+			imagelist = glob.glob(os.path.join(root,d,'*browse*.png'))
+			imagelist.extend(glob.glob(os.path.join(root,d,'*browse*.jpg')))
+			imagelist.extend(glob.glob(os.path.join(root,d,'*browse*.gif')))
 			reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
 			# imagelist = glob.glob(os.path.join(root,d,'*.png'))
 			# imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
