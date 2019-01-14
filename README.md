@@ -63,41 +63,34 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 
 ### 4. Run script sb_automation.py!
 #### INSTALL
-Install additional required python modules: lxml, pysb, science-base-automation. sb_automation is compatible with Python 3 on OSX and Windows.
+Install additional required python modules: lxml, pysb, science-base-automation. science-base-automation is compatible with Python 3 on OSX and Windows.
 
 Download/fork/clone __science-base-automation__.
 
-Install __lxml__ and __pysb__ using pip (requires Git):
-
-	easy_install pip
-	pip install lxml
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-
-... or using Conda...
+Install __lxml__ and __pysb__ using Conda (recommended):
 
 	conda create -n sb_py3 python=3 lxml
 	source activate sb_py3 # OSX. Windows would be activate sb_py3
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+	pip install sciencebasepy
+
+Alternative to conda: Use pip in your base python environment:
+
+	easy_install pip
+	pip install lxml
+	pip install sciencebasepy
+
 
 #### RUN
 __In your bash console (Terminal on OSX):__
 
-	# If using Conda:
-	source activate sb_py3 # OSX. Windows would be activate sb_py3
-	# Start here if not using Conda:
+If using Conda, first activate your sb_py3 environment: OSX: `source activate sb_py3` Windows: `activate sb_py3`
+
 	cd [path]\[to]\science-base-automation
 	python sb_automation.py
 
-__From Finder:__ Right click and run with your python launcher of choice.
+__From Finder:__ Right click sb_automation.py and run with your python launcher of choice.
 
 __In your Python IDE of choice:__ Open the script (sb_automation.py) and run it line by line or however you choose.
-
-Once I learn how to properly set up a program to be installed and run, I will update this to describe that process. It will begin like this...
-
-	conda create -n sb_py3 python=3
-	source activate sb_py3
-	pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 
 ### 5. Check ScienceBase pages and make manual modifications.   
