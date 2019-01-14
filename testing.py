@@ -17,7 +17,7 @@ ALTERNATIVE: only create child page from metadata if data files also exist...
 ...or if there are multiple metadata files in the directory.
 """
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import glob
 from lxml import etree

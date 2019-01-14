@@ -9,7 +9,7 @@ OVERVIEW: Configuration file for sb_automation.py
 REQUIRES: autoSB.py, pysb, lxml
 """
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import glob
 from lxml import etree

@@ -16,7 +16,7 @@ To install pysb with pip: pip install -e git+https://my.usgs.gov/stash/scm/sbe/p
 """
 
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import glob
 from lxml import etree

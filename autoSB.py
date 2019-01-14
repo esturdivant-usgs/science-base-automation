@@ -8,7 +8,7 @@ Last modified: 1/10/17
 OVERVIEW: Functions used in sb_automation.py
 """
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import sys
 import shutil
