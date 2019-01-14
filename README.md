@@ -171,7 +171,7 @@ Each directory will become a ScienceBase page within your data release. The dire
 ### ScienceBase features
 
 Reference for ScienceBase item services: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Services
-PYSB, the ScienceBase python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/browse
+sciencebasepy, the ScienceBase python module: https://github.com/usgs/sciencebasepy
 
 #### Intelligent content from uploaded files
 ScienceBase automatically detects the file type and in some cases the contents of uploaded files and makes intelligent decisions about how to use them. For instance, an image file uploaded to a page will be used as the preview image. It will pull information from an XML file to populate fields, and it will detect components of a shapefile or raster file and present them as a shapefile or raster “facet”, which can be downloaded as a package. Even if an XML file is later removed from the Files, the fields populated from it will remain.
