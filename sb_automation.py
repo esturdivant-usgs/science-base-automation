@@ -174,11 +174,12 @@ for xml_file in xmllist:
 		new_values['child_id'] = data_item['id']
 		# Look for browse graphic
 		searchstr = xml_file.split('.')[0].split('_meta')[0] + '*browse*'
+		new_values.pop('browse_file', None)
 		try:
 			browse_file = glob.glob(searchstr)[0]
-			new_values['browse_file'] = browse_file.split('/')[-1]
+			new_values['browse_file'] = os.path.basename(browse_file)
 		except Exception as e:
-			print("We weren't able to upload a browse image for page {}. Exception reported as '{}'".format(data_title, e))
+			print("We didn't find a browse image for page {}. Exception reported as '{}'".format(data_title, e))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if "find_and_replace" in new_values:

@@ -38,7 +38,7 @@ landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b91
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Volumes/stor/Projects/ScienceBaseAutomation/test_localdir' # OSX format
 parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1/sb_upload_test' # OSX format
-#parentdir = r"c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
+parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/P944FPA4" # DOI for Deep Dive volume I
@@ -77,20 +77,20 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if the page structure is already established.
-update_XML      = True # False to save time if XML already has the most up-to-date values.
+update_subpages = True # False to save time if page structure is already established.
+update_XML      = True # False to save time if XML already has most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
-quality_check_pages      = True # False to save time if you feel good/want to keep it simple
+quality_check_pages      = False # False to save time if you feel good/want to keep it simple
 verbose         = True
 # page_per_filename   = False
 
-max_MBsize = 100 # 2000 mb is the suggested threshold above which to use the large file uploader.
+max_MBsize = 50 # 2000 mb is the suggested threshold above which to use the large file uploader.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
 replace_subpages         = True # True to delete all child pages before running. Not necessary.
-restore_original_xml     = True # True to restore original files saved on the first run of the code. Not necessary.
+restore_original_xml     = False # True to restore original files saved on the first run of the code. Not necessary.
 
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes
