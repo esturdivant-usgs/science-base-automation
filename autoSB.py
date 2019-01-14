@@ -17,6 +17,7 @@ from lxml import etree
 import json
 import pickle
 import datetime
+import time
 
 __all__ = ['splitall', 'splitall2', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
@@ -24,7 +25,7 @@ __all__ = ['splitall', 'splitall2', 'trunc',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
 		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
-		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
+		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child', 'find_or_create_child_dicts',
 		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
 		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
@@ -543,6 +544,7 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
 		child_item = sb.create_item(child_item)
 		if verbose:
 			print("CREATED PAGE: '{}' in '{}.'".format(trunc(child_title, 40), sb.get_item(parentid)['title']))
+		time.sleep(1) # wait 1 sec to ensure that page is registered
 	return child_item
 
 def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):

@@ -78,9 +78,9 @@ qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
 #-------------------------------------------------------------------------------
 # Default True:
 update_subpages = True # False to save time if page structure is already established.
-update_XML      = True # False to save time if XML already has most up-to-date values.
+update_XML      = False # False to save time if XML already has most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
-update_extent   = True
+update_extent   = False
 quality_check_pages      = False # False to save time if you feel good/want to keep it simple
 verbose         = True
 # page_per_filename   = False
