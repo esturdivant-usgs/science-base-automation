@@ -31,13 +31,13 @@ useremail = 'esturdivant@usgs.gov'
 #password =
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
-landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
-# landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7cb" # Deep Dive volume I
+# landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
+landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7cb" # Deep Dive volume I
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
 parentdir = r'/Volumes/stor/Projects/ScienceBaseAutomation/test_localdir' # OSX format
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1/sb_upload_test' # OSX format
+parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_sbupload' # OSX format
 #parentdir = r"c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -71,7 +71,7 @@ data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 # Default: [].
 landing_fields_from_xml = []
 
-qcfields_dict = {'contacts':5, 'webLinks':0, 'facets':1}
+# qcfields_dict = {'contacts':3, 'webLinks':0, 'facets':1}
 
 #-------------------------------------------------------------------------------
 # Time-saving options
@@ -81,7 +81,7 @@ update_subpages = True # False to save time if the page structure is already est
 update_XML      = True # False to save time if XML already has the most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
-quality_check_pages      = True # False to save time if you feel good/want to keep it simple
+quality_check_pages      = False # False to save time if you feel good/want to keep it simple
 verbose         = True
 # page_per_filename   = False
 
@@ -90,7 +90,7 @@ max_MBsize = 100 # 2000 mb is the suggested threshold above which to use the lar
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
 replace_subpages         = True # True to delete all child pages before running. Not necessary.
-restore_original_xml     = True # True to restore original files saved on the first run of the code. Not necessary.
+restore_original_xml     = False # True to restore original files saved on the first run of the code. Not necessary.
 
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes
@@ -98,8 +98,9 @@ restore_original_xml     = True # True to restore original files saved on the fi
 # To change the "Suggested citation" in the Other Citation Information, choose one of two options: either use the find_and_replace variable or the new_othercit variable, see below.
 
 # FIND AND REPLACE. {key='desired value': value=['list of','values','to replace']}
-find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/XXXXX'],
+find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/***'],
     'DOI:{}'.format(dr_doi): ['DOI:XXXXX'],
+    'xxx': ['**ofrDOI**'],
     # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
     # 'https:': 'http:',
     'doi.org': 'dx.doi.org'

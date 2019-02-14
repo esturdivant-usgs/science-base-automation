@@ -493,6 +493,8 @@ def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True
 		dirchain = splitall2(os.path.dirname(relpath))
 		for dirpath in dirchain[1:]:
 			parent_id = dict_DIRtoID[os.path.dirname(dirpath)] # get ID for parent
+			if dirpath in dict_DIRtoID:
+				continue
 			subpage = find_or_create_child(sb, parent_id, os.path.basename(dirpath), verbose=verbose) # get JSON for subpage based on parent ID and dirpath
 			if not imagefile == False:
 				subpage = sb.upload_file_to_item(subpage, imagefile)

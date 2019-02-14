@@ -61,8 +61,11 @@ Work with landing page and XML
 """
 # Remove all child pages
 if replace_subpages:
-    print(delete_all_children(sb, landing_id))
-    landing_item = remove_all_files(sb, landing_id)
+	if not update_subpages:
+		print('WARNING: You chose not to update subpages, but also to replace them. Both are not possible so we will remove and create them.')
+	print(delete_all_children(sb, landing_id))
+	landing_item = remove_all_files(sb, landing_id, verbose=verbose)
+	update_subpages = True
 
 # Set imagefile
 if 'previewImage' in subparent_inherits:
@@ -174,11 +177,11 @@ for xml_file in xmllist:
 		new_values['child_id'] = data_item['id']
 		# Look for browse graphic
 		searchstr = xml_file.split('.')[0].split('_meta')[0] + '*browse*'
-		try:
-			browse_file = glob.glob(searchstr)[0]
-			new_values['browse_file'] = browse_file.split('/')[-1]
-		except Exception as e:
-			print("We weren't able to upload a browse image for page {}. Exception reported as '{}'".format(data_title, e))
+		browse_file = glob.glob(searchstr)
+		if len(browse_file) > 0:
+			new_values['browse_file'] = browse_file[0].split('/')[-1]
+		else:
+			print("Note: No browse image uploaded because no files matching the pattern were found.".format(data_title, e))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if "find_and_replace" in new_values:
