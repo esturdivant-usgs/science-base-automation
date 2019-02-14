@@ -100,17 +100,18 @@ If you want to start fresh, an easy way to delete all items pertaining to the pa
 ## What the script does:
 - Starts a ScienceBase session.
 - Works in the landing page and top directory as specified by the input parameters.
+- Optionally removes all child pages (option `replace_subpages`).
 - Loops through the sub-directories to create or find a matching SB page.
 	- For each sub-directory, it checks for a matching child page (child title==directory name and parent page=parent directory). If the child does not already exist, it creates a new page. For each page (regardless of whether it already existed), it copies fields from the landing page, as indicated in the input parameters.
 
 - Loops through the XML files to create or find a data page. For each XML file (excluding the landing page XML), it:
 	- creates (or finds) a data page,
 	- revises the XML to: include DOI and URLs for the landing page, data page, and direct data download; replaces any instance of 'http:' with 'https:'; adds a new element (such as new cross reference) to the XML
-	- uploads files matching the XML filename to the new page, except those greater than an indicated maximum file size.
+	- uploads files in the given data folder the new page, except those greater than an indicated maximum file size, which are listed at the end to be uploaded manually.
 	- copies fields from the parent page to the data page as indicated in the input parameters.
 
 - Sets bounding box coordinates for parents based on the spatial extent of the data in their child pages.
-- During processing it stores values in three dictionaries, which are then saved in the top directory as a time-saving measure for future processing.
+- During processing it stores values in two dictionaries, which are then saved in the top directory as a time-saving measure for future processing.
 
 ## Background
 
