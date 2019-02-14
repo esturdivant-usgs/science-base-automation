@@ -16,7 +16,7 @@ To install pysb with pip: pip install -e git+https://my.usgs.gov/stash/scm/sbe/p
 """
 
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import glob
 from lxml import etree
@@ -177,11 +177,12 @@ for xml_file in xmllist:
 		new_values['child_id'] = data_item['id']
 		# Look for browse graphic
 		searchstr = xml_file.split('.')[0].split('_meta')[0] + '*browse*'
+		new_values.pop('browse_file', None)
 		browse_file = glob.glob(searchstr)
 		if len(browse_file) > 0:
-			new_values['browse_file'] = browse_file[0].split('/')[-1]
+			new_values['browse_file'] = os.path.basename(browse_file[0])
 		else:
-			print("Note: No browse image uploaded because no files matching the pattern were found.".format(data_title, e))
+			print("Note: No browse browse graphic uploaded because no files matched the pattern.".format(data_title))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if "find_and_replace" in new_values:

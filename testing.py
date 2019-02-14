@@ -17,7 +17,7 @@ ALTERNATIVE: only create child page from metadata if data files also exist...
 ...or if there are multiple metadata files in the directory.
 """
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import glob
 from lxml import etree
@@ -50,6 +50,29 @@ if not "dict_DIRtoID" in locals():
 
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xml_file = xmllist[0]
+xml_file
+
+
+with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+    dict_DIRtoID = json.load(f)
+with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
+    dict_IDtoJSON = json.load(f)
+# Preview Image
+# org_map['IDtoJSON'] = upload_all_previewImages(sb, parentdir, org_map['DIRtoID'], org_map['IDtoJSON'])
+dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
+
+# Save dictionaries
+# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
+# 	json.dump(org_map, f)
+with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+	json.dump(dict_DIRtoID, f)
+with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
+	json.dump(dict_IDtoJSON, f)
+
+
+
+
+
 
 
 datadir = os.path.dirname(xml_file)

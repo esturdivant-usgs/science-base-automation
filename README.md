@@ -17,7 +17,7 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release.
-See below for an explanation of how SB pages will mimic the directory structure. Each directory within the parent directory that contains (at some level) an XML file will become a ScienceBase page within the landing page. An SB page will be created for each XML file. The page will be located within the page corresponding to its containing directory. The title of that page is taken from the title of the dataset recorded in the XML file. Ensure there is one and only one XML file for each desired SB page. These XML files should pass MP error checking.
+See below for an explanation of how SB pages will mimic the directory structure. Each directory within the parent directory that contains (at some level) an XML file will become a ScienceBase page within the landing page. An SB page will be created for each XML file. If a directory contains only one XML, it will become a child page and all relevant data files will be uploaded there. The page will be located within the page corresponding to its containing directory. If a single XML is present, the title of the corresponding page is taken from the dataset title in the XML file. All XML files should pass MP error checking.
 
 - Filenames should use this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively. If the metadata filename is data_1.shp.xml, all files in the folder containing the XML file that begin with 'data_1' will be uploaded. This would include data_12.shp
 
@@ -63,41 +63,34 @@ Open config_autoSB.py in your Python/text editor and revise the value of each in
 
 ### 4. Run script sb_automation.py!
 #### INSTALL
-Install additional required python modules: lxml, pysb, science-base-automation. sb_automation is compatible with Python 3 on OSX and Windows.
+Install additional required python modules: lxml, pysb, science-base-automation. science-base-automation is compatible with Python 3 on OSX and Windows.
 
 Download/fork/clone __science-base-automation__.
 
-Install __lxml__ and __pysb__ using pip (requires Git):
-
-	easy_install pip
-	pip install lxml
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
-
-... or using Conda...
+Install __lxml__ and __pysb__ using Conda (recommended):
 
 	conda create -n sb_py3 python=3 lxml
 	source activate sb_py3 # OSX. Windows would be activate sb_py3
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
+	pip install sciencebasepy
+
+Alternative to conda: Use pip in your base python environment:
+
+	easy_install pip
+	pip install lxml
+	pip install sciencebasepy
+
 
 #### RUN
 __In your bash console (Terminal on OSX):__
 
-	# If using Conda:
-	source activate sb_py3 # OSX. Windows would be activate sb_py3
-	# Start here if not using Conda:
+If using Conda, first activate your sb_py3 environment: OSX: `source activate sb_py3` Windows: `activate sb_py3`
+
 	cd [path]\[to]\science-base-automation
 	python sb_automation.py
 
-__From Finder:__ Right click and run with your python launcher of choice.
+__From Finder:__ Right click sb_automation.py and run with your python launcher of choice.
 
 __In your Python IDE of choice:__ Open the script (sb_automation.py) and run it line by line or however you choose.
-
-Once I learn how to properly set up a program to be installed and run, I will update this to describe that process. It will begin like this...
-
-	conda create -n sb_py3 python=3
-	source activate sb_py3
-	pip install git+https://github.com/esturdivant-usgs/science-base-automation.git
-	pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb
 
 
 ### 5. Check ScienceBase pages and make manual modifications.   
@@ -107,17 +100,18 @@ If you want to start fresh, an easy way to delete all items pertaining to the pa
 ## What the script does:
 - Starts a ScienceBase session.
 - Works in the landing page and top directory as specified by the input parameters.
+- Optionally removes all child pages (option `replace_subpages`).
 - Loops through the sub-directories to create or find a matching SB page.
 	- For each sub-directory, it checks for a matching child page (child title==directory name and parent page=parent directory). If the child does not already exist, it creates a new page. For each page (regardless of whether it already existed), it copies fields from the landing page, as indicated in the input parameters.
 
 - Loops through the XML files to create or find a data page. For each XML file (excluding the landing page XML), it:
 	- creates (or finds) a data page,
 	- revises the XML to: include DOI and URLs for the landing page, data page, and direct data download; replaces any instance of 'http:' with 'https:'; adds a new element (such as new cross reference) to the XML
-	- uploads files matching the XML filename to the new page, except those greater than an indicated maximum file size.
+	- uploads files in the given data folder the new page, except those greater than an indicated maximum file size, which are listed at the end to be uploaded manually.
 	- copies fields from the parent page to the data page as indicated in the input parameters.
 
 - Sets bounding box coordinates for parents based on the spatial extent of the data in their child pages.
-- During processing it stores values in three dictionaries, which are then saved in the top directory as a time-saving measure for future processing.
+- During processing it stores values in two dictionaries, which are then saved in the top directory as a time-saving measure for future processing.
 
 ## Background
 
@@ -178,7 +172,7 @@ Each directory will become a ScienceBase page within your data release. The dire
 ### ScienceBase features
 
 Reference for ScienceBase item services: https://my.usgs.gov/confluence/display/sciencebase/ScienceBase+Item+Services
-PYSB, the ScienceBase python module: https://my.usgs.gov/bitbucket/projects/SBE/repos/pysb/browse
+sciencebasepy, the ScienceBase python module: https://github.com/usgs/sciencebasepy
 
 #### Intelligent content from uploaded files
 ScienceBase automatically detects the file type and in some cases the contents of uploaded files and makes intelligent decisions about how to use them. For instance, an image file uploaded to a page will be used as the preview image. It will pull information from an XML file to populate fields, and it will detect components of a shapefile or raster file and present them as a shapefile or raster “facet”, which can be downloaded as a package. Even if an XML file is later removed from the Files, the fields populated from it will remain.

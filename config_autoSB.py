@@ -9,7 +9,7 @@ OVERVIEW: Configuration file for sb_automation.py
 REQUIRES: autoSB.py, pysb, lxml
 """
 #%% Import packages
-import pysb # Install on OSX with "pip install -e git+https://my.usgs.gov/stash/scm/sbe/pysb.git#egg=pysb"
+import sciencebasepy as pysb
 import os
 import glob
 from lxml import etree
@@ -36,9 +36,8 @@ landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7c
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/ScienceBaseAutomation/test_localdir' # OSX format
 parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_sbupload' # OSX format
-#parentdir = r"c:/Users/esturdivant/SE_ATLANTIC_0124" # WINDOWS format
+# parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
 dr_doi = "10.5066/P944FPA4" # DOI for Deep Dive volume I
@@ -77,8 +76,8 @@ landing_fields_from_xml = []
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if the page structure is already established.
-update_XML      = True # False to save time if XML already has the most up-to-date values.
+update_subpages = True # False to save time if page structure is already established.
+update_XML      = True # False to save time if XML already has most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
 quality_check_pages      = False # False to save time if you feel good/want to keep it simple

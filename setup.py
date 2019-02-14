@@ -10,5 +10,5 @@ setup(name='science-base-automation',
       url='https://github.com/esturdivant-usgs/science-base-automation',
       packages=[],
       python_requires='~=3.3',
-      install_requires=['lxml'],
+      install_requires=['lxml', 'sciencebasepy'],
      )
