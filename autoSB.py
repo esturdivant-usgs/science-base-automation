@@ -24,11 +24,11 @@ __all__ = ['splitall', 'splitall2', 'trunc',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
 		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
-		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
+		   'get_fields_from_xml', 'log_in', 'log_in2', 'flexibly_get_item',
 		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
 		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
-		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
+		   'set_parent_extent', 'find_browse_file', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
 		   'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
@@ -724,6 +724,16 @@ def set_parent_extent(sb, top_id, verbose=False):
 	for page in pagelist:
 		parent_bounds = get_parent_bounds(sb, page, verbose)
 	return parent_bounds
+
+def find_browse_file(datadir, searchterm='*browse*', extensions=('.png', '.jpg', '.gif')):
+    imagelist = []
+    for ext in extensions:
+        imagelist.extend(glob.glob(os.path.join(datadir, searchterm + ext)))
+        if len(imagelist) > 0:
+            browse_file = os.path.basename(imagelist[0])
+            return(browse_file)
+    print("Note: No {} image files found in the directory.".format(searchterm))
+    return
 
 def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=False, verbose=False):
 	# Upload all image files to their respective pages.

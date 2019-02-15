@@ -156,7 +156,7 @@ for xml_file in xmllist:
 	pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
 	# Get title of data from XML
 	data_title = get_title_from_data(xml_file)
-	# Either change the title of the existing page (if only one metadata file)
+	# Either change the title of the existing page (if only one metadata file)...
 	if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
 	    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
 		# Change subparent title to data title
@@ -183,7 +183,7 @@ for xml_file in xmllist:
 		if len(imagelist) > 0:
 		    new_values['browse_file'] = os.path.basename(imagelist[0])
 		else:
-		    print("Note: No browse graphic uploaded because no files matched the pattern.".format(data_title))
+		    print("Note: No *browse* image files found in the data directory.".format(data_title))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if "find_and_replace" in new_values:
