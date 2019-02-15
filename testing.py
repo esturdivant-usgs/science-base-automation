@@ -53,6 +53,26 @@ xml_file = xmllist[0]
 xml_file
 
 
+#%% Working with browse graphic population... Looking at section of for loop.
+new_values ={'child_id':'5c65dffde4b0fe48cb3907b2'}
+new_values['browse_file'] = '000'
+new_values.pop('browse_file', None) # remove value from past iteration
+new_values
+datadir = os.path.dirname(xml_file)
+imagelist = glob.glob(os.path.join(datadir,'*browse*.png'))
+imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.jpg')))
+imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.gif')))
+# reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
+if len(imagelist) > 0:
+    new_values['browse_file'] = os.path.basename(imagelist[0])
+else:
+    print("Note: No browse graphic uploaded because no files matched the pattern.".format(data_title))
+
+xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
+update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+
+
+
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
     dict_DIRtoID = json.load(f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:

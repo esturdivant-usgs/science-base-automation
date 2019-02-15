@@ -25,7 +25,7 @@ __all__ = ['splitall', 'splitall2', 'trunc',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
 		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
-		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child', 'find_or_create_child_dicts',
+		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
 		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
@@ -451,6 +451,15 @@ def log_in(username=False, password=False):
 			sb = pysb.SbSession(env=None).loginc(username)
 	return sb
 
+def log_in2(username=False, password=False, sb=[]):
+	if not sb.is_logged_in():
+		print('Logging back in...')
+		try:
+			sb = pysb.SbSession(env=None).login(useremail, password)
+		except NameError:
+			sb = pysb.SbSession(env=None).loginc(useremail)
+	return sb
+
 def flexibly_get_item(sb, mystery_id, output='item'):
 	# Given input of either ID or JSON, return ID, link, and JSON item
 	if type(mystery_id) is str: # If input is ID...
@@ -726,9 +735,6 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
 			imagelist.extend(glob.glob(os.path.join(root,d,'*browse*.jpg')))
 			imagelist.extend(glob.glob(os.path.join(root,d,'*browse*.gif')))
 			reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
-			# imagelist = glob.glob(os.path.join(root,d,'*.png'))
-			# imagelist.extend(glob.glob(os.path.join(root,d,'*.jpg')))
-			# imagelist.extend(glob.glob(os.path.join(root,d,'*.gif')))
 			for f in imagelist:
 				# sb = log_in(useremail)
 				try:

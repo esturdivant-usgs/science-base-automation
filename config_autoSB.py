@@ -18,6 +18,7 @@ import pickle
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__))) # Add the script location to the system path just to make sure this works.
 from autoSB import *
+import getpass
 
 """
 Input variables
@@ -36,7 +37,7 @@ landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7c
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_sbupload' # OSX format
+parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v2_4sb_part2' # OSX format
 # parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -76,7 +77,7 @@ landing_fields_from_xml = []
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = True # False to save time if page structure is already established.
+update_subpages = False # False to save time if page structure is already established.
 update_XML      = True # False to save time if XML already has most up-to-date values.
 update_data     = True # False to save time if up-to-date data files have already been uploaded.
 update_extent   = True
@@ -88,7 +89,7 @@ max_MBsize = 100 # 2000 mb is the suggested threshold above which to use the lar
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
-replace_subpages         = True # True to delete all child pages before running. Not necessary.
+replace_subpages         = False # True to delete all child pages before running. Not necessary.
 restore_original_xml     = False # True to restore original files saved on the first run of the code. Not necessary.
 
 # ------------------------------------------------------------------------------
@@ -162,6 +163,7 @@ find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.50
 Initialize
 """
 #%% Initialize SB session
+password = getpass.getpass("ScienceBase password: ")
 if "password" in locals():
     sb = log_in(useremail, password)
 else:

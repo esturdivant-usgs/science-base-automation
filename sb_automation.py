@@ -176,13 +176,14 @@ for xml_file in xmllist:
 		# add SB UID to be updated in XML
 		new_values['child_id'] = data_item['id']
 		# Look for browse graphic
-		searchstr = xml_file.split('.')[0].split('_meta')[0] + '*browse*'
-		new_values.pop('browse_file', None)
-		browse_file = glob.glob(searchstr)
-		if len(browse_file) > 0:
-			new_values['browse_file'] = os.path.basename(browse_file[0])
+		new_values.pop('browse_file', None) # remove value from past iteration
+		imagelist = glob.glob(os.path.join(datadir,'*browse*.png'))
+		imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.jpg')))
+		imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.gif')))
+		if len(imagelist) > 0:
+		    new_values['browse_file'] = os.path.basename(imagelist[0])
 		else:
-			print("Note: No browse browse graphic uploaded because no files matched the pattern.".format(data_title))
+		    print("Note: No browse graphic uploaded because no files matched the pattern.".format(data_title))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if "find_and_replace" in new_values:
@@ -197,13 +198,21 @@ for xml_file in xmllist:
 			data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
 		except:
 			pass
-		# Upload all files in dir that match basename of XML file. Record list of files that were not uploaded because they were above the threshold set by max_MBsize
+		# Upload all files in directory to the SB page
+		# Record list of files that were not uploaded because they were above the threshold set by max_MBsize
 		# data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 		data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 		if bigfiles1:
 			if not 'bigfiles' in locals():
 				bigfiles = []
 			bigfiles += bigfiles1
+	# Log into SB if it's timed out
+	if not sb.is_logged_in():
+		print('Logging back in...')
+		try:
+			sb = pysb.SbSession(env=None).login(useremail, password)
+		except NameError:
+			sb = pysb.SbSession(env=None).loginc(useremail)
 	# Upload XML to ScienceBase
 	elif update_XML:
 		# If XML was updated, but data was not uploaded, replace only XML.
