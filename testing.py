@@ -73,95 +73,6 @@ else:
 xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
 update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 
-def find_browse_file(datadir, searchterm='*browse*', extensions=('.png', '.jpg', '.gif')):
-    imagelist = []
-    for ext in extensions:
-        imagelist.extend(glob.glob(os.path.join(datadir, searchterm + ext)))
-        if len(imagelist) > 0:
-            browse_file = os.path.basename(imagelist[0])
-            return(browse_file)
-    print("Note: No {} image files found in the directory.".format(searchterm))
-    return
-    # imagelist = glob.glob(os.path.join(datadir, searchterm+'.png'))
-    # imagelist.extend(glob.glob(os.path.join(datadir, searchterm+'.jpg')))
-    # imagelist.extend(glob.glob(os.path.join(datadir, searchterm+'.gif')))
-    # if len(imagelist) > 0:
-    #     browse_file = os.path.basename(imagelist[0])
-    # else:
-    #     print("Note: No *browse* image files found in the data directory.".format(data_title))
-    # return(browse_file)
-
-#%% Troubleshooting failure while trying to upload shoreline png
-"""
-Exception: Other HTTP error: 400: {"errors":[{"message":
-"There was a problem with handling of uploaded files. Remove newly uploaded files before trying again.
-javax.imageio.IIOException: I/O error reading PNG header!",
-"objectName":"gov.sciencebase.catalog.item.Item","field":"files"}]}
-"""
-item = sb.get_item('5c65dfa2e4b0fe48cb39074c')
-up_files = [r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/cei_shoreline_inletLines_browse.png']
-fn = up_files[0]
-item = sb.upload_files_and_upsert_item(item, up_files)
-# throws HTTP error, same as copied into sbautomation_errors.py
-sb.upload_files_and_update_item(item, up_files, scrape_file=False)
-
-sb.upload_file_to_item(item, fn, scrape_file=False)
-# throws same HTTP error
-
-sb.replace_file(fn, item)
-
-item = remove_all_files(sb, item, True)
-item = sb.upload_files_and_upsert_item(item, up_files)
-# throws HTTP error, same as copied into sbautomation_errors.py
-sb.upload_files_and_update_item(item, up_files, scrape_file=False)
-
-sb.upload_file_to_item(item, fn, scrape_file=False) # throws same HTTP error
-
-sb.replace_file(fn, item) # replace file doesn't return anything if there's nothing to replace.
-
-fn = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/cei_shoreline_inletLines_browse_small.jpeg'
-up_files = [fn]
-item = remove_all_files(sb, item, True)
-item = sb.upload_files_and_upsert_item(item, up_files)
-# throws HTTP error, same as copied into sbautomation_errors.py
-sb.upload_files_and_update_item(item, up_files, scrape_file=False)
-
-sb.upload_file_to_item(item, fn, scrape_file=False) # throws same HTTP error
-
-sb.replace_file(fn, item) # replace file doesn't return anything if there's nothing to replace.
-
-
-
-# def upload_files(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
-# Upload all files in the directory to SB page.
-# if replace:
-# 	# Remove all files (and facets) from child page
-# 	item = remove_all_files(sb, item, verbose)
-# List all files in directory, except original xml and other bad apples
-Ldatadir = os.path.dirname(xml_file)
-up_files = [os.path.join(datadir, fn) for fn in os.listdir(datadir)
-			if not fn.endswith('_orig')
-			and not fn.endswith('DS_Store')
-			and not fn.endswith('.lock')
-			and os.path.isfile(os.path.join(datadir, fn))]
-bigfiles = []
-for fn in up_files:
-	if os.path.getsize(fn) > max_MBsize*1000000: # convert megabytes to bytes
-		bigfiles.append(os.path.basename(fn))
-		up_files.remove(fn)
-# Upload all files to child page
-if verbose:
-	print("UPLOADING: files in directory '{}'".format(os.path.basename(datadir)))
-	if len(bigfiles) == 1:
-		print("**TO DO** File {} is too big to upload here. Please manually upload afterward.".format(bigfiles))
-	elif len(bigfiles)>1:
-		print("**TO DO** Files {} are too big to upload here. Please manually upload afterward.".format(bigfiles))
-item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
-if verbose:
-	print("UPLOAD COMPLETED.")
-return(item, bigfiles)
-
-
 
 
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
@@ -182,6 +93,22 @@ with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
 
 
 
+
+#%% Change find_and_replace so that keys are searchstr and values are replacestr
+find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/***'],
+    'DOI:{}'.format(dr_doi): ['DOI:XXXXX'],
+    'xxx': ['**ofrDOI**'],
+    # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+    # 'https:': 'http:',
+    'doi.org': 'dx.doi.org'
+    }
+fr2 = {'https://doi.org/10.5066/***':'https://doi.org/{}'.format(dr_doi),
+    'DOI:XXXXX':'DOI:{}'.format(dr_doi),
+    '**ofrDOI**':'xxx',
+    # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+    # 'https:': 'http:',
+    'dx.doi.org':'doi.org'
+    }
 
 
 

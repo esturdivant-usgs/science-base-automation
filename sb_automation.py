@@ -186,8 +186,6 @@ for xml_file in xmllist:
 		    print("Note: No *browse* image files found in the data directory.".format(data_title))
 		# Make the changes to the XML based on the new_values dictionary
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-		if "find_and_replace" in new_values:
-			find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
 		if verbose:
 			print("UPDATED XML: {}".format(xml_file))
 	# Upload data to ScienceBase

@@ -98,12 +98,10 @@ restore_original_xml     = False # True to restore original files saved on the f
 # To change the "Suggested citation" in the Other Citation Information, choose one of two options: either use the find_and_replace variable or the new_othercit variable, see below.
 
 # FIND AND REPLACE. {key='desired value': value=['list of','values','to replace']}
-find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/***'],
-    'DOI:{}'.format(dr_doi): ['DOI:XXXXX'],
-    'xxx': ['**ofrDOI**'],
-    # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
-    # 'https:': 'http:',
-    'doi.org': 'dx.doi.org'
+find_and_replace = {'**dr_doi**': dr_doi,
+    'xxx-ofr doi-***': 'xxx-ofr doi-***',
+    # 'http:': 'https:',
+    'dx.doi.org': 'doi.org'
     }
 
 # REMOVE ELEMENT. If an element needs to be removed, this will occur before additions or replacements

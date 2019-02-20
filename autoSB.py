@@ -18,6 +18,7 @@ import json
 import pickle
 import datetime
 import time
+import io
 
 __all__ = ['splitall', 'splitall2', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
@@ -318,19 +319,16 @@ def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
 	return fname
 
 def find_and_replace_from_dict(fname, find_dict):
-	# Takes dictionary of {replace_value: [find_str, find_str2]}
-	os.rename(fname, fname+'.tmp')
-	with open(fname+'.tmp', 'r') as f1:
-		with open(fname, 'w') as f2:
-			for line in f1:
-				for rstr, flist in find_dict.items():
-					if type(flist) is str:
-						flist = [flist]
-					for fstr in flist:
-						line = line.replace(fstr, rstr)
-				f2.write(line)
-	os.remove(fname+'.tmp')
-	return fname
+    # Takes dictionary of {find_value: replace_value}
+    ct = 0
+    with io.open(fname, 'r', encoding='utf-8') as f:
+        s = f.read()
+    # Iterate through find:replace pairs
+    for fstr, rstr in find_dict.items():
+        s = s.replace(fstr, rstr)
+    with io.open(fname, 'w', encoding='utf-8') as f:
+        f.write(s)
+    return(fname)
 
 def update_xml_tagtext(metadata_root, newval, fstr='./distinfo', idx=0):
 	# Add or update the values of each element
@@ -392,6 +390,8 @@ def update_xml(xml_file, new_values, verbose=False):
 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
 	if "metadata_replacements" in new_values:
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
+	if "find_and_replace" in new_values:
+		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
 
 	# Fix common error in which attrdomv has multiple subelements
 	metadata_root = fix_attrdomv_error(metadata_root)
