@@ -93,6 +93,8 @@ def get_title_from_data(xml_file, metadata_root=False):
 		return False
 
 def get_root_flexibly(in_metadata):
+	# Whether in_metadata is a filename or an element, get metadata_root
+	# in_metadata accepts either xml file or root element of parsed metadata.
 	if type(in_metadata) is etree._Element:
 		metadata_root = in_metadata
 		tree = False
@@ -110,7 +112,7 @@ def get_root_flexibly(in_metadata):
 		metadata_root=tree.getroot()
 	else:
 		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
-	return metadata_root, tree, xml_file
+	return(metadata_root, tree, xml_file)
 
 def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	# Appends element 'new_elem' to 'containertag' in XML file. in_metadata accepts either xmlfile or root element of parsed metadata. new_elem accepts either lxml._Element or XML string
@@ -162,27 +164,36 @@ def fix_attrdomv_error(in_metadata, verbose=False):
 	else:
 		return metadata_root
 
-def remove_xml_element(metadata_root, path='./', fill_text=['AUTHOR']):
-	# Remove XML elements in path that contain fill text
-	""" Example:
-	tree = etree.parse(xml_file)
-	metadata_root = tree.getroot()
-	metadata_root = remove_xml_element(metadata_root)
-	tree.write(xml_file)
-	"""
-	if type(fill_text) is str:
-		fill_text = [fill_text]
-	elif not type(fill_text) is list:
-		print('fill_text must be string or list')
-		raise(Exception)
-	container, tag = os.path.split(path)
-	parent_elem = metadata_root.find(container)
-	for elem in parent_elem.iter(tag):
-		for text in elem.itertext():
-			for ftext in fill_text:
-				if ftext in text:
-					parent_elem.remove(elem)
-	return metadata_root
+def remove_xml_element(in_metadata, path='./', fill_text=['AUTHOR']):
+    # Remove XML elements in path that contain fill text
+    """ Example:
+    tree = etree.parse(xml_file)
+    metadata_root = tree.getroot()
+    metadata_root = remove_xml_element(metadata_root)
+    tree.write(xml_file)
+    """
+    # get metadata root
+    metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+    # get fill_text as list of strings
+    if type(fill_text) is str:
+        fill_text = [fill_text]
+    elif not type(fill_text) is list:
+        print('fill_text must be string or list')
+        raise(Exception)
+    # Search the matching tags for fill_text and remove all elements in which it is found.
+    container, tag = os.path.split(path)
+    parent_elem = metadata_root.find(container)
+    for elem in parent_elem.iter(tag):
+        for text in elem.itertext():
+            for ftext in fill_text:
+                if ftext in text:
+                    parent_elem.remove(elem)
+    # Either overwrite XML file with new XML or return the updated metadata_root
+    if type(xml_file) is str:
+        tree.write(xml_file)
+        return xml_file
+    else:
+        return metadata_root
 
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# Overwrites the first element in containertag corresponding to the tag of new_elem
@@ -293,7 +304,7 @@ def map_newvals2xml(new_values):
 		# add values
 		val2xml[page_url] = {citelink: 1, networkr: 0}
 		val2xml[directdownload_link] = {networkr:1}
-		access_str = 'The first link is to the page containing the data. The second is a direct link to download all data available from the page as a zip file. And the final link is to the publication landing page.'
+		access_str = 'The first link is to the page containing the data. The second is a direct link to download all data available from the page as a zip file. The final link is to the publication landing page. The data page (first link) may have additional data access options, including web services.'
 		val2xml[access_str] = {accinstr: 0}
 		# Browse graphic
 		if 'browse_file' in new_values.keys():
@@ -307,7 +318,7 @@ def map_newvals2xml(new_values):
 	# Date and time of update
 	now_str = datetime.datetime.now().strftime("%Y%m%d")
 	val2xml[now_str] = {metadate: 0}
-	return val2xml
+	return(val2xml)
 
 def find_and_replace_text(fname, findstr='http:', replacestr='https:'):
 	os.rename(fname, fname+'.tmp')
@@ -365,25 +376,22 @@ def flip_dict(in_dict, verbose=False):
 
 def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
-	# 1. Save the original xml_file if an original is not already present
-	if not os.path.exists(xml_file+'_orig'):
-		shutil.copy(xml_file, xml_file+'_orig')
-
-	# 2. Parse metadata
-	metadata_root, tree, xml_file = get_root_flexibly(xml_file)
-
-	# 3. Map the new values to their appropriate metadata elements
+	#%% Map new values to their appropriate metadata elements
 	e2nv = map_newvals2xml(new_values)
 	e2nv_flipped = flip_dict(e2nv, verbose=False)
-
-	# 4. Update elements with new text values
+	#%% Update the XML with the new values
+	# Save the original xml_file if an original is not already present
+	if not os.path.exists(xml_file+'_orig'):
+		shutil.copy(xml_file, xml_file+'_orig')
+	# Parse metadata
+	metadata_root, tree, xml_file = get_root_flexibly(xml_file)
+	# Update elements with new text values
 	for fstr, idx_val in e2nv_flipped.items():
 		for idx in sorted(idx_val):
 			newval = idx_val[idx]
 			# Update elements with new text value
 			update_xml_tagtext(metadata_root, newval, fstr, idx)
-
-	#
+	#%% Modify XML as programmed in config file.
 	if "remove_fills" in new_values:
 		[remove_xml_element(metadata_root, path, ftext) for path, ftext in new_values['remove_fills'].items()]
 	if "metadata_additions" in new_values:
@@ -392,11 +400,9 @@ def update_xml(xml_file, new_values, verbose=False):
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
 	if "find_and_replace" in new_values:
 		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
-
-	# Fix common error in which attrdomv has multiple subelements
+	#%% Fix common error in which attrdomv has multiple subelements
 	metadata_root = fix_attrdomv_error(metadata_root)
-
-	# Save changes - overwrite XML file with new XML
+	#%% Save changes - overwrite XML file with new XML
 	tree.write(xml_file)
 	return(xml_file)
 

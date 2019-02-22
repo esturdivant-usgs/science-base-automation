@@ -164,7 +164,7 @@ for xml_file in xmllist:
 		orig_title = data_item['title']
 		data_item['title'] = data_title
 		data_item = sb.update_item(data_item)
-		print("REPLACED: created page '{}' in place of {}".format(trunc(data_title), orig_title))
+		print("RENAMED: page '{}' in place of '{}'".format(trunc(data_title), orig_title))
 	# Or create/find a new page to match the XML file
 	else:
 		# Create (or find) data page based on title
