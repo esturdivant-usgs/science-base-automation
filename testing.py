@@ -46,13 +46,37 @@ if not sb.is_logged_in():
         sb = pysb.SbSession(env=None).loginc(useremail)
 cnt=0
 
+# get JSON item for parent page
+landing_item = sb.get_item(landing_id)
+new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
+if 'pubdate' in locals():
+	new_values['pubdate'] = pubdate
+if 'find_and_replace' in locals():
+	new_values['find_and_replace'] = find_and_replace
+if 'metadata_additions' in locals():
+	new_values['metadata_additions'] = metadata_additions
+if "metadata_replacements" in locals():
+	new_values['metadata_replacements'] = metadata_replacements
+if "remove_fills" in locals():
+	new_values['remove_fills'] = remove_fills
+new_values
+
+try:
+    sb = pysb.SbSession(env=None).login(useremail, password)
+    print('logged in with saved password')
+except NameError:
+    sb = pysb.SbSession(env=None).loginc(useremail)
+    print('logged in with input password')
+
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
-
+if not "dict_IDtoJSON" in locals():
+    with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
+        dict_IDtoJSON = json.load(f)
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-xml_file = xmllist[0]
-xml_file
+xml_file = xmllist[63]
+os.path.basename(xml_file)
 
 
 def remove_files(parentdir, pattern='**/*.xml_orig'):
@@ -61,10 +85,46 @@ def remove_files(parentdir, pattern='**/*.xml_orig'):
     for xml_file in xmllist:
     	os.remove(xml_file)
     return(parentdir)
-    
+
 if remove_original_xml:
     remove_files(parentdir, pattern='**/*.xml_orig')
 
+
+#%% Test find and replace
+os.path.basename(xml_file)
+update_xml(xml_file, new_values, verbose=True)
+
+
+#%% Perform upload_files for one data page, based on the XML file.
+datadir = os.path.dirname(xml_file)
+pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+data_title = get_title_from_data(xml_file)
+if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
+    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+    # Change subparent title to data title
+    data_item = flexibly_get_item(sb, pageid)
+    orig_title = data_item['title']
+    data_item['title'] = data_title
+    data_item = sb.update_item(data_item)
+    print("RENAMED: page '{}' in place of '{}'".format(trunc(data_title), orig_title))
+# Or create/find a new page to match the XML file
+else:
+    # Create (or find) data page based on title
+    data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
+landing_item = sb.get_item(landing_id)
+new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
+if 'pubdate' in locals():
+	new_values['pubdate'] = pubdate
+try:
+    # If pubdate in new_values, set it as the date for the SB page
+    data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+except:
+    pass
+data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
+dict_DIRtoID[xml_file] = data_item['id']
+dict_IDtoJSON[data_item['id']] = data_item
+# started: 3:37
+# completed:
 
 #%% Add browse graphic title to page - Not working. The change to the JSON item is not taking effect.
 # Create function get_browsedesc_from_xml()

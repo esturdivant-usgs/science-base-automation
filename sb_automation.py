@@ -191,6 +191,11 @@ for xml_file in xmllist:
 		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 		if verbose:
 			print("UPDATED XML: {}".format(xml_file))
+	# Log back in to SB, just in case.
+	try:
+		sb = pysb.SbSession(env=None).login(useremail, password)
+	except NameError:
+		sb = pysb.SbSession(env=None).loginc(useremail)
 	# Upload data to ScienceBase
 	if update_data:
 		# Update publication date in item
@@ -207,9 +212,7 @@ for xml_file in xmllist:
 			if not 'bigfiles' in locals():
 				bigfiles = []
 			bigfiles += bigfiles1
-	# Log into SB if it's timed out
-	if not sb.is_logged_in():
-		print('Logging back in...')
+		# Log into SB if it's timed out
 		try:
 			sb = pysb.SbSession(env=None).login(useremail, password)
 		except NameError:

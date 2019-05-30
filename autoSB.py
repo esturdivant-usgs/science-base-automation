@@ -126,15 +126,6 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	# Whether in_metadata is a filename or an element, get metadata_root
 	# FIXME: Check whether element already exists
 	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
-	# if type(in_metadata) is etree._Element:
-	#     metadata_root = in_metadata
-	#     xml_file =False
-	# elif type(in_metadata) is str:
-	#     xml_file = in_metadata
-	#     tree = etree.parse(xml_file) # parse metadata using etree
-	#     metadata_root=tree.getroot()
-	# else:
-	#     print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	if type(new_elem) is str:
 		new_elem = etree.fromstring(new_elem)
@@ -146,9 +137,9 @@ def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
 		tree.write(xml_file)
-		return xml_file
+		return(xml_file)
 	else:
-		return metadata_root
+		return(metadata_root)
 
 def fix_attrdomv_error(in_metadata, verbose=False):
 	# Fix attrdomv so that each has only one subelement
@@ -198,9 +189,9 @@ def remove_xml_element(in_metadata, path='./', fill_text=['AUTHOR']):
     # Either overwrite XML file with new XML or return the updated metadata_root
     if type(xml_file) is str:
         tree.write(xml_file)
-        return xml_file
+        return(xml_file)
     else:
-        return metadata_root
+        return(metadata_root)
 
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# Overwrites the first element in containertag corresponding to the tag of new_elem
@@ -208,15 +199,6 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# new_elem accepts either lxml._Element or XML string
 	# Whether in_metadata is a filename or an element, get metadata_root
 	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
-	# if type(in_metadata) is etree._Element:
-	#     metadata_root = in_metadata
-	#     xml_file =False
-	# elif type(in_metadata) is str:
-	#     xml_file = in_metadata
-	#     tree = etree.parse(xml_file) # parse metadata using etree
-	#     metadata_root=tree.getroot()
-	# else:
-	#     print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
 	# If new element is still a string convert it to an XML element
 	if type(new_elem) is str:
 		new_elem = etree.fromstring(new_elem)
@@ -229,9 +211,9 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
 	# Either overwrite XML file with new XML or return the updated metadata_root
 	if type(xml_file) is str:
 		tree.write(xml_file)
-		return xml_file
+		return(xml_file)
 	else:
-		return metadata_root
+		return(metadata_root)
 
 def replace_element_in_xml_for_wrapper(metadata_root, new_elem, containertag='./distinfo'):
 	if type(new_elem) is str:
@@ -385,7 +367,7 @@ def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	#%% Map new values to their appropriate metadata elements
 	e2nv = map_newvals2xml(new_values)
-	e2nv_flipped = flip_dict(e2nv, verbose=False)
+	e2nv_flipped = flip_dict(e2nv, verbose=verbose)
 	#%% Update the XML with the new values
 	# Save the original xml_file if an original is not already present
 	if not os.path.exists(xml_file+'_orig'):
@@ -405,12 +387,13 @@ def update_xml(xml_file, new_values, verbose=False):
 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_additions'].items()]
 	if "metadata_replacements" in new_values:
 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in new_values['metadata_replacements'].items()]
-	if "find_and_replace" in new_values:
-		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
 	#%% Fix common error in which attrdomv has multiple subelements
 	metadata_root = fix_attrdomv_error(metadata_root)
 	#%% Save changes - overwrite XML file with new XML
 	tree.write(xml_file)
+	#%% Perform find and replace the text in the file
+	if "find_and_replace" in new_values:
+		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
 	return(xml_file)
 
 def json_from_xml():
