@@ -134,32 +134,34 @@ If you want to start fresh, an easy way to delete all items pertaining to the pa
 ### Directory structure
 Each directory will become a ScienceBase page within your data release. The directories will maintain their hierarchy. Each (error-free) XML file will populate a ScienceBase page. If a directory contains a single XML file, the corresponding ScienceBase page will be populated with that XML file. If the directory contains multiple XML files, each XML will become a child page linked on the page corresponding to its parent directory. Each ScienceBase page will be titled with the name of the source directory unless there is only one XML file in that directory. In that case, the ScienceBase page will be renamed to match the title in the XML file (Identity Information > Citation > Citation Information > Title). Here is an example of how a local file structure will become a ScienceBase page structure:
 
+#### Variation 1
 
 ##### Input directories and files: DATA_RELEASE_1 - top directory
 - North Carolina - sub-directory
-
-      - NC Central - sub-directory
-
-		- NCcentral_baseline.cpg - 1st data file
-		- NCcentral_baseline.dbf - 1st data file
-		- NCcentral_baseline.prj - 1st data file
-		- NCcentral_baseline.sbn - 1st data file
-		- NCcentral_baseline.shp - 1st data file
-		- NCcentral_baseline.shp.xml - metadata for 1st data file
+   - NC Central - sub-directory
+	- NCcentral_baseline.cpg - 1st data file
+	- NCcentral_baseline.dbf - 1st data file
+	- NCcentral_baseline.prj - 1st data file
+	- NCcentral_baseline.sbn - 1st data file
+	- NCcentral_baseline.shp - 1st data file
+	- NCcentral_baseline.shp.xml - metadata for 1st data file
+	
+	excerpt of title element from within metadata file
 
 			<idinfo><citation><citeinfo><title>Coastal baseline for North Carolina…</title></citeinfo></citation></idinfo> - excerpt of title element from within metadata file
-		- NCcentral_baseline.shx - 1st data file
-		- NCcentral_baseline_browse.png - browse graphic for 1st data file
-		- NCcentral_shorelines.cpg - 2nd data file
-		- NCcentral_shorelines.dbf - 2nd data file
-		- NCcentral_shorelines.prj - 2nd data file
-		- NCcentral_shorelines.sbn - 2nd data file
-		- NCcentral_shorelines.shp - 2nd data file
-		- NCcentral_shorelines.shp.xml - metadata for 2nd data file
+	- NCcentral_baseline.shx - 1st data file
+	- NCcentral_baseline_browse.png - browse graphic for 1st data file
+	- NCcentral_shorelines.cpg - 2nd data file
+	- NCcentral_shorelines.dbf - 2nd data file
+	- NCcentral_shorelines.prj - 2nd data file
+	- NCcentral_shorelines.sbn - 2nd data file
+	- NCcentral_shorelines.shp - 2nd data file
+	- NCcentral_shorelines.shp.xml - metadata for 2nd data file
 
-
-			<idinfo><citation><citeinfo><title>Shorelines of North Carolina…</title></citeinfo></citation></idinfo>” - excerpt of title element from within metadata file
-		- NCcentral_shorelines.shx - 2nd data file
+	excerpt of title element from within metadata file
+	
+			<idinfo><citation><citeinfo><title>Shorelines of North Carolina…</title></citeinfo></citation></idinfo> 
+	- NCcentral_shorelines.shx - 2nd data file
 
 ##### ScienceBase page: Shorelines of U.S. Atlantic - landing page
 - North Carolina - sub-page
@@ -171,26 +173,25 @@ Each directory will become a ScienceBase page within your data release. The dire
 
 ##### Input directories and files: DATA_RELEASE_2 - top directory
 - North Carolina - sub-directory
+    - NC Central - sub-directory
+	- NCcentral_baseline.cpg - 1st data file
+	- NCcentral_baseline.dbf - 1st data file
+	- NCcentral_baseline.prj - 1st data file
+	- NCcentral_baseline.sbn - 1st data file
+	- NCcentral_baseline.shp - 1st data file
+	- NCcentral_baseline.shx - 1st data file
+	- NCcentral_shorelines_baseline_browse.png - browse graphic for both NCcentral_shorelines and NCcentral_baseline
+	- NCcentral_shorelines.cpg - 2nd data file
+	- NCcentral_shorelines.dbf - 2nd data file
+	- NCcentral_shorelines.prj - 2nd data file
+	- NCcentral_shorelines.sbn - 2nd data file
+	- NCcentral_shorelines.shp - 2nd data file
+	- NCcentral_shorelines_baseline_meta.xml - metadata for both NCcentral_shorelines and NCcentral_baseline
 
-      - NC Central - sub-directory
-
-		- NCcentral_baseline.cpg - 1st data file
-		- NCcentral_baseline.dbf - 1st data file
-		- NCcentral_baseline.prj - 1st data file
-		- NCcentral_baseline.sbn - 1st data file
-		- NCcentral_baseline.shp - 1st data file
-		- NCcentral_baseline.shx - 1st data file
-		- NCcentral_shorelines_baseline_browse.png - browse graphic for both NCcentral_shorelines and NCcentral_baseline
-		- NCcentral_shorelines.cpg - 2nd data file
-		- NCcentral_shorelines.dbf - 2nd data file
-		- NCcentral_shorelines.prj - 2nd data file
-		- NCcentral_shorelines.sbn - 2nd data file
-		- NCcentral_shorelines.shp - 2nd data file
-		- NCcentral_shorelines_baseline_meta.xml - metadata for both NCcentral_shorelines and NCcentral_baseline
-
-
-			<idinfo><citation><citeinfo><title>Shorelines of North Carolina with baseline file…</title></citeinfo></citation></idinfo>” - excerpt of title element from within metadata file
-		- NCcentral_shorelines.shx - 2nd data file
+	excerpt of title element from within metadata file
+		
+			<idinfo><citation><citeinfo><title>Shorelines of North Carolina with baseline file…</title></citeinfo></citation></idinfo>
+	- NCcentral_shorelines.shx - 2nd data file
 
 ##### ScienceBase page: Shorelines of U.S. Atlantic - landing page
 - North Carolina - sub-page
