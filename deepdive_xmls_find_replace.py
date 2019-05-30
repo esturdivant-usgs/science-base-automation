@@ -307,15 +307,15 @@ def change_rock14_SupClas_xml(xml_file):
     replace_in_file(xml_file, fstr, rstr)
     # SubType
     fstr = """Not all values may be represented for this site\.\n\nWe made one manual change to the reclassification of the supervised classification to create the substrate type layer"""
-    rstr = """Not all values may be represented for this site.\n\nWe further refined the substrate type layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for Substrate Type (i.e., Sand, Shell/Gravel/Cobble, Mud/Peat, Water, or Development) and converted the reclassified GNSS dataset to a raster. We overlayed this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the substrate type layer"""
+    rstr = """Not all values may be represented for this site.\n\nWe further refined the substrate type layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for Substrate Type (i.e., Sand, Shell/Gravel/Cobble, Mud/Peat, Water, or Development) and converted the reclassified GNSS dataset to a raster. We overlaid this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the substrate type layer"""
     replace_in_file(xml_file, fstr, rstr)
     # VegDen
     fstr = """Not all values may be represented in this dataset\.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation density layer"""
-    rstr = """Not all values may be represented for this site.\n\nWe further refined the vegetation density layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for vegetation density (i.e., None, Sparse, Moderate, etc.) and converted the reclassified GNSS dataset to a raster. We overlayed this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation density layer"""
+    rstr = """Not all values may be represented for this site.\n\nWe further refined the vegetation density layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for vegetation density (i.e., None, Sparse, Moderate, etc.) and converted the reclassified GNSS dataset to a raster. We overlaid this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation density layer"""
     replace_in_file(xml_file, fstr, rstr)
     # VegType
     fstr = """Not all values may be represented for this site\.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation type layer"""
-    rstr = """Not all values may be represented for this site.\n\nWe further refined the vegetation type layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for vegetation type (i.e., None, Herbaceous, Shrub, etc.) and converted the reclassified GNSS dataset to a raster. We overlayed this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation type layer"""
+    rstr = """Not all values may be represented for this site.\n\nWe further refined the vegetation type layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for vegetation type (i.e., None, Herbaceous, Shrub, etc.) and converted the reclassified GNSS dataset to a raster. We overlaid this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation type layer"""
     replace_in_file(xml_file, fstr, rstr)
     # return
     return(xml_file)
@@ -323,11 +323,23 @@ def change_rock14_SupClas_xml(xml_file):
 #%%
 """
 ## Execute
+The master copy of the template spreadsheet is the Google Doc. Before running,
+download it and change the csvfile variable below to the correct pathname.
+
+How to execute:
+1. Optionally duplicate the data folder. This code won't touch the data. It will save backup copies of the XMLs and then overwrite them.
+2. Download the template table as CSV and save it in the basedir. Update the paths below.
+3. Run the code below.
+
+The code:
+1. Creates a backup_xmls directory and saves a copy of the csv file there.
+2. Parses the CSV to a DF.
+3. Renames directories to the sycode in the template table that exactly matches the full name of Site, State, Year
 """
 # Initialize variables
-basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v3"
+basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4_afterreview"
 backup_dir = os.path.join(basedir, "backup_xmls")
-template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/v2.5/templates"
+template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/v3.0_aftervol1review/templates"
 csvfname = "template_values.csv"
 csvfpath = os.path.join(basedir, csvfname)
 
@@ -339,12 +351,13 @@ shutil.copy2(csvfpath, nowbackup)
 # Get values from CSV
 valuesdf = pd.read_csv(csvfpath, header=0, index_col='templated_value', dtype='str')#, names=['templated_value', sycode])
 
-#%% Rename from the full name to the code
+#%% Rename directories to the siteyear codes. Requires exact match.
+# from full 'Site, State, Year' name (site, state abbr, year) to the sycode
 rename_sycode_dirs(basedir, valuesdf, False)
 
 #%% Run the process -
 # For every site-year, copy and rename the template files, then replace the fill values from the spreadsheet
-perform_backup = False
+perform_backup = True
 remaining_fills = pd.DataFrame(columns=['file', 'fill_count'])
 for sycode in valuesdf.columns:
     # Back up existing XML files and copy template
@@ -352,7 +365,8 @@ for sycode in valuesdf.columns:
     # Copy template files into sycode directory
     copytree(template_dir, os.path.join(basedir, sycode))
     # Rename template XMLs to match the site-year.
-    xmllist = rename_xmls(basedir, sycode, valuesdf)
+    xmllist = rename_xmls(basedir, sycode, valuesdf, verbose=False)
+	print("{}: {} XML files ".format(len(xmllist), sycode))
     #% Run find and replace to apply to all xml files in list
     for infile in xmllist:
         relpath = os.path.relpath(infile, basedir)
@@ -360,7 +374,7 @@ for sycode in valuesdf.columns:
         if ct_fills > 0:
             remaining_fills = remaining_fills.append({'file':relpath, 'fill_count':ct_fills}, ignore_index=True)
 
-print(len(remaining_fills))
+print("{} files still have fill values:".format(len(remaining_fills)))
 print(remaining_fills)
 
 #%% Make "manual" changes to files
@@ -430,7 +444,7 @@ for sycode in valuesdf.columns:
     if len(leftovers) > 0:
         for xml in leftovers:
             os.remove(xml)
-        print("Removed remaining {} XMLs from {} because they weren't matched.".format(len(leftovers), sycode))
+        print("{}: removed {} XMLs because they weren't matched.".format(sycode, len(leftovers)))
 
 #%% Check remaining XMLs for xxx fill values
 remaining_fills = pd.DataFrame(columns=['file', 'fill_count'])
@@ -447,8 +461,10 @@ for sycode in valuesdf.columns:
         ct_fills = len(re.findall('(?i)xxx', s))
         if ct_fills > 0:
             remaining_fills = remaining_fills.append({'file':relpath, 'fill_count':ct_fills}, ignore_index=True)
-
-print(remaining_fills)
+if len(remaining_fills) > 0:
+    print(remaining_fills)
+else:
+    print("No 'xxx' fills remaining.")
 
 #%% Change the directory names (back-and-forth between code and full name)
 # Map the sycodes to the full names
@@ -461,11 +477,15 @@ except:
     pass
 shutil.copytree(basedir, basedir+'_4sb', ignore=shutil.ignore_patterns('xxx_trash', 'backup_xmls'))
 
+# If the sub-parent page structure is already created, and you don't want to
+# re-create it, you'll need to copy the dict files from the last parent upload
+# folder into the new one.
 
 
-
-
-
+#%% Save to zip file
+base_dir = r'/Users/esturdivant/Desktop/Rockaway Peninsula, NY, 2013–2014'
+shutil.make_archive(base_dir, 'zip',
+	r'/Users/esturdivant/Desktop/', 'Rockaway Peninsula, NY, 2013–2014', dry_run=True)
 
 
 

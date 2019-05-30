@@ -20,7 +20,7 @@ import datetime
 import time
 import io
 
-__all__ = ['splitall', 'splitall2', 'trunc',
+__all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
@@ -71,6 +71,13 @@ def splitall2(path):
 			allparts2.insert(0, path)
 			path = parts[0]
 	return(allparts2)
+
+def remove_files(parentdir, pattern='**/*.xml_orig'):
+    # Recursively remove files matching pattern
+    xmllist = glob.glob(os.path.join(parentdir, pattern), recursive=True)
+    for xml_file in xmllist:
+    	os.remove(xml_file)
+    return(parentdir)
 
 ###################################################
 #

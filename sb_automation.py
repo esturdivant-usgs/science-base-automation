@@ -138,6 +138,9 @@ if verbose:
 	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
 cnt = 0
 
+if remove_original_xml:
+    remove_files(parentdir, pattern='**/*.xml_orig')
+
 for xml_file in xmllist:
 	# Optionally restore original XML files.
 	if restore_original_xml and os.path.exists(xml_file+'_orig'):

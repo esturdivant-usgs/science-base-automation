@@ -55,6 +55,44 @@ xml_file = xmllist[0]
 xml_file
 
 
+def remove_files(parentdir, pattern='**/*.xml_orig'):
+    # Recursively remove files matching pattern
+    xmllist = glob.glob(os.path.join(parentdir, pattern), recursive=True)
+    for xml_file in xmllist:
+    	os.remove(xml_file)
+    return(parentdir)
+    
+if remove_original_xml:
+    remove_files(parentdir, pattern='**/*.xml_orig')
+
+
+#%% Add browse graphic title to page - Not working. The change to the JSON item is not taking effect.
+# Create function get_browsedesc_from_xml()
+def get_browsedesc_from_xml(xml_file, metadata_root=False):
+	try:
+		if not metadata_root:
+			tree = etree.parse(xml_file) # parse metadata using etree
+			metadata_root=tree.getroot()
+		title = metadata_root.findall('./idinfo/browse/browsed')[0].text # Get title of child from XML
+		return(title)
+	except Exception as e:
+		print("Exception while trying to parse XML file ({}): {}".format(xml_file, e), file=sys.stderr)
+		return(False)
+
+xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v2_4sb/Edwin B. Forsythe NWR, NJ, 2010/DC_DT_SLpts/ebf10_DC_DT_SLpts_meta.xml'
+browse_title = get_browsedesc_from_xml(xml_file)
+
+page_id = '5c6dc479e4b0fe48cb4024ae'
+data_item = sb.get_item(page_id)
+
+# Change title
+data_item['previewImage']['original']
+data_item['previewImage']['original']['title'] = 'browse_title'
+data_item['previewImage']['original']['title'] # --> 'browse_title'
+data_item = sb.update_item(data_item)
+data_item = sb.get_item(page_id)
+data_item['previewImage']['original']['title'] # --> Not 'browse_title'
+
 #%% Working with browse graphic population... Looking at section of for loop.
 new_values ={'child_id':'5c65dffde4b0fe48cb3907b2'}
 new_values['browse_file'] = '000'
