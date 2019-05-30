@@ -13,7 +13,7 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 
 - The metadata population routine is hard-coded to the FGDC CSDGM structure.
 - It does not change the XML files within zipped files nor recreate the zip file with the updated XML. You will need to do this afterward to make sure that the XML is in the zip file is updated.
-- It does not add networkr links to individual files on the data page. 
+- It does not add networkr links to individual files on the data page.
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release.
@@ -83,7 +83,7 @@ Alternative to conda: Use pip in your base python environment:
 #### RUN
 __In your bash console (Terminal on OSX):__
 
-If using Conda, first activate your sb_py3 environment: OSX: `source activate sb_py3` Windows: `activate sb_py3`
+If using Conda, first activate your sb_py3 environment: OSX: `conda activate sb_py3` Windows: `activate sb_py3`
 
 	cd [path]\[to]\science-base-automation
 	python sb_automation.py
@@ -95,7 +95,7 @@ __In your Python IDE of choice:__ Open the script (sb_automation.py) and run it 
 
 ### 5. Check ScienceBase pages and make manual modifications.   
 
-If you want to start fresh, an easy way to delete all items pertaining to the parent page, is to set `parentdir` to an empty directory and set the variable `replace_subpages` to True. 
+If you want to start fresh, an easy way to delete all items pertaining to the parent page, is to set `parentdir` to an empty directory and set the variable `replace_subpages` to True.
 
 ## What the script does:
 - Starts a ScienceBase session.
@@ -156,7 +156,7 @@ Each directory will become a ScienceBase page within your data release. The dire
 		- NCcentral_shorelines.sbn - 2nd data file
 		- NCcentral_shorelines.shp - 2nd data file
 		- NCcentral_shorelines.shp.xml - metadata for 2nd data file
-		
+
 
 			<idinfo><citation><citeinfo><title>Shorelines of North Carolina…</title></citeinfo></citation></idinfo>” - excerpt of title element from within metadata file
 		- NCcentral_shorelines.shx - 2nd data file
@@ -189,4 +189,4 @@ If a facet was created, a URL for direct download of the all files in the facets
 
 	parentdir = r'/Volumes/myserverfolder/data_release'
 
-- Although not necessary, you can use find_and_replace variable in config_autoSB.py to replace text in the XML based on placeholder values. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
+- Although not necessary, you can use find_and_replace variable in config_autoSB.py to replace text in the XML based on placeholder values. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's.
