@@ -63,7 +63,6 @@ Work with landing page and XML
 if replace_subpages:
 	if not update_subpages:
 		print('WARNING: You chose not to update subpages, but also to replace them. Both are not possible so we will remove and create them.')
-	print("Deleting all child pages of landing page...")
 	print(delete_all_children(sb, landing_id))
 	landing_item = remove_all_files(sb, landing_id, verbose=verbose)
 	update_subpages = True
@@ -80,12 +79,6 @@ elif "previewImage" in locals():
 		print("{} does not exist.".format(previewImage))
 else:
 	imagefile = False
-
-#%% Change folder name to match XML title
-"""
-Change folder name to match XML title
-"""
-rename_dirs_from_xmls(parentdir)
 
 #%% Create SB page structure
 """
@@ -125,6 +118,7 @@ For each XML file in each directory, create a data page, revise the XML, and upl
 """
 if verbose:
 	print('---\nChecking log in information...')
+#sb = log_in(useremail) #FIXME
 if not sb.is_logged_in():
 	print('Logging back in...')
 	try:
@@ -132,20 +126,25 @@ if not sb.is_logged_in():
 	except NameError:
 		sb = pysb.SbSession(env=None).loginc(useremail)
 
+if verbose:
+	print('Checking for directory: ID dictionary...')
+if not "dict_DIRtoID" in locals():
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+		dict_DIRtoID = json.load(f)
+
 #%%
-# Optionally remove original XML files.
-if remove_original_xml:
-    remove_files(parentdir, pattern='**/*.xml_orig')
-
-# Optionally restore original XML files.
-if restore_original_xml:
-	restore_original_xmls(parentdir)
-
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
 	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
 cnt = 0
+
+if remove_original_xml:
+    remove_files(parentdir, pattern='**/*.xml_orig')
+
 for xml_file in xmllist:
+	# Optionally restore original XML files.
+	if restore_original_xml and os.path.exists(xml_file+'_orig'):
+		shutil.copy(xml_file+'_orig', xml_file)
 	# Log into SB if it's timed out
 	if not sb.is_logged_in():
 		print('Logging back in...')
@@ -158,9 +157,21 @@ for xml_file in xmllist:
 	print("File {}: {}".format(cnt, xml_file))
 	datadir = os.path.dirname(xml_file)
 	pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-	# Create (or find) data page based on directory name (which should be the same as the XML title)
-	data_title = os.path.basename(datadir)
-	data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
+	# Get title of data from XML
+	data_title = get_title_from_data(xml_file)
+	# Either change the title of the existing page (if only one metadata file)...
+	if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
+	    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+		# Change subparent title to data title
+		data_item = flexibly_get_item(sb, pageid)
+		orig_title = data_item['title']
+		data_item['title'] = data_title
+		data_item = sb.update_item(data_item)
+		print("RENAMED: page '{}' in place of '{}'".format(trunc(data_title), orig_title))
+	# Or create/find a new page to match the XML file
+	else:
+		# Create (or find) data page based on title
+		data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
 	# 2. MAKE UPDATES
 	# Update XML
 	if update_XML:

@@ -26,7 +26,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
 		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'log_in2', 'flexibly_get_item',
-		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
+		   'get_DOI_from_item', 'rename_dirs_from_xmls', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
 		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'find_browse_file', 'upload_all_previewImages', 'shp_to_new_child',
@@ -36,8 +36,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
 		   'delete_all_children', 'remove_all_child_pages',
 		   'check_fields', 'check_fields2', 'check_fields3', 'check_fields2_topdown',
 		   'landing_page_from_parentdir', 'inherit_topdown',
-		   'apply_topdown',
-		   'apply_bottomup']
+		   'apply_topdown', 'apply_bottomup', 'restore_original_xmls']
 
 
 #%% Functions
@@ -486,6 +485,28 @@ def get_DOI_from_item(item):
 		doi = doi[-16:] if 'doi' in weblinks[i]['uri'].lower() else False
 		i += 1
 	return doi
+
+def rename_dirs_from_xmls(parentdir):
+	# Rename directories that contain a single XML.
+	# Copy the directory name from the title in the XML file.
+	invalid_chars = r'< > : " / \ | ? *'.split(' ')
+	xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+	ct = 0
+	for xml_file in xmllist:
+		datadir = os.path.dirname(xml_file)
+		basedir = os.path.dirname(datadir)
+		if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
+			and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+			data_title = get_title_from_data(xml_file)
+			# Rename
+			if not datadir == os.path.join(basedir, data_title):
+				# Check for invalid characters
+				if any(x in data_title for x in invalid_chars):
+					print('WARNING: Title in XML may include invalid characters. Consider changing the title.')
+				os.rename(datadir, os.path.join(basedir, data_title))
+				ct+=1
+	print("Renamed {} directories.".format(ct))
+	return
 
 def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True):
 	landing_item = sb.get_item(landing_id)
@@ -1051,3 +1072,15 @@ def apply_bottomup(sb, top_id, function, verbose=False):
 			print('Applying {} to page "{}"'.format(function, citem['title']))
 		function(sb, citem)
 	return True
+
+def restore_original_xmls(parentdir):
+	# List XML files
+	xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+	ct = 0
+	for xml_file in xmllist:
+		# Copy the file with the _orig suffix to the original filename.
+		if os.path.exists(xml_file+'_orig'):
+			shutil.copy(xml_file+'_orig', xml_file)
+			ct += 1
+	print("Restored {} original XML files.".format(ct))
+	return
