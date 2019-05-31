@@ -97,7 +97,9 @@ remove_files(parentdir, pattern='**/*.xml_orig')
 remove_files(parentdir, pattern='**/*.sr.lock')
 
 #%%
+
 dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
+
 # Save dictionaries
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
 	json.dump(dict_DIRtoID, f)

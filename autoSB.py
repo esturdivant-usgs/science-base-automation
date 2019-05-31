@@ -366,7 +366,7 @@ def update_xml(xml_file, new_values, verbose=False):
 	# update XML file to include new child ID and DOI
 	#%% Map new values to their appropriate metadata elements
 	e2nv = map_newvals2xml(new_values)
-	e2nv_flipped = flip_dict(e2nv, verbose=verbose)
+	e2nv_flipped = flip_dict(e2nv, verbose=False)
 	#%% Update the XML with the new values
 	# Save the original xml_file if an original is not already present
 	if not os.path.exists(xml_file+'_orig'):
