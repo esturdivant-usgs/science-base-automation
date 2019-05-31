@@ -24,7 +24,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
 		   'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
 		   'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
-		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
+		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'update_all_xmls', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'log_in2', 'flexibly_get_item',
 		   'get_DOI_from_item', 'rename_dirs_from_xmls', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
@@ -32,7 +32,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
 		   'set_parent_extent', 'find_browse_file', 'upload_all_previewImages', 'shp_to_new_child',
 		   'update_datapage', 'update_subpages_from_landing',
 		   'update_pages_from_XML_and_landing', 'remove_all_files',
-		   'update_XML_from_SB', 'Update_XMLfromSB', 'update_existing_fields',
+		   'update_existing_fields',
 		   'delete_all_children', 'remove_all_child_pages',
 		   'check_fields', 'check_fields2', 'check_fields3', 'check_fields2_topdown',
 		   'landing_page_from_parentdir', 'inherit_topdown',
@@ -394,6 +394,30 @@ def update_xml(xml_file, new_values, verbose=False):
 	if "find_and_replace" in new_values:
 		find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
 	return(xml_file)
+
+def update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True):
+	xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+	for xml_file in xmllist:
+		# Update XML
+		# Get SB values
+		datadir = os.path.dirname(xml_file)
+		pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+		data_title = os.path.basename(datadir)
+		data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
+		# add SB UID to be updated in XML
+		new_values['child_id'] = data_item['id']
+		# add DOI to be updated in XML
+		new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, pageid))
+		# Look for browse graphic
+		browse_file = find_browse_file(datadir, searchterm='*browse*', extensions=('.png', '.jpg', '.gif'))
+		new_values.pop('browse_file', None) # remove value from past iteration
+		if browse_file:
+			new_values['browse_file'] = browse_file
+		# Make the changes to the XML based on the new_values dictionary
+		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+		if verbose:
+			print("UPDATED XML: {}".format(xml_file))
+	return
 
 def json_from_xml():
 	#FIXME: Currently hard-wired; will need to adapted to match metadata scheme.
@@ -847,46 +871,6 @@ def remove_all_files(sb, pageid, verbose=False):
 	if verbose:
 		print('REMOVED: any files or facets on page "{}".'.format(item['title']))
 	return item
-
-def update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON):
-	# Populate metadata from SB pages
-	# 1/17/17: no evidence that this fxn is being used
-	xmllist = glob.glob(os.path.join(parentdir,'*.xml'))
-	for f in os.listdir(parentdir):
-		if f.lower().endswith(('xml')):
-			xml_list = xmllist[1:]
-	for xml_file in xml_list:
-		if xml_file in dict_DIRtoID:
-			child_id = dict_DIRtoID[xml_file]
-			parentid = dict_IDtoJSON[child_id]['parentId']
-		else:
-			child_title = get_title_from_data(xml_file) # data title in XML should correspond to page title
-			child_item = sb.find_items_by_title(child_title)['items'][0]
-			child_id = child_item['id']
-			parentid = child_item['parentId']
-		parent_link = dict_IDtoJSON[parentid]['link']['url']
-		# Update XML file to include new child ID and DOI
-		update_xml(xml_file, child_id, dr_doi, parent_link)
-		child_item = sb.replace_file(xml_file, item)
-		dict_IDtoJSON[child_item['id']] = child_item
-	return dict_IDtoJSON
-
-def Update_XMLfromSB(sb, useremail, parentdir, fname_dir2id='dir_to_id.json', fname_id2json='id_to_json.json'):
-	# read data
-	# 1/17/17: no evidence that this fxn is being used
-	with open(os.path.join(parentdir,fname_dir2id), 'r') as f:
-		dict_DIRtoID = json.load(f)
-	with open(os.path.join(parentdir,fname_id2json), 'r') as f:
-		dict_IDtoJSON = json.load(f)
-		# log into ScienceBase
-	sb = log_in(useremail)
-	# Populate XML with SB values
-	dict_IDtoJSON = update_XML_from_SB(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
-	# Update dictionary with JSON items
-	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-		json.dump(dict_IDtoJSON, f)
-	print("Dictionary saved as: {}".format(os.path.join(parentdir,'id_to_json.json')))
-	return True
 
 def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fname_dir2id='dir_to_id.json', fname_id2json='id_to_json.json', fname_par2childs='parentID_to_childrenIDs.txt'):
 	# Populate pages if SB page structure already exists.

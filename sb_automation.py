@@ -141,6 +141,10 @@ if remove_original_xml:
 if restore_original_xml:
 	restore_original_xmls(parentdir)
 
+# Optionally update all XML files from SB values
+if update_XML:
+	update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
+
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
 	print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
@@ -161,30 +165,6 @@ for xml_file in xmllist:
 	# Create (or find) data page based on directory name (which should be the same as the XML title)
 	data_title = os.path.basename(datadir)
 	data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
-	# 2. MAKE UPDATES
-	# Update XML
-	if update_XML:
-		new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, pageid))
-		# add SB UID to be updated in XML
-		new_values['child_id'] = data_item['id']
-		# Look for browse graphic
-		new_values.pop('browse_file', None) # remove value from past iteration
-		imagelist = glob.glob(os.path.join(datadir,'*browse*.png'))
-		imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.jpg')))
-		imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.gif')))
-		if len(imagelist) > 0:
-		    new_values['browse_file'] = os.path.basename(imagelist[0])
-		else:
-		    print("Note: No *browse* image files found in the data directory.".format(data_title))
-		# Make the changes to the XML based on the new_values dictionary
-		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-		if verbose:
-			print("UPDATED XML: {}".format(xml_file))
-	# Log back in to SB, just in case.
-	try:
-		sb = pysb.SbSession(env=None).login(useremail, password)
-	except NameError:
-		sb = pysb.SbSession(env=None).loginc(useremail)
 	# Upload data to ScienceBase
 	if update_data:
 		# Update publication date in item
@@ -233,12 +213,9 @@ if update_extent:
 
 # Preview Image
 if add_preview_image_to_all:
-	# org_map['IDtoJSON'] = upload_all_previewImages(sb, parentdir, org_map['DIRtoID'], org_map['IDtoJSON'])
 	dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
 
 # Save dictionaries
-# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
-# 	json.dump(org_map, f)
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
 	json.dump(dict_DIRtoID, f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
@@ -246,7 +223,7 @@ with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
 
 #%% QA/QC
 if quality_check_pages:
-	qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
+	qcfields_dict = {'contacts':7, 'webLinks':0, 'facets':1}
 	print('Checking that each page has: \n{}'.format(qcfields_dict))
 	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
 

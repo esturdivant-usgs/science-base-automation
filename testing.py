@@ -68,31 +68,52 @@ except NameError:
 	sb = pysb.SbSession(env=None).loginc(useremail)
 	print('logged in with input password')
 
+#%%
+# Set imagefile
+if 'previewImage' in subparent_inherits:
+	for f in os.listdir(parentdir):
+		if f.lower().endswith(('png','jpg','gif')):
+			imagefile = os.path.join(parentdir,f)
+elif "previewImage" in locals():
+	if os.path.isfile(previewImage):
+		imagefile = previewImage
+	else:
+		print("{} does not exist.".format(previewImage))
+else:
+	imagefile = False
+
+#%%
 if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-	dict_DIRtoID = json.load(f)
+		dict_DIRtoID = json.load(f)
 if not "dict_IDtoJSON" in locals():
 	with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
 		dict_IDtoJSON = json.load(f)
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xml_file = xmllist[48]
 os.path.basename(xml_file)
+#%%
+remove_files(parentdir, pattern='**/*.xml_orig')
+remove_files(parentdir, pattern='**/*.sr.lock')
+
+#%%
+dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
+# Save dictionaries
+with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+	json.dump(dict_DIRtoID, f)
+with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
+	json.dump(dict_IDtoJSON, f)
+
+#%% Create modular XML updater
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+# if update_XML:
+
+new_values
+parentdir
+dict_DIRtoID
+update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
 
 
-# def remove_files(parentdir, pattern='**/*.xml_orig'):
-#     # Recursively remove files matching pattern
-#     xmllist = glob.glob(os.path.join(parentdir, pattern), recursive=True)
-#     for xml_file in xmllist:
-#     	os.remove(xml_file)
-#     return(parentdir)
-#
-# if remove_original_xml:
-#     remove_files(parentdir, pattern='**/*.xml_orig')
-
-
-#%% Test find and replace
-os.path.basename(xml_file)
-update_xml(xml_file, new_values, verbose=True)
 
 #%% Check max size
 # List all files in directory, except original xml and other bad apples
@@ -114,20 +135,11 @@ for fn in up_files:
 	print([os.path.basename(fn), os.path.getsize(fn)/1000000])
 print('\n'.join([os.path.basename(fn) for fn in up_files]))
 
-#%%
 #%% Change folder name to match XML title
-
 parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4_xmlonly'
 rename_dirs_from_xmls(parentdir)
 
 restore_original_xmls(parentdir)
-
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-imagefile = False
-dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
-
-
-
 
 
 
@@ -342,12 +354,6 @@ data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MB
 
 xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_4upload_3/SfM products (point cloud, orthomosaic, and DEM)/bb20160318_sfm_dem_meta.xml'
 d = 'SfM products (point cloud, orthomosaic, and DEM)'
-if not sb.is_logged_in():
-	print('Logging back in...')
-	try:
-	sb = pysb.SbSession(env=None).login(useremail,password)
-	except NameError:
-	sb = pysb.SbSession(env=None).loginc(useremail)
 parentid = dict_DIRtoID[d]
 new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
 # Create (or find) new data page based on title in XML
@@ -355,13 +361,10 @@ data_title = get_title_from_data(xml_file) # get title from XML
 data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
 try: #FIXME: add this to a function in a more generalized way?
 	data_item["dates"][0]["dateString"]= new_values['pubdate']
-	#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
 except:
 	pass
 # Upload to ScienceBase
 data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=2000, replace=True, verbose=verbose)
-
-# sb, xml_file, directory, dict_DIRtoID, new_values,
 
 #%%QC
 if quality_check_pages:
@@ -370,7 +373,6 @@ if quality_check_pages:
 	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
 
 landing_item = sb.get_item(landing_id)
-child_id = '58b89028e4b01ccd5500c263'
 child_item = sb.get_item(child_id)
 
 # Revise the XML, except for the values created by SB
@@ -379,81 +381,6 @@ xmllist = []
 for root, dirs, files in os.walk(parentdir):
 	for d in dirs:
 	xmllist += glob.glob(os.path.join(root,d,'*.xml'))
-
-#%% Count XML files and modify metadata
-xmllist = []
-for root, dirs, files in os.walk(parentdir):
-	for d in dirs:
-	xmllist += glob.glob(os.path.join(root,d,'*.xml'))
-xml_cnt = len(xmllist)
-# for xml_file in xmllist:
-# 	tree = etree.parse(xml_file)
-# 	metadata_root = tree.getroot()
-# 	if "remove_fills" in locals():
-# 		[remove_xml_element(metadata_root, path, ftext) for path, ftext in remove_fills.items()])
-# 	if "metadata_additions" in locals():
-# 		[add_element_to_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_additions.items()]
-# 	if "metadata_replacements" in locals():
-# 		[replace_element_in_xml(metadata_root, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
-# 	tree.write(xml_file)
-# 	find_and_replace_text(xml_file, 'http:', 'https:') 		    # Replace 'http:' with 'https:'
-# 	find_and_replace_text(xml_file, 'dx.doi.org', 'doi.org') 	# Replace 'dx.doi.org' with 'doi.org'
-
-xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept_sb/SfM products (point cloud, orthomosaic, and DEM)/bb20160318_sfm_orthomosaic_meta.xml'
-os.path.basename(os.path.dirname(xml_file))
-cnt = 0
-# for xml_file in xmllist:
-cnt += 1
-if not sb.is_logged_in():
-	print('Logging back in...')
-	try:
-		sb = pysb.SbSession(env=None).login(useremail,password)
-	except NameError:
-		sb = pysb.SbSession(env=None).loginc(useremail)
-d = os.path.basename(os.path.dirname(xml_file))
-parentid = dict_DIRtoID[d]
-new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
-# Create (or find) new data page based on title in XML
-data_title = get_title_from_data(xml_file) # get title from XML
-data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
-try:
-	data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
-	#data_item["dates"][1]["dateString"]= {"type": "Info", "dateString": "2016", "label": "Time Period"} # What should the time period value reflect?
-except:
-	pass
-# 2. MAKE UPDATES
-# Update XML
-if update_XML:
-	# Check for Browse graphic
-	dataname = xml_file.split('.')[0]
-	dataname = dataname.split('_meta')[0]
-	browse_file = glob.glob(dataname + '*browse*')[0]
-	if len(browse_file) > 0:
-		new_values['browse_file'] = browse_file
-	# add SB UID to be updated in XML
-	new_values['child_id'] = data_item['id']
-	update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-# Upload to ScienceBase
-if update_data:
-	# Upload all files in dir that match basename of XML file
-	# data_item = upload_data(sb, data_item, xml_file, replace=True, verbose=verbose)
-	data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
-	if bigfiles1:
-		if not 'bigfiles' in locals():
-			bigfiles = []
-		else:
-			bigfiles += bigfiles1
-elif update_XML:
-	# If XML was updated, but data was not uploaded, replace only XML.
-	try:
-		sb.replace_file(xml_file, data_item) # Does not update SB page to match metadata
-	except e:
-		print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
-	# sb.upload_files_and_upsert_item(data_item, [xml_file])
-if verbose:
-	now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-	print('Completed {} out of {} xml files at {}.\n'.format(cnt, xml_cnt, now_str))
-
 
 """
 Tkinter learning

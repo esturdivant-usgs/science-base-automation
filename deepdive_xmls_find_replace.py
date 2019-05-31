@@ -18,8 +18,8 @@ The master copy of the template spreadsheet is the Google Doc. Before running,
 download it and change the csvfile variable below to the correct pathname.
 """
 def trunc(string, length=40):
-	string = (string[:length-3] + '...') if len(string) > length else string
-	return(string)
+    string = (string[:length-3] + '...') if len(string) > length else string
+    return(string)
 
 def replace_in_file(fname, fstr, rstr, fill='xxx'):
     with io.open(fname, 'r', encoding='utf-8') as f:
@@ -149,8 +149,8 @@ def rename_sycode_dirs(basedir, valuesdf, code2name=True):
     namelist = []
     for sycode in valuesdf.columns:
         newname = '{}, {}, {}'.format(valuesdf.at['xxx-site-xxx', sycode],
-                                      valuesdf.at['xxx-state abbr-xxx', sycode],
-                                      valuesdf.at['xxx-supclass year-xxx', sycode])
+          valuesdf.at['xxx-state abbr-xxx', sycode],
+          valuesdf.at['xxx-supclass year-xxx', sycode])
         namelist += [newname]
     dirnames = pd.DataFrame(index=valuesdf.columns, data=namelist, columns=['syname'])
     # Conditionally perform rename
@@ -202,45 +202,45 @@ def remove_xml_element(in_metadata, path='./', fill_text=['AUTHOR']):
         return metadata_root
 
 def get_root_flexibly(in_metadata):
-	if type(in_metadata) is etree._Element:
-		metadata_root = in_metadata
-		tree = False
-		xml_file =False
-	elif type(in_metadata) is str:
-		xml_file = in_metadata
-		try:
-			tree = etree.parse(xml_file) # parse metadata using etree
-		except etree.XMLSyntaxError as e:
-			print("XML Syntax Error while trying to parse XML file: {}".format(e))
-			return False
-		except Exception as e:
-			print("Exception while trying to parse XML file: {}".format(e))
-			return False
-		metadata_root=tree.getroot()
-	else:
-		print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
-	return metadata_root, tree, xml_file
+    if type(in_metadata) is etree._Element:
+        metadata_root = in_metadata
+        tree = False
+        xml_file =False
+    elif type(in_metadata) is str:
+        xml_file = in_metadata
+        try:
+            tree = etree.parse(xml_file) # parse metadata using etree
+        except etree.XMLSyntaxError as e:
+            print("XML Syntax Error while trying to parse XML file: {}".format(e))
+            return False
+        except Exception as e:
+            print("Exception while trying to parse XML file: {}".format(e))
+            return False
+        metadata_root=tree.getroot()
+    else:
+        print("{} is not an accepted variable type for 'in_metadata'".format(in_metadata))
+    return(metadata_root, tree, xml_file)
 
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
-	# Overwrites the first element in containertag corresponding to the tag of new_elem
-	# in_metadata accepts either xml file or root element of parsed metadata.
-	# new_elem accepts either lxml._Element or XML string
-	# Whether in_metadata is a filename or an element, get metadata_root
-	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
-	if type(new_elem) is str:
-		new_elem = etree.fromstring(new_elem)
-	elif not type(new_elem) is etree._Element:
-		raise TypeError("'new_elem' takes either strings or elements.")
-	# Replace element with new_elem
-	elem = metadata_root.findall(containertag)[0]
-	old_elem = elem.findall(new_elem.tag)[0]
-	elem.replace(old_elem, new_elem)
-	# Either overwrite XML file with new XML or return the updated metadata_root
-	if type(xml_file) is str:
-		tree.write(xml_file)
-		return xml_file
-	else:
-		return metadata_root
+    # Overwrites the first element in containertag corresponding to the tag of new_elem
+    # in_metadata accepts either xml file or root element of parsed metadata.
+    # new_elem accepts either lxml._Element or XML string
+    # Whether in_metadata is a filename or an element, get metadata_root
+    metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+    if type(new_elem) is str:
+        new_elem = etree.fromstring(new_elem)
+    elif not type(new_elem) is etree._Element:
+        raise TypeError("'new_elem' takes either strings or elements.")
+    # Replace element with new_elem
+    elem = metadata_root.findall(containertag)[0]
+    old_elem = elem.findall(new_elem.tag)[0]
+    elem.replace(old_elem, new_elem)
+    # Either overwrite XML file with new XML or return the updated metadata_root
+    if type(xml_file) is str:
+        tree.write(xml_file)
+        return xml_file
+    else:
+        return metadata_root
 
 def change_cei10_shoreline_xml(xml_file, valuesdf):
     # 1. <purpose> Change to: “This file consists of GeoTIFF raster data produced in reference to the shoreline polygon dataset (cei10_shoreline.shp) published within the larger work. The shoreline was not further checked for topological consistency. No further logical accuracy tests were conducted on the present dataset.”
@@ -258,18 +258,17 @@ def change_cei10_shoreline_xml(xml_file, valuesdf):
     [replace_element_in_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
 
     # 4. Change procdesc
-    ipy = valuesdf.cei10.loc['xxx-ipy filename-xxx']
     sycode = 'cei10'
     mhw = valuesdf.cei10.loc['xxx-mhw offset-xxx']
     mtl = valuesdf.cei10.loc['xxx-mtl elev-xxx']
     poly_ct = valuesdf.cei10.loc['xxx-polys in shoreline-xxx']
-    new_elem = """<procdesc>Full methods are provided in the associated Methods OFR (Zeigler and others 2019). The iPython notebook used for processing ({}.html) is distributed with this dataset.\n\n{}_shoreline.shp:\n\nA polygon outlining the shoreline of the island was created for the study area. On the ocean-facing side of the island, this was considered the MHW contour (Weber and others 2005, Zeigler and others 2019). To include partially submerged wetland on the estuarine-side, the land-facing shoreline was delineated at mean tidal level (MTL), which was calculated from the local MHW and mean low water (MLW) levels at the given study area.\n\nThe local MLW elevation was estimated from NOAA&#8217;s VDatum (2014 release) as the average MLW elevation at a sample of nearshore points in the study area. Experimentation conducted as part of this study found that the MTL delineation more consistently identified the boundary between marsh (intertidal vegetation) and submerged areas than either MHW or MLW. For consistency with the MHW offset applied throughout the project, MHW was used as part of the calculation of MTL.\n\nTo create this shoreline, we performed the following steps. Most of the steps were performed programmatically using the function functions_warcpy.DEMtoFullShorelinePoly in bi-transect-extractor (Sturdivant, 2018):\n\n1. Manually digitize lines from the DEM that indicate where land meets a tidal inlet, which is considered the division point between the oceanside and the bayside or estuarine side of the island. This line was visually approximated.\n\n2. Create a generalized polygon from the DEM in which every cell within the polygon is above MHW (MHW polygon). This was performed programmatically using the function functions_warcpy.RasterToLandPerimeter in bi-transect-extractor v1.0 (Sturdivant, 2018) with a MHW elevation of {} m NAVD88, calculated for the area by Weber and others (2005). The process includes generalizing the polygons (Aggregate Polygons tool in the Cartography toolbox) using an aggregation distance of 10 m, a minimum area of 300 m, and a minimum hole size of 300 m.\n\n3. Repeat Step 3 for MTL, using an MTL elevation of {} m NAVD88.\n\n4. Merge the polygons so that the MHW contour outlines the island on the oceanside and the MTL contour outlines the island on the bayside, divided at the delineated tidal inlets. To do so, create a symmetrical difference polygon between MHW and MTL polygons (SymDiff) and split the resulting polygon at the inlet lines (Feature to Polygon). Create a polygon that outlines only the bayside area that is above MTL and below MHW (MTL-only polygon) by manually deleting the segments of the symmetrical difference polygon that pertain to the ocean-side of the island. Merge the MTL-only polygon with the MHW polygon (Union, Dissolve). This was performed using the function functions_warcpy.CombineShorelinePolygons in bi-transect-extractor (Sturdivant, 2018).\n\n5. QA/QC the output and manually revise any sections with clearly incorrect artifacts.\n\nThe dataset contains {} polygons.</procdesc>""".format(ipy, sycode, mhw, mtl, poly_ct)
+    new_elem = """<procdesc>Full methods are provided in the associated Methods OFR (Zeigler and others 2019). \n\n{}_shoreline.shp:\n\nA polygon outlining the shoreline of the island was created for the study area. On the ocean-facing side of the island, this was considered the MHW contour (Weber and others 2005, Zeigler and others 2019). To include partially submerged wetland on the estuarine-side, the land-facing shoreline was delineated at mean tidal level (MTL), which was calculated from the local MHW and mean low water (MLW) levels at the given study area.\n\nThe local MLW elevation was estimated from NOAA&#8217;s VDatum (2014 release) as the average MLW elevation at a sample of nearshore points in the study area. Experimentation conducted as part of this study found that the MTL delineation more consistently identified the boundary between marsh (intertidal vegetation) and submerged areas than either MHW or MLW. For consistency with the MHW offset applied throughout the project, MHW was used as part of the calculation of MTL.\n\nTo create this shoreline, we performed the following steps. Most of the steps were performed programmatically using the function functions_warcpy.DEMtoFullShorelinePoly in bi-transect-extractor (Sturdivant, 2018):\n\n1. Manually digitize lines from the DEM that indicate where land meets a tidal inlet, which is considered the division point between the oceanside and the bayside or estuarine side of the island. This line was visually approximated.\n\n2. Create a generalized polygon from the DEM in which every cell within the polygon is above MHW (MHW polygon). This was performed programmatically using the function functions_warcpy.RasterToLandPerimeter in bi-transect-extractor v1.0 (Sturdivant, 2018) with a MHW elevation of {} m NAVD88, calculated for the area by Weber and others (2005). The process includes generalizing the polygons (Aggregate Polygons tool in the Cartography toolbox) using an aggregation distance of 10 m, a minimum area of 300 m, and a minimum hole size of 300 m.\n\n3. Repeat Step 3 for MTL, using an MTL elevation of {} m NAVD88.\n\n4. Merge the polygons so that the MHW contour outlines the island on the oceanside and the MTL contour outlines the island on the bayside, divided at the delineated tidal inlets. To do so, create a symmetrical difference polygon between MHW and MTL polygons (SymDiff) and split the resulting polygon at the inlet lines (Feature to Polygon). Create a polygon that outlines only the bayside area that is above MTL and below MHW (MTL-only polygon) by manually deleting the segments of the symmetrical difference polygon that pertain to the ocean-side of the island. Merge the MTL-only polygon with the MHW polygon (Union, Dissolve). This was performed using the function functions_warcpy.CombineShorelinePolygons in bi-transect-extractor (Sturdivant, 2018).\n\n5. QA/QC the output and manually revise any sections with clearly incorrect artifacts.\n\nThe dataset contains {} polygons.</procdesc>""".format(sycode, mhw, mtl, poly_ct)
     metadata_replacements = {'./dataqual/lineage/procstep':new_elem}
     [replace_element_in_xml(xml_file, new_elem, containertag) for containertag, new_elem in metadata_replacements.items()]
 
     # Remove section of resdesc
-    fstr = " as well as the iPython notebook \(xxx-ipy filename-xxx\.html\) used for processing\."
-    rstr = "."
+    fstr = " as well as the iPython notebook \(xxx-ipy filename-xxx\.ipynb\) used for processing\."
+    rstr = "\."
     xml_file = os.path.join(basedir, 'cei10', 'cei10_shoreline_inletLines_meta.xml')
     replace_in_file(xml_file, fstr, rstr)
 
@@ -337,7 +336,7 @@ The code:
 3. Renames directories to the sycode in the template table that exactly matches the full name of Site, State, Year
 """
 # Initialize variables
-basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4_afterreview"
+basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b"
 backup_dir = os.path.join(basedir, "backup_xmls")
 template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/v3.0_aftervol1review/templates"
 csvfname = "template_values.csv"
@@ -366,7 +365,7 @@ for sycode in valuesdf.columns:
     copytree(template_dir, os.path.join(basedir, sycode))
     # Rename template XMLs to match the site-year.
     xmllist = rename_xmls(basedir, sycode, valuesdf, verbose=False)
-	print("{}: {} XML files ".format(len(xmllist), sycode))
+    print("{}: {} XML files ".format(sycode, len(xmllist)))
     #% Run find and replace to apply to all xml files in list
     for infile in xmllist:
         relpath = os.path.relpath(infile, basedir)
@@ -485,7 +484,7 @@ shutil.copytree(basedir, basedir+'_4sb', ignore=shutil.ignore_patterns('xxx_tras
 #%% Save to zip file
 base_dir = r'/Users/esturdivant/Desktop/Rockaway Peninsula, NY, 2013–2014'
 shutil.make_archive(base_dir, 'zip',
-	r'/Users/esturdivant/Desktop/', 'Rockaway Peninsula, NY, 2013–2014', dry_run=True)
+    r'/Users/esturdivant/Desktop/', 'Rockaway Peninsula, NY, 2013–2014', dry_run=True)
 
 
 
