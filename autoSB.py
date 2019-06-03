@@ -25,7 +25,7 @@ __all__ = ['splitall', 'splitall2', 'trunc',
 		   'find_and_replace_text', 'find_and_replace_from_dict',
 		   'update_xml_tagtext', 'flip_dict', 'update_xml', 'json_from_xml',
 		   'get_fields_from_xml', 'log_in', 'flexibly_get_item',
-		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child', 'find_or_create_child_dicts',
+		   'get_DOI_from_item', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
 		   'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
 		   'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
 		   'set_parent_extent', 'upload_all_previewImages', 'shp_to_new_child',
@@ -184,9 +184,11 @@ def remove_xml_element(metadata_root, path='./', fill_text=['AUTHOR']):
 	return metadata_root
 
 def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
-	# Overwrites the first element in containertag corresponding to the tag of new_elem
-	# in_metadata accepts either xml file or root element of parsed metadata.
-	# new_elem accepts either lxml._Element or XML string
+	"""
+	Overwrites the first element in containertag corresponding to the tag of new_elem
+	`in_metadata` accepts either xml file or root element of parsed metadata.
+	`new_elem` accepts either lxml._Element or XML string
+	"""
 	# Whether in_metadata is a filename or an element, get metadata_root
 	metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
 	# if type(in_metadata) is etree._Element:
@@ -292,7 +294,7 @@ def map_newvals2xml(new_values):
 		# add values
 		val2xml[page_url] = {citelink: 1, networkr: 0}
 		val2xml[directdownload_link] = {networkr:1}
-		access_str = 'The first link is to the page containing the data. The second is a direct link to download all data available from the page as a zip file. And the final link is to the publication landing page.'
+		access_str = 'The first link is to the page containing the data. The second is a direct link to download all data available from the page as a zip file. The final link is to the publication landing page. The data page (first link) may have additional data access options, including web services.'
 		val2xml[access_str] = {accinstr: 0}
 		# Browse graphic
 		if 'browse_file' in new_values.keys():
