@@ -106,11 +106,13 @@ if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json
 	print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
 	update_subpages = True
 
-# List XML files
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-
 if update_subpages:
-    dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
+    dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, imagefile)
+	# Save dictionaries
+	with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+		json.dump(dict_DIRtoID, f)
+	with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
+		json.dump(dict_IDtoJSON, f)
 else: # Import pre-created dictionaries if all SB pages exist
     with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
         dict_DIRtoID = json.load(f)

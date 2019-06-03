@@ -532,11 +532,13 @@ def rename_dirs_from_xmls(parentdir):
 	print("Renamed {} directories.".format(ct))
 	return
 
-def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True):
+def setup_subparents(sb, parentdir, landing_id, imagefile, verbose=True):
 	landing_item = sb.get_item(landing_id)
 	# Initialize dictionaries
 	dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
 	dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
+	# List XML files
+	xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 	for xml_file in xmllist:
 		# get relative path from parentdir to XML, including parentdir
 		relpath = os.path.relpath(xml_file, os.path.dirname(parentdir))
