@@ -510,25 +510,42 @@ def get_DOI_from_item(item):
 		i += 1
 	return doi
 
-def rename_dirs_from_xmls(parentdir):
-	# Rename directories that contain a single XML.
-	# Copy the directory name from the title in the XML file.
+def rename_dirs_from_xmls(parentdir, rename_intermediates=True):
+	"""
+	Rename directories that contain a single XML. Rename the directory to the title in the XML file.
+	Notes:
+	- I have run this on OSX with colons in the titles without issue. The renamed directories have backslash instead of colon, but the ScienceBase page titles have colons even though they are copied from the directory names.
+	- Use rename_intermediates to specify whether directory must not contain sub-directories.
+	"""
+	# List characters that are invalid pathnames in OSX (:) or Windows (the rest).
 	invalid_chars = r'< > : " / \ | ? *'.split(' ')
-	xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+	# Initialize
 	ct = 0
+	invalid_titles = []
+	# For all XML files...
+	xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 	for xml_file in xmllist:
 		datadir = os.path.dirname(xml_file)
-		basedir = os.path.dirname(datadir)
-		if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
-			and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+		# Check whether directory meets conditions: contains only one XML and (optionally) does not contain subdirectories.
+		go = False
+		if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1:
+			go = True
+			# and doesn't contain sub-directories...
+			if rename_intermediates and any([os.path.isdir(os.path.join(datadir,fn)) for fn in os.listdir(datadir)]):
+				go = False
+		# If directory meets the conditions, rename it.
+		if go:
 			data_title = get_title_from_data(xml_file)
-			# Rename
+			# Rename if the values don't already match
+			basedir = os.path.dirname(datadir)
 			if not datadir == os.path.join(basedir, data_title):
 				# Check for invalid characters
 				if any(x in data_title for x in invalid_chars):
-					print('WARNING: Title in XML may include invalid characters. Consider changing the title.')
+					invalid_titles += [data_title]
 				os.rename(datadir, os.path.join(basedir, data_title))
 				ct+=1
+	if len(invalid_titles):
+		print('WARNING: The following titles include invalid characters. Consider changing:\n{}'.format('\n'.join(invalid_titles)))
 	print("Renamed {} directories.".format(ct))
 	return
 
