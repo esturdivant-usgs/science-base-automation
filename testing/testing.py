@@ -26,10 +26,10 @@ import pickle
 import datetime
 import sys
 try:
-	sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
+    sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
 except:
-	sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
-	sb_auto_dir = r'/Users/esturdivant/GitHub/science-base-automation'
+    sb_auto_dir = os.path.dirname(os.path.realpath('sb_automation.py'))
+    sb_auto_dir = r'/Users/esturdivant/GitHub/science-base-automation'
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import * # Input sciencebase password
@@ -39,56 +39,56 @@ import getpass
 password = getpass.getpass('ScienceBase password: ')
 # sb = log_in(useremail)
 if not sb.is_logged_in():
-	print('Logging back in...')
-	try:
-		sb = pysb.SbSession(env=None).login(useremail, password)
-	except NameError:
-		sb = pysb.SbSession(env=None).loginc(useremail)
+    print('Logging back in...')
+    try:
+        sb = pysb.SbSession(env=None).login(useremail, password)
+    except NameError:
+        sb = pysb.SbSession(env=None).loginc(useremail)
 cnt=0
 
 #%% get JSON item for parent page
 landing_item = sb.get_item(landing_id)
 new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 if 'pubdate' in locals():
-	new_values['pubdate'] = pubdate
+    new_values['pubdate'] = pubdate
 if 'find_and_replace' in locals():
-	new_values['find_and_replace'] = find_and_replace
+    new_values['find_and_replace'] = find_and_replace
 if 'metadata_additions' in locals():
-	new_values['metadata_additions'] = metadata_additions
+    new_values['metadata_additions'] = metadata_additions
 if "metadata_replacements" in locals():
-	new_values['metadata_replacements'] = metadata_replacements
+    new_values['metadata_replacements'] = metadata_replacements
 if "remove_fills" in locals():
-	new_values['remove_fills'] = remove_fills
+    new_values['remove_fills'] = remove_fills
 new_values
 
 try:
-	sb = pysb.SbSession(env=None).login(useremail, password)
-	print('logged in with saved password')
+    sb = pysb.SbSession(env=None).login(useremail, password)
+    print('logged in with saved password')
 except NameError:
-	sb = pysb.SbSession(env=None).loginc(useremail)
-	print('logged in with input password')
+    sb = pysb.SbSession(env=None).loginc(useremail)
+    print('logged in with input password')
 
 #%%
 # Set imagefile
 if 'previewImage' in subparent_inherits:
-	for f in os.listdir(parentdir):
-		if f.lower().endswith(('png','jpg','gif')):
-			imagefile = os.path.join(parentdir,f)
+    for f in os.listdir(parentdir):
+        if f.lower().endswith(('png','jpg','gif')):
+            imagefile = os.path.join(parentdir,f)
 elif "previewImage" in locals():
-	if os.path.isfile(previewImage):
-		imagefile = previewImage
-	else:
-		print("{} does not exist.".format(previewImage))
+    if os.path.isfile(previewImage):
+        imagefile = previewImage
+    else:
+        print("{} does not exist.".format(previewImage))
 else:
-	imagefile = False
+    imagefile = False
 
 #%%
 if not "dict_DIRtoID" in locals():
-	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-		dict_DIRtoID = json.load(f)
+    with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+        dict_DIRtoID = json.load(f)
 if not "dict_IDtoJSON" in locals():
-	with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-		dict_IDtoJSON = json.load(f)
+    with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
+        dict_IDtoJSON = json.load(f)
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xml_file = xmllist[48]
 os.path.basename(xml_file)
@@ -102,9 +102,9 @@ dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, xmllis
 
 # Save dictionaries
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-	json.dump(dict_DIRtoID, f)
+    json.dump(dict_DIRtoID, f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-	json.dump(dict_IDtoJSON, f)
+    json.dump(dict_IDtoJSON, f)
 
 #%% Create modular XML updater
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
@@ -121,20 +121,20 @@ update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
 # List all files in directory, except original xml and other bad apples
 datadir = os.path.dirname(xml_file)
 up_files = [os.path.join(datadir, fn) for fn in os.listdir(datadir)
-			if not fn.endswith('_orig')
-			and not fn.endswith('DS_Store')
-			and not fn.endswith('.lock')
-			and os.path.isfile(os.path.join(datadir, fn))]
+            if not fn.endswith('_orig')
+            and not fn.endswith('DS_Store')
+            and not fn.endswith('.lock')
+            and os.path.isfile(os.path.join(datadir, fn))]
 bigfiles = []
 for fn in up_files:
-	print(os.path.basename(fn))
+    print(os.path.basename(fn))
 
 for fn in up_files:
-	if os.path.getsize(fn) > max_MBsize*1000000: # convert megabytes to bytes
-		bigfiles.append(os.path.basename(fn))
-		up_files.remove(fn)
+    if os.path.getsize(fn) > max_MBsize*1000000: # convert megabytes to bytes
+        bigfiles.append(os.path.basename(fn))
+        up_files.remove(fn)
 for fn in up_files:
-	print([os.path.basename(fn), os.path.getsize(fn)/1000000])
+    print([os.path.basename(fn), os.path.getsize(fn)/1000000])
 print('\n'.join([os.path.basename(fn) for fn in up_files]))
 
 #%% Change folder name to match XML title
@@ -151,26 +151,26 @@ datadir = os.path.dirname(xml_file)
 pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
 data_title = get_title_from_data(xml_file)
 if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
-	and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
-	# Change subparent title to data title
-	data_item = flexibly_get_item(sb, pageid)
-	orig_title = data_item['title']
-	data_item['title'] = data_title
-	data_item = sb.update_item(data_item)
-	print("RENAMED: page '{}' in place of '{}'".format(trunc(data_title), orig_title))
+    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+    # Change subparent title to data title
+    data_item = flexibly_get_item(sb, pageid)
+    orig_title = data_item['title']
+    data_item['title'] = data_title
+    data_item = sb.update_item(data_item)
+    print("RENAMED: page '{}' in place of '{}'".format(trunc(data_title), orig_title))
 # Or create/find a new page to match the XML file
 else:
-	# Create (or find) data page based on title
-	data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
+    # Create (or find) data page based on title
+    data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
 landing_item = sb.get_item(landing_id)
 new_values = {'landing_id':landing_item['id'], 'doi':dr_doi}
 if 'pubdate' in locals():
-	new_values['pubdate'] = pubdate
+    new_values['pubdate'] = pubdate
 try:
-	# If pubdate in new_values, set it as the date for the SB page
-	data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+    # If pubdate in new_values, set it as the date for the SB page
+    data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
 except:
-	pass
+    pass
 data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 dict_DIRtoID[xml_file] = data_item['id']
 dict_IDtoJSON[data_item['id']] = data_item
@@ -180,15 +180,15 @@ dict_IDtoJSON[data_item['id']] = data_item
 #%% Add browse graphic title to page - Not working. The change to the JSON item is not taking effect.
 # Create function get_browsedesc_from_xml()
 def get_browsedesc_from_xml(xml_file, metadata_root=False):
-	try:
-	if not metadata_root:
-	tree = etree.parse(xml_file) # parse metadata using etree
-	metadata_root=tree.getroot()
-	title = metadata_root.findall('./idinfo/browse/browsed')[0].text # Get title of child from XML
-	return(title)
-	except Exception as e:
-	print("Exception while trying to parse XML file ({}): {}".format(xml_file, e), file=sys.stderr)
-	return(False)
+    try:
+    if not metadata_root:
+    tree = etree.parse(xml_file) # parse metadata using etree
+    metadata_root=tree.getroot()
+    title = metadata_root.findall('./idinfo/browse/browsed')[0].text # Get title of child from XML
+    return(title)
+    except Exception as e:
+    print("Exception while trying to parse XML file ({}): {}".format(xml_file, e), file=sys.stderr)
+    return(False)
 
 xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v2_4sb/Edwin B. Forsythe NWR, NJ, 2010/DC_DT_SLpts/ebf10_DC_DT_SLpts_meta.xml'
 browse_title = get_browsedesc_from_xml(xml_file)
@@ -215,9 +215,9 @@ imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.jpg')))
 imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.gif')))
 # reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
 if len(imagelist) > 0:
-	new_values['browse_file'] = os.path.basename(imagelist[0])
+    new_values['browse_file'] = os.path.basename(imagelist[0])
 else:
-	print("Note: No browse graphic uploaded because no files matched the pattern.".format(data_title))
+    print("Note: No browse graphic uploaded because no files matched the pattern.".format(data_title))
 
 xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
 update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
@@ -225,9 +225,9 @@ update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 
 
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-	dict_DIRtoID = json.load(f)
+    dict_DIRtoID = json.load(f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-	dict_IDtoJSON = json.load(f)
+    dict_IDtoJSON = json.load(f)
 # Preview Image
 # org_map['IDtoJSON'] = upload_all_previewImages(sb, parentdir, org_map['DIRtoID'], org_map['IDtoJSON'])
 dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
@@ -236,28 +236,28 @@ dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJ
 # with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
 # 	json.dump(org_map, f)
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-	json.dump(dict_DIRtoID, f)
+    json.dump(dict_DIRtoID, f)
 with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-	json.dump(dict_IDtoJSON, f)
+    json.dump(dict_IDtoJSON, f)
 
 
 
 
 #%% Change find_and_replace so that keys are searchstr and values are replacestr
 find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/***'],
-	'DOI:{}'.format(dr_doi): ['DOI:XXXXX'],
-	'xxx': ['**ofrDOI**'],
-	# 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
-	# 'https:': 'http:',
-	'doi.org': 'dx.doi.org'
-	}
+    'DOI:{}'.format(dr_doi): ['DOI:XXXXX'],
+    'xxx': ['**ofrDOI**'],
+    # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+    # 'https:': 'http:',
+    'doi.org': 'dx.doi.org'
+    }
 fr2 = {'https://doi.org/10.5066/***':'https://doi.org/{}'.format(dr_doi),
-	'DOI:XXXXX':'DOI:{}'.format(dr_doi),
-	'**ofrDOI**':'xxx',
-	# 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
-	# 'https:': 'http:',
-	'dx.doi.org':'doi.org'
-	}
+    'DOI:XXXXX':'DOI:{}'.format(dr_doi),
+    '**ofrDOI**':'xxx',
+    # 'E.R. Thieler': ['E. Robert Thieler', 'E. R. Thieler'],
+    # 'https:': 'http:',
+    'dx.doi.org':'doi.org'
+    }
 
 
 
@@ -266,12 +266,12 @@ datadir = os.path.dirname(xml_file)
 sub_xmllist = glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)
 innerdirs = [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]
 if len(sub_xmllist) == 1 and not innerdirs:
-	print("One XML and no sub-directories...")
+    print("One XML and no sub-directories...")
 
 datadir = os.path.dirname(xml_file)
 if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
-	and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
-	print("One XML and no sub-directories...")
+    and not [fn for fn in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,fn))]]:
+    print("One XML and no sub-directories...")
 # convert the subparent into the data page
 
 pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
@@ -293,14 +293,14 @@ facets = [fi['name'] for fi in data_item['facets']]
 data_item['browseTypes']
 data_item['browseCategories']
 for fi in data_item['files']:
-	print(fi['name'])
+    print(fi['name'])
 for fi in data_item['facets']:
-	print(fi['name'])
+    print(fi['name'])
 
 
 for link in data_item['distributionLinks']:
-	print(link['title'])
-	print(link['uri'])
+    print(link['title'])
+    print(link['uri'])
 
 data_item['distributionLinks'][1]['uri']
 
@@ -325,7 +325,7 @@ sp_item_dist
 #%% Upload all XML files without updating them.
 parentdir = r'/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publishing/data_release_revisedSept' # OSX Desktop
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-	dict_DIRtoID = json.load(f)
+    dict_DIRtoID = json.load(f)
 
 replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml') # only replaces the file if the file is already on the data page.
 
@@ -334,14 +334,14 @@ xml_file = '/Volumes/ThunderVant/Projects/UAS_BlackBeach/Publishing/Data_publish
 d = 'Field Data (images and reference points)'
 
 if not sb.is_logged_in():
-	print('Logging back in...')
-	try:
-	sb = pysb.SbSession(env=None).login(useremail,password)
-	except NameError:
-	sb = pysb.SbSession(env=None).loginc(useremail)
+    print('Logging back in...')
+    try:
+    sb = pysb.SbSession(env=None).login(useremail,password)
+    except NameError:
+    sb = pysb.SbSession(env=None).loginc(useremail)
 
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-	dict_DIRtoID = json.load(f)
+    dict_DIRtoID = json.load(f)
 
 parentid = dict_DIRtoID[d]
 # Create (or find) new data page based on title in XML
@@ -362,17 +362,17 @@ new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexib
 data_title = get_title_from_data(xml_file) # get title from XML
 data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
 try: #FIXME: add this to a function in a more generalized way?
-	data_item["dates"][0]["dateString"]= new_values['pubdate']
+    data_item["dates"][0]["dateString"]= new_values['pubdate']
 except:
-	pass
+    pass
 # Upload to ScienceBase
 data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=2000, replace=True, verbose=verbose)
 
 #%%QC
 if quality_check_pages:
-	qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
-	print('Checking that each page has: \n{}'.format(qcfields_dict))
-	pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
+    qcfields_dict = {'contacts':4, 'webLinks':0, 'facets':1}
+    print('Checking that each page has: \n{}'.format(qcfields_dict))
+    pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
 
 landing_item = sb.get_item(landing_id)
 child_item = sb.get_item(child_id)
@@ -381,8 +381,8 @@ child_item = sb.get_item(child_id)
 # Recursively list all XML files in parentdir
 xmllist = []
 for root, dirs, files in os.walk(parentdir):
-	for d in dirs:
-	xmllist += glob.glob(os.path.join(root,d,'*.xml'))
+    for d in dirs:
+    xmllist += glob.glob(os.path.join(root,d,'*.xml'))
 
 """
 Tkinter learning
@@ -391,10 +391,10 @@ Tkinter learning
 counter = 0
 def counter_label(label):
   def count():
-	global counter
-	counter += 1
-	label.config(text=str(counter))
-	label.after(1000, count)
+    global counter
+    counter += 1
+    label.config(text=str(counter))
+    label.after(1000, count)
   count()
 
 root = Tk() # Tk root widget initializes Tkinter. Appears as window with title bar after calling root.mainloop()
@@ -427,8 +427,8 @@ type(json)
 # Orig:
 xmllist = []
 for root, dirs, files in os.walk(parentdir):
-	for d in dirs:
-	xmllist += glob.glob(os.path.join(root, d, '*.xml'))
+    for d in dirs:
+    xmllist += glob.glob(os.path.join(root, d, '*.xml'))
 d
 root
 
@@ -463,9 +463,9 @@ xml_file.name
 # Search for browse
 searchstr = xml_file.stem.split('_meta')[0] + '*browse*'
 try:
-	browse_file = sorted(xml_file.parent.glob(searchstr))[0]
+    browse_file = sorted(xml_file.parent.glob(searchstr))[0]
 except:
-	print("Couldn't find file matching the pattern '{}' in directory {} to add as browse image.".format(searchstr, xml_file.parent.stem))
+    print("Couldn't find file matching the pattern '{}' in directory {} to add as browse image.".format(searchstr, xml_file.parent.stem))
 
 searchstr = dataname + '*browse*'
 xml_file.parent / searchstr
@@ -484,9 +484,9 @@ def map_newvals2xml(new_values):
 # Create dictionary of {new value: {XPath to element: position of element in list retrieved by XPath}}
 """
 To update XML elements with new text:
-	for newval, elemfind in val2xml.items():
-	for elempath, i in elemfind.items():
-	metadata_root.findall(elempath)[i].text = newval
+    for newval, elemfind in val2xml.items():
+    for elempath, i in elemfind.items():
+    metadata_root.findall(elempath)[i].text = newval
 Currently hard-wired; will need to be adapted to match metadata scheme.
 """
 # Hard-wire path in metadata to each element
@@ -512,35 +512,35 @@ val2xml = {}
 
 # DOI values
 if 'doi' in new_values.keys():
-	# get DOI values (as issue and URL)
-	doi_issue = "DOI:{}".format(new_values['doi'])
-	doi_url = "https://doi.org/{}".format(new_values['doi'])
-	# add new DOI values as {DOI:XXXXX:{'./idinfo/.../issue':0}}
-	val2xml[doi_issue] = {seriesid:0, lwork_serID:0}
-	val2xml[doi_url] = {citelink: 0, lwork_link: 0, networkr: 2}
+    # get DOI values (as issue and URL)
+    doi_issue = "DOI:{}".format(new_values['doi'])
+    doi_url = "https://doi.org/{}".format(new_values['doi'])
+    # add new DOI values as {DOI:XXXXX:{'./idinfo/.../issue':0}}
+    val2xml[doi_issue] = {seriesid:0, lwork_serID:0}
+    val2xml[doi_url] = {citelink: 0, lwork_link: 0, networkr: 2}
 # Landing URL
 if 'landing_id' in new_values.keys():
-	landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['landing_id'])
-	val2xml[landing_link] = {lwork_link: 1}
+    landing_link = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['landing_id'])
+    val2xml[landing_link] = {lwork_link: 1}
 # Data page URL
 if 'child_id' in new_values.keys():
-	# get URLs
-	page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
-	directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
-	# add values
-	val2xml[page_url] = {citelink: 1, networkr: 0}
-	val2xml[directdownload_link] = {networkr:1}
-	access_str = 'The first link is to the page containing the data, the second link downloads all data available from the page as a zip file, and the third link is to the publication landing page.'
-	val2xml[access_str] = {accinstr: 0}
-	# Browse graphic
-	if 'browse_file' in new_values.keys():
-	browse_link = '{}/?name={}'.format(directdownload_link, new_values['browse_file'])
-	val2xml[browse_link] = {browsen:0}
+    # get URLs
+    page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
+    directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
+    # add values
+    val2xml[page_url] = {citelink: 1, networkr: 0}
+    val2xml[directdownload_link] = {networkr:1}
+    access_str = 'The first link is to the page containing the data, the second link downloads all data available from the page as a zip file, and the third link is to the publication landing page.'
+    val2xml[access_str] = {accinstr: 0}
+    # Browse graphic
+    if 'browse_file' in new_values.keys():
+    browse_link = '{}/?name={}'.format(directdownload_link, new_values['browse_file'])
+    val2xml[browse_link] = {browsen:0}
 # Edition
 if 'edition' in new_values.keys():
-	val2xml[new_values['edition']] = {edition:0}
+    val2xml[new_values['edition']] = {edition:0}
 if 'pubdate' in new_values.keys():
-	val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0} # removed caldate
+    val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0} # removed caldate
 # Date and time of update
 now_str = datetime.datetime.now().strftime("%Y%m%d")
 val2xml[now_str] = {metadate: 0}
@@ -556,16 +556,16 @@ accinstr = './distinfo/stdorder/digform/digtopt/onlinopt/accinstr'
 i = 0
 acc_inst = 'The URLs in the network address section provide the following, respectively: '
 if 'child_id' in new_values.keys():
-	# link to containing page
-	page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
-	i = i
-	update_xml_tagtext(metadata_root, page_url, networkr, i)
-	acc_inst += 'Link number {} is to the page containing the data. '.format(i+1)
-	# direct download everything on page
-	directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
-	i += 1
-	update_xml_tagtext(metadata_root, directdownload_link, networkr, i)
-	acc_inst += 'Link number {} downloads all data available from the page as a zip file. '.format(i+1)
+    # link to containing page
+    page_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(new_values['child_id']) # data_item['link']['url']
+    i = i
+    update_xml_tagtext(metadata_root, page_url, networkr, i)
+    acc_inst += 'Link number {} is to the page containing the data. '.format(i+1)
+    # direct download everything on page
+    directdownload_link = 'https://www.sciencebase.gov/catalog/file/get/{}'.format(new_values['child_id'])
+    i += 1
+    update_xml_tagtext(metadata_root, directdownload_link, networkr, i)
+    acc_inst += 'Link number {} downloads all data available from the page as a zip file. '.format(i+1)
 # link DOI, landing page
 doi_url = "https://doi.org/{}".format(new_values['doi'])
 i += 1
