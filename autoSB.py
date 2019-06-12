@@ -27,7 +27,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
            'update_xml_tagtext', 'flip_dict', 'update_xml', 'update_all_xmls', 'json_from_xml',
            'get_fields_from_xml', 'log_in', 'log_in2', 'flexibly_get_item',
            'get_DOI_from_item', 'rename_dirs_from_xmls', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
-           'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
+           'upsert_metadata', 'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
            'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
            'set_parent_extent', 'find_browse_file', 'upload_all_previewImages', 'shp_to_new_child',
            'update_datapage', 'update_subpages_from_landing',
@@ -401,13 +401,12 @@ def update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True):
         # Update XML
         # Get SB values
         datadir = os.path.dirname(xml_file)
-        pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+        datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
         data_title = os.path.basename(datadir)
-        data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
+        # data_item = find_or_create_child(sb, datapageid, data_title, verbose=verbose)
+        data_item = sb.get_item(datapageid)
         # add SB UID to be updated in XML
         new_values['child_id'] = data_item['id']
-        # add DOI to be updated in XML
-        new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, pageid))
         # Look for browse graphic
         browse_file = find_browse_file(datadir, searchterm='*browse*', extensions=('.png', '.jpg', '.gif'))
         new_values.pop('browse_file', None) # remove value from past iteration
@@ -552,7 +551,7 @@ def rename_dirs_from_xmls(parentdir, rename_intermediates=True):
 def setup_subparents(sb, parentdir, landing_id, imagefile, verbose=True):
     landing_item = sb.get_item(landing_id)
     # Initialize dictionaries
-    dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize top dir/file:ID entry to dict
+    dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize [top dir/file: ID] entry to dict
     dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
     # List XML files
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
@@ -617,6 +616,16 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
             print("CREATED PAGE: '{}' in '{}.'".format(trunc(child_title, 40), sb.get_item(parentid)['title']))
         time.sleep(1) # wait 1 sec to ensure that page is registered
     return child_item
+
+def upsert_metadata(sb, data_item, xml_file):
+    # Remove file with the originalMetadata flag. Then upload the xml file.
+    if 'files' in data_item:
+        for fidx, file in enumerate(data_item['files']):
+            if file['originalMetadata']:
+                data_item['files'].pop(fidx)
+        data_item = sb.update_item(data_item)
+    data_item = sb.upload_file_to_item(data_item, xml_file)
+    return(data_item)
 
 def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
     for root, dirs, files in os.walk(parentdir):

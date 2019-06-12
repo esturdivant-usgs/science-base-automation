@@ -65,6 +65,10 @@ if replace_subpages:
         print('WARNING: You chose not to update subpages, but also to replace them. Both are not possible so we will remove and create them.')
     print("Deleting all child pages of landing page...")
     print(delete_all_children(sb, landing_id))
+    # Try new get_ancestor_ids() and delete_items() to remove all children
+    # ancestor_ids = sb.get_ancestor_ids(landing_id)
+    # sb.delete_items(ancestor_ids)
+    # Remove any files from the landing page
     landing_item = remove_all_files(sb, landing_id, verbose=verbose)
     update_subpages = True
 
@@ -143,6 +147,12 @@ if remove_original_xml:
 if restore_original_xml:
     restore_original_xmls(parentdir)
 
+# add DOI to be updated in XML
+if 'dr_doi' in locals():
+    new_values['doi'] = dr_doi
+else:
+    new_values['doi'] = get_DOI_from_item(flexibly_get_item(sb, datapageid))
+
 # Optionally update all XML files from SB values
 if update_XML:
     update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
@@ -151,6 +161,7 @@ if update_XML:
 if verbose:
     print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
 cnt = 0
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 for xml_file in xmllist:
     # Log into SB if it's timed out
     if not sb.is_logged_in():
@@ -163,10 +174,11 @@ for xml_file in xmllist:
     cnt += 1
     print("File {}: {}".format(cnt, xml_file))
     datadir = os.path.dirname(xml_file)
-    pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+    datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
     # Create (or find) data page based on directory name (which should be the same as the XML title)
     data_title = os.path.basename(datadir)
-    data_item = find_or_create_child(sb, pageid, data_title, verbose=verbose)
+    # data_item = find_or_create_child(sb, datapageid, data_title, verbose=verbose)
+    data_item = sb.get_item(datapageid)
     # Upload data to ScienceBase
     if update_data:
         # Update publication date in item
@@ -191,10 +203,7 @@ for xml_file in xmllist:
     # Upload XML to ScienceBase
     elif update_XML:
         # If XML was updated, but data was not uploaded, replace only XML.
-        try:
-            sb.replace_file(xml_file, data_item) # Does not update SB page to match metadata
-        except e:
-            print('Retry with update_data = True. pysb.replace_file() is not working for this use. Returned: \n'+e)
+        data_item = upsert_metadata(sb, data_item, xml_file)
     if 'previewImage' in data_inherits and "imagefile" in locals():
         data_item = sb.upload_file_to_item(data_item, imagefile)
     if verbose:
