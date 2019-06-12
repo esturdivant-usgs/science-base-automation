@@ -338,7 +338,7 @@ The code:
 # Initialize variables
 basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b"
 backup_dir = os.path.join(basedir, "backup_xmls")
-template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/v3.0_aftervol1review/templates"
+template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/v3.1/templates"
 csvfname = "template_values.csv"
 csvfpath = os.path.join(basedir, csvfname)
 

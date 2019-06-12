@@ -153,6 +153,7 @@ xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xmllist = xmllist[0:3]
 xml_file = xmllist[0]
 
+
 update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
 
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
@@ -215,19 +216,12 @@ for xml_file in xmllist:
     dict_DIRtoID[xml_file] = data_item['id']
     dict_IDtoJSON[data_item['id']] = data_item
 
-def upsert_metadata(sb, data_item, xml_file):
-	# Remove file with the originalMetadata flag. Then upload the xml file.
-	for fidx, file in enumerate(data_item['files']):
-		if file['originalMetadata']:
-			data_item['files'].pop(fidx)
-	data_item = sb.update_item(data_item)
-	data_item = sb.upload_file_to_item(data_item, xml_file)
-	return(data_item)
 
-data_item = upsert_metadata(data_item, xml_file)
 
 #%% Try new delete_items()
 ancestor_ids = sb.get_ancestor_ids(landing_id)
+ancestor_ids[0]
+len(ancestor_ids)
 sb.delete_items(ancestor_ids)
 
 #%% Check max size

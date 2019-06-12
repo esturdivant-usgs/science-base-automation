@@ -924,6 +924,7 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
 def delete_all_children(sb, parentid, verbose=False):
     # Recursively delete all SB items that are descendants of the input page.
     # Waits up to 5 seconds for the child items to be deleted.
+    exit_message = "Not sure if the process completed..."
     cids = sb.get_child_ids(parentid)
     for cid in cids:
         try:
