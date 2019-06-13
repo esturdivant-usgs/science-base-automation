@@ -162,14 +162,10 @@ if verbose:
     print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
 cnt = 0
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+xmllist = xmllist[start_xml_idx:]
 for xml_file in xmllist:
     # Log into SB if it's timed out
-    if not sb.is_logged_in():
-        print('Logging back in...')
-        try:
-            sb = pysb.SbSession(env=None).login(useremail, password)
-        except NameError:
-            sb = pysb.SbSession(env=None).loginc(useremail)
+    sb = log_in(useremail, password)
     # 1. GET VALUES from XML
     cnt += 1
     print("File {}: {}".format(cnt, xml_file))
@@ -196,10 +192,7 @@ for xml_file in xmllist:
                 bigfiles = []
             bigfiles += bigfiles1
         # Log into SB if it's timed out
-        try:
-            sb = pysb.SbSession(env=None).login(useremail, password)
-        except NameError:
-            sb = pysb.SbSession(env=None).loginc(useremail)
+        sb = log_in(useremail, password)
     # Upload XML to ScienceBase
     elif update_XML:
         # If XML was updated, but data was not uploaded, replace only XML.

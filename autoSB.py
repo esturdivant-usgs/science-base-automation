@@ -304,7 +304,7 @@ def map_newvals2xml(new_values):
     if 'pubdate' in new_values.keys():
         val2xml[new_values['pubdate']] = {pubdate:0, lwork_pubdate:0} # removed caldate
     # Date and time of update
-    now_str = datetime.datetime.now().strftime("%Y%m%d")
+    now_str = datetime.now().strftime("%Y%m%d")
     val2xml[now_str] = {metadate: 0}
     return(val2xml)
 
@@ -660,14 +660,17 @@ def upload_files(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=Fals
             up_files.remove(fn)
     # Upload all files to child page
     if verbose:
-        print("UPLOADING: files in directory '{}'".format(os.path.basename(datadir)))
+        start = datetime.now()
+        print("UPLOADING {}: files in directory '{}'".format(start.strftime("%X"), os.path.basename(datadir)))
         if len(bigfiles) == 1:
             print("**TO DO** File {} is too big to upload here. Please manually upload afterward.".format(bigfiles))
         elif len(bigfiles)>1:
             print("**TO DO** Files {} are too big to upload here. Please manually upload afterward.".format(bigfiles))
     item = sb.upload_files_and_upsert_item(item, up_files) # upsert should "create or update a SB item"
     if verbose:
-        print("UPLOAD COMPLETED.")
+        end = datetime.now()
+        duration = end - start
+        print("UPLOAD COMPLETED. Duration: {}".format(duration))
     return(item, bigfiles)
 
 def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True, verbose=False):
@@ -863,16 +866,16 @@ def update_datapage(sb, page, xml_file, inheritedfields=False, replace=True, ver
         item = inherit_SBfields(sb, item, inheritedfields, verbose=verbose)
     return item # Return new JSON
 
-def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID, dict_IDtoJSON):
-    # Find sub-parent container pages following directory hierarchy and copy-paste fields from landing page
-    for (root, dirs, files) in os.walk(parentdir):
-        for d in dirs:
-            sb = log_in(useremail)
-            reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
-            subpage = sb.get_item(dict_DIRtoID[reldirpath])
-            subpage = inherit_SBfields(sb, subpage, subparent_inherits)
-            dict_IDtoJSON[subpage['id']] = subpage
-    return dict_IDtoJSON
+# def update_subpages_from_landing(sb, parentdir, subparent_inherits, dict_DIRtoID, dict_IDtoJSON):
+#     # Find sub-parent container pages following directory hierarchy and copy-paste fields from landing page
+#     for (root, dirs, files) in os.walk(parentdir):
+#         for d in dirs:
+#             sb = log_in(useremail)
+#             reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
+#             subpage = sb.get_item(dict_DIRtoID[reldirpath])
+#             subpage = inherit_SBfields(sb, subpage, subparent_inherits)
+#             dict_IDtoJSON[subpage['id']] = subpage
+#     return dict_IDtoJSON
 
 def update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent_inherits, dict_PARtoCHILDS):
     # Populate data pages
@@ -934,10 +937,10 @@ def delete_all_children(sb, parentid, verbose=False):
     sb.delete_items(cids)
     ptitle = sb.get_item(parentid)['title']
     # Wait up to 5 seconds for the child items to be deleted
-    start = datetime.datetime.now()
+    start = datetime.now()
     duration = 0
     while duration < 6:
-        duration = (datetime.datetime.now() - start).seconds
+        duration = (datetime.now() - start).seconds
         if len(sb.get_child_ids(parentid)) < 1:
             exit_message = "DELETED: all child items from parent page '{}.'".format(ptitle)
             break

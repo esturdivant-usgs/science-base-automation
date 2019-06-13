@@ -152,7 +152,9 @@ if not sb.is_logged_in():
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xmllist = xmllist[0:3]
 xml_file = xmllist[0]
-
+start_xml_idx = 25
+xmllist = xmllist[start_xml_idx:]
+len(xmllist)
 
 update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
 
@@ -224,6 +226,27 @@ ancestor_ids[0]
 len(ancestor_ids)
 sb.delete_items(ancestor_ids)
 
+
+#%% What's the difference in the sbjson between items that I tried to delete and now use the folder icon even though they have no child pages and normal pages?
+if not sb.is_logged_in():
+    print('Logging back in...')
+    try:
+        sb = pysb.SbSession(env=None).login(useremail, password)
+    except NameError:
+        sb = pysb.SbSession(env=None).loginc(useremail)
+
+try:
+    sb = pysb.SbSession(env=None).login(useremail, password)
+except NameError:
+    sb = pysb.SbSession(env=None).loginc(useremail)
+
+weirdid = '5d013783e4b05cc71cad2516'
+normalid = '5d016bc4e4b05cc71cad2b66'
+
+weird = sb.get_item(weirdid)
+normal = sb.get_item(normalid)
+
+
 #%% Check max size
 # List all files in directory, except original xml and other bad apples
 datadir = os.path.dirname(xml_file)
@@ -243,13 +266,6 @@ for fn in up_files:
 for fn in up_files:
     print([os.path.basename(fn), os.path.getsize(fn)/1000000])
 print('\n'.join([os.path.basename(fn) for fn in up_files]))
-
-#%% Change folder name to match XML title
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4_xmlonly'
-rename_dirs_from_xmls(parentdir)
-
-restore_original_xmls(parentdir)
-
 
 
 
