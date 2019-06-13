@@ -17,7 +17,7 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 
 ## How to execute, from the top:
 ### 1. Set up a local directory structure for your data release.
-See below for an explanation of how SB pages will mimic the directory structure. Each directory within the parent directory that contains (at some level) an XML file will become a ScienceBase page within the landing page. An SB page will be created for each XML file. If a directory contains only one XML, it will become a child page and all relevant data files will be uploaded there. The page will be located within the page corresponding to its containing directory. If a single XML is present, the title of the corresponding page is taken from the dataset title in the XML file. All XML files should pass MP error checking.
+See below for a detailed explanation of how SB pages are set up to mimic the directory structure. The parent directory should correspond to the landing page. It will be populated with a child page for all first-level directories that contain XML files in their directory trees. Directories without XML files will be ignored. The contents of each directory that contains an XML will be uploaded to the corresponding child page. If a single XML is present, the title of the corresponding page is taken from the dataset title in the XML file. All XML files should pass MP error checking.
 
 - Filenames should use this pattern: data_1.shp, data_1.shp.xml (or data_1_meta.xml), data_1_browse.png, where 'data_1' is the _basename_ of the dataset and the suffixes '.shp' or '\_meta' and '\_browse' indicate metadata or browse graphics respectively. If the metadata filename is data_1.shp.xml, all files in the folder containing the XML file that begin with 'data_1' will be uploaded. This would include data_12.shp
 
@@ -26,7 +26,6 @@ See below for an explanation of how SB pages will mimic the directory structure.
 ### 2. Set up a ScienceBase landing page.
 Create the data release landing page before running the script.
 Begin either by uploading an XML file to the File section, which SB will use to automatically populate fields or go straight to working manually with the page. Make manual revisions, such as to the citation, the body, the purpose, etc. If desired, create a preview image by uploading an image to the File section; this will automatically be used as the preview image. You can choose any of these fields to be copied over to child pages (including the preview image).
-It is also possible for the script to automatically create the SB page from an XML file. If desired, that file should be checked for errors using MP and placed in the top directory.
 
 ### 3. Modify parameters.
 
