@@ -16,7 +16,7 @@ import glob
 from lxml import etree
 import json
 import pickle
-import datetime
+from datetime import datetime
 import time
 import io
 
@@ -30,7 +30,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
            'upsert_metadata', 'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
            'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
            'set_parent_extent', 'find_browse_file', 'upload_all_previewImages', 'shp_to_new_child',
-           'update_datapage', 'update_subpages_from_landing',
+           'update_datapage', #'update_subpages_from_landing',
            'update_pages_from_XML_and_landing', 'remove_all_files',
            'update_existing_fields',
            'delete_all_children', 'remove_all_child_pages',

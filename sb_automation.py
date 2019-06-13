@@ -22,7 +22,7 @@ import glob
 from lxml import etree
 import json
 import pickle
-import datetime
+from datetime import datetime
 import sys
 import shutil
 from pathlib import Path
@@ -129,14 +129,8 @@ Create and populate data pages
 Inputs: parent directory, landing page ID, dictionary of new values (new_values)
 For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 """
-if verbose:
-    print('---\nChecking log in information...')
-if not sb.is_logged_in():
-    print('Logging back in...')
-    try:
-        sb = pysb.SbSession(env=None).login(useremail,password)
-    except NameError:
-        sb = pysb.SbSession(env=None).loginc(useremail)
+# Log into SB if it's timed out
+sb = log_in(useremail, password)
 
 #%%
 # Optionally remove original XML files.
@@ -159,19 +153,19 @@ if update_XML:
 
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
-    print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
+    print('\n---\nWalking through XML files to upload the data...')
 cnt = 0
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 xmllist = xmllist[start_xml_idx:]
 for xml_file in xmllist:
+    cnt += 1
+    print("File {}: {}".format(cnt + start_xml_idx, xml_file))
     # Log into SB if it's timed out
     sb = log_in(useremail, password)
     # 1. GET VALUES from XML
-    cnt += 1
-    print("File {}: {}".format(cnt, xml_file))
     datadir = os.path.dirname(xml_file)
     datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-    # Create (or find) data page based on directory name (which should be the same as the XML title)
+    # Create (or find) data page based on directory name (should be the same as the XML title)
     data_title = os.path.basename(datadir)
     # data_item = find_or_create_child(sb, datapageid, data_title, verbose=verbose)
     data_item = sb.get_item(datapageid)
@@ -184,7 +178,7 @@ for xml_file in xmllist:
         except:
             pass
         # Upload all files in directory to the SB page
-        # Record list of files that were not uploaded because they were above the threshold set by max_MBsize
+        # Record files that were not uploaded because they were above the max_MBsize threshold
         # data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
         data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
         if bigfiles1:
@@ -200,7 +194,7 @@ for xml_file in xmllist:
     if 'previewImage' in data_inherits and "imagefile" in locals():
         data_item = sb.upload_file_to_item(data_item, imagefile)
     if verbose:
-        now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+        now_str = datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
         print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
     # store values in dictionaries
     dict_DIRtoID[xml_file] = data_item['id']
@@ -232,7 +226,7 @@ if quality_check_pages:
     pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
 
 
-now_str = datetime.datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
+now_str = datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
 print('\n{}\nAll done! View the result at {}'.format(now_str, landing_link))
 if 'bigfiles' in locals():
     if len(bigfiles) > 0:

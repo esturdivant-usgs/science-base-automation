@@ -87,7 +87,7 @@ verbose         = True
 # page_per_filename   = False
 
 max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the large file uploader.
-start_xml_idx = 24 # 0 to perform for all XMLs. This is included in case a process does not complete.
+start_xml_idx = 42 # 0 to perform for all XMLs. This is included in case a process does not complete.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
