@@ -455,7 +455,7 @@ def log_in(username=False, password=False):
         else:
             return sb
     if not username:
-        username = raw_input("SB username (should be entire USGS email): ")
+        username = input("SB username (should be entire USGS email): ")
     if not password:
         sb = pysb.SbSession(env=None).loginc(username)
     else:
@@ -950,9 +950,9 @@ def remove_all_child_pages(useremail=False, landing_link=False):
     # Stand-alone function to wipe page tree;
     # Calls delete_all_children()
     if not useremail:
-        useremail = raw_input("SB username (should be entire USGS email): ")
+        useremail = input("SB username (should be entire USGS email): ")
     if not landing_link:
-        landing_link = raw_input("Landing page URL: ")
+        landing_link = input("Landing page URL: ")
     landing_id = os.path.basename(landing_link)
     sb = log_in(useremail)
     delete_all_children(sb, landing_id)
