@@ -97,13 +97,8 @@ Create SB page structure: nested child pages following directory hierarchy
 Inputs: parent directory, landing page ID
 This one should overwrite the entire data release (excluding the landing page).
 """
-# Check whether logged in.
-if not sb.is_logged_in():
-    print('Logging back in...')
-    try:
-        sb = pysb.SbSession(env=None).login(useremail,password)
-    except NameError:
-        sb = pysb.SbSession(env=None).loginc(useremail)
+# Log into SB if it's timed out
+sb = log_in(useremail, password)
 
 # If there's no id_to_json.json file available, we need to create the subpage structure.
 if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json.json')):
