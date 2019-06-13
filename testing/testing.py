@@ -247,6 +247,16 @@ weird = sb.get_item(weirdid)
 normal = sb.get_item(normalid)
 
 
+
+#%% Test whether training line break is problematic for renaming
+basedir1 = r'/Users/esturdivant/test/test2'
+basedir2 = r'/Users/esturdivant/test'
+data_title = 'test with break \n'
+newdir = os.path.join(basedir2, data_title)
+os.rename(basedir1, newdir)
+
+
+
 #%% Check max size
 # List all files in directory, except original xml and other bad apples
 datadir = os.path.dirname(xml_file)

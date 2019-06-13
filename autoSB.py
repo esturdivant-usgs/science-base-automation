@@ -535,6 +535,7 @@ def rename_dirs_from_xmls(parentdir, rename_intermediates=True):
         # If directory meets the conditions, rename it.
         if go:
             data_title = get_title_from_data(xml_file)
+            data_title = data_title.strip('\n')
             # Rename if the values don't already match
             basedir = os.path.dirname(datadir)
             if not datadir == os.path.join(basedir, data_title):
