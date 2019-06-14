@@ -228,33 +228,23 @@ sb.delete_items(ancestor_ids)
 
 
 #%% What's the difference in the sbjson between items that I tried to delete and now use the folder icon even though they have no child pages and normal pages?
-if not sb.is_logged_in():
-    print('Logging back in...')
-    try:
-        sb = pysb.SbSession(env=None).login(useremail, password)
-    except NameError:
-        sb = pysb.SbSession(env=None).loginc(useremail)
 
-try:
-    sb = pysb.SbSession(env=None).login(useremail, password)
-except NameError:
-    sb = pysb.SbSession(env=None).loginc(useremail)
-
-weirdid = '5d013783e4b05cc71cad2516'
-normalid = '5d016bc4e4b05cc71cad2b66'
-
-weird = sb.get_item(weirdid)
-normal = sb.get_item(normalid)
+falsefolder_id = '5d013787e4b05cc71cad2520'
+fix_falsefolder(sb, falsefolder_id, useremail, password)
 
 
 
-#%% Test whether training line break is problematic for renaming
+
+#%% Test whether trailing line break is problematic for renaming
 basedir1 = r'/Users/esturdivant/test/test2'
 basedir2 = r'/Users/esturdivant/test'
 data_title = 'test with break \n'
 newdir = os.path.join(basedir2, data_title)
 os.rename(basedir1, newdir)
+newdir
+os.listdir(basedir2)
 
+data_title.strip('\n')
 
 
 #%% Check max size

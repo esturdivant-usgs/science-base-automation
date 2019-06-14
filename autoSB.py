@@ -26,7 +26,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
            'find_and_replace_text', 'find_and_replace_from_dict',
            'update_xml_tagtext', 'flip_dict', 'update_xml', 'update_all_xmls', 'json_from_xml',
            'get_fields_from_xml', 'log_in', 'log_in2', 'flexibly_get_item',
-           'get_DOI_from_item', 'rename_dirs_from_xmls', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
+           'get_DOI_from_item', 'fix_falsefolder', 'rename_dirs_from_xmls', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
            'upsert_metadata', 'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
            'upload_shp', 'get_parent_bounds', 'get_idlist_bottomup',
            'set_parent_extent', 'find_browse_file', 'upload_all_previewImages', 'shp_to_new_child',
@@ -509,6 +509,20 @@ def get_DOI_from_item(item):
         i += 1
     return doi
 
+def fix_falsefolder(sb, falsefolder_id, useremail, password):
+    # Occasionally a child page is falsely identified as a folder even though it doesn't have children. In that case, this should fix it. 1. Add a child page to the false folder. 2. Delete the child. 3. remove the 'Folder'
+    sb = log_in(useremail, password)
+    child_item = sb.create_item({'parentId': falsefolder_id, 'title':'meow'})
+    sb.delete_item(child_item)
+    falsefolder_item = sb.get_item(falsefolder_id)
+    falsefolder_item['systemTypes'].remove('Folder')
+    falsefolder_item = sb.update_item(falsefolder_item)
+    if falsefolder_item['hasChildren']:
+        print("'hasChildren' successfully set to False. ")
+    if 'Folder' in falsefolder_item['systemTypes']:
+        print("Still recognized as a folder... :(")
+    return
+
 def rename_dirs_from_xmls(parentdir, rename_intermediates=True):
     """
     Rename directories that contain a single XML. Rename the directory to the title in the XML file.
@@ -859,6 +873,7 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 
 def update_datapage(sb, page, xml_file, inheritedfields=False, replace=True, verbose=True):
     #FIXME This is not currently being used. Why not?
+    # In its current form, there's no reason to get parent_item
     parent_item = flexibly_get_item(sb, page)
     if replace:
         item = sb.replace_file(xml_file,item) # replace_file() does not work well
