@@ -195,6 +195,8 @@ for xml_file in xmllist:
     dict_DIRtoID[xml_file] = data_item['id']
     dict_IDtoJSON[data_item['id']] = data_item
 
+#%% Update SB preview image from the uploaded files.
+
 #%% Pass down fields from parents to children
 print("\n---\nPassing down fields from parents to children...")
 inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)

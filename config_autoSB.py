@@ -164,10 +164,7 @@ Initialize
 """
 #%% Initialize SB session
 password = getpass.getpass("ScienceBase password: ")
-if "password" in locals():
-    sb = log_in(useremail, password)
-else:
-    sb = log_in(useremail)
+sb = log_in(useremail, password)
 
 #%% Find landing page
 if not "landing_id" in locals():

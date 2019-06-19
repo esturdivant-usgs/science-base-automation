@@ -25,6 +25,7 @@ import json
 import pickle
 import datetime
 import sys
+import re
 try:
     sb_auto_dir = os.path.dirname(os.path.realpath(__file__))
 except:
@@ -33,22 +34,16 @@ except:
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import * # Input sciencebase password
+
 # from Tkinter import *
 import getpass
 
+useremail = 'esturdivant@usgs.gov'
 password = getpass.getpass('ScienceBase password: ')
-# sb = log_in(useremail)
-if not sb.is_logged_in():
-    print('Logging back in...')
-    try:
-        sb = pysb.SbSession(env=None).login(useremail, password)
-    except NameError:
-        sb = pysb.SbSession(env=None).loginc(useremail)
-cnt=0
+
 #%% Initialize SB session
-"""
-sb = log_in(useremail)
-"""
+sb = log_in(useremail, password)
+
 # get JSON item for parent page
 landing_item = sb.get_item(landing_id)
 #print("CITATION: {}".format(landing_item['citation'])) # print to QC citation
@@ -129,122 +124,9 @@ else: # Import pre-created dictionaries if all SB pages exist
     with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
         dict_IDtoJSON = json.load(f)
 
-#%% Create and populate data pages
-"""
-Create and populate data pages
-Inputs: parent directory, landing page ID, dictionary of new values (new_values)
-For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
-"""
-if verbose:
-    print('---\nChecking log in information...')
-if not sb.is_logged_in():
-    print('Logging back in...')
-    try:
-        sb = pysb.SbSession(env=None).login(useremail,password)
-    except NameError:
-        sb = pysb.SbSession(env=None).loginc(useremail)
-
-#%%
-# # Optionally update all XML files from SB values
-# if update_XML:
-#     update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
-
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-xmllist = xmllist[0:3]
-xml_file = xmllist[0]
-start_xml_idx = 25
-xmllist = xmllist[start_xml_idx:]
-len(xmllist)
-
-update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
-
-# For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
-if verbose:
-    print('\n---\nWalking through XML files to create/find a data page, update the XML file, and upload the data...')
-cnt = 0
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-xmllist = xmllist[0:3]
-for xml_file in xmllist:
-    # Log into SB if it's timed out
-    if not sb.is_logged_in():
-        print('Logging back in...')
-        try:
-            sb = pysb.SbSession(env=None).login(useremail, password)
-        except NameError:
-            sb = pysb.SbSession(env=None).loginc(useremail)
-    # 1. GET VALUES from XML
-    cnt += 1
-    print("File {}: {}".format(cnt, xml_file))
-    # Get SB values
-    datadir = os.path.dirname(xml_file)
-    datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-    data_title = os.path.basename(datadir)
-    # data_item = find_or_create_child(sb, datapageid, data_title, verbose=verbose)
-    data_item = sb.get_item(datapageid)
-    # Upload data to ScienceBase
-    if update_data:
-        # Update publication date in item
-        try:
-            # If pubdate in new_values, set it as the date for the SB page
-            data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
-        except:
-            pass
-        # Upload all files in directory to the SB page
-        # Record list of files that were not uploaded because they were above the threshold set by max_MBsize
-        # data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
-        data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
-        if bigfiles1:
-            if not 'bigfiles' in locals():
-                bigfiles = []
-            bigfiles += bigfiles1
-        # Log into SB if it's timed out
-        try:
-            sb = pysb.SbSession(env=None).login(useremail, password)
-        except NameError:
-            sb = pysb.SbSession(env=None).loginc(useremail)
-    # Upload XML to ScienceBase
-    elif update_XML:
-        # If XML was updated, but data was not uploaded, replace only XML.
-        try:
-            upsert_metadata(sb, data_item, xml_file)
-        except e:
-            print('Retry with update_data = True. sb.replace_file() is not working for this use. Returned: \n'+e)
-    if 'previewImage' in data_inherits and "imagefile" in locals():
-        data_item = sb.upload_file_to_item(data_item, imagefile)
-    if verbose:
-        now_str = datetime.datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-        print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
-    # store values in dictionaries
-    dict_DIRtoID[xml_file] = data_item['id']
-    dict_IDtoJSON[data_item['id']] = data_item
-
-
-
-#%% Try new delete_items()
-ancestor_ids = sb.get_ancestor_ids(landing_id)
-ancestor_ids[0]
-len(ancestor_ids)
-sb.delete_items(ancestor_ids)
-
-
-#%% What's the difference in the sbjson between items that I tried to delete and now use the folder icon even though they have no child pages and normal pages?
-
+#%% After trying to delete and getting the pages all confused...
 falsefolder_id = '5d013787e4b05cc71cad2520'
 fix_falsefolder(sb, falsefolder_id, useremail, password)
-
-
-
-
-#%% Test whether trailing line break is problematic for renaming
-basedir1 = r'/Users/esturdivant/test/test2'
-basedir2 = r'/Users/esturdivant/test'
-data_title = 'test with break \n'
-newdir = os.path.join(basedir2, data_title)
-os.rename(basedir1, newdir)
-newdir
-os.listdir(basedir2)
-
-data_title.strip('\n')
 
 
 #%% Check max size
@@ -300,48 +182,45 @@ dict_IDtoJSON[data_item['id']] = data_item
 # started: 3:37
 # completed:
 
-#%% Add browse graphic title to page - Not working. The change to the JSON item is not taking effect.
-# Create function get_browsedesc_from_xml()
-def get_browsedesc_from_xml(xml_file, metadata_root=False):
-    try:
-    if not metadata_root:
-    tree = etree.parse(xml_file) # parse metadata using etree
-    metadata_root=tree.getroot()
-    title = metadata_root.findall('./idinfo/browse/browsed')[0].text # Get title of child from XML
-    return(title)
-    except Exception as e:
-    print("Exception while trying to parse XML file ({}): {}".format(xml_file, e), file=sys.stderr)
-    return(False)
 
-xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v2_4sb/Edwin B. Forsythe NWR, NJ, 2010/DC_DT_SLpts/ebf10_DC_DT_SLpts_meta.xml'
-browse_title = get_browsedesc_from_xml(xml_file)
 
-page_id = '5c6dc479e4b0fe48cb4024ae'
-data_item = sb.get_item(page_id)
 
-# Change title
-data_item['previewImage']['original']
-data_item['previewImage']['original']['title'] = 'browse_title'
-data_item['previewImage']['original']['title'] # --> 'browse_title'
-data_item = sb.update_item(data_item)
-data_item = sb.get_item(page_id)
-data_item['previewImage']['original']['title'] # --> Not 'browse_title'
+#%% Work with browse graphic...
+xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b_4sb/Cedar Island, VA, 2010–2011/DisMOSH, Cost, MOSHShoreline: Distance to foraging areas for piping plovers (foraging shoreline, cost mask, and least-cost path distance): Cedar Island, VA, 2010–2011/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
+update_browse(sb, xml_file, page_id, useremail, password)
+parentdir
+landing_id
+#%% Update SB preview image from the uploaded files.
+print("Updating browse graphic information...")
+valid_ids = sb.get_ancestor_ids(landing_id)
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+for xml_file in xmllist:
+    # Get SB page ID from the XML (needs to be up-to-date)
+    sb = log_in(useremail, password)
+    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+    update_browse(sb, xml_file, datapageid, useremail, password)
+    # data_item = upsert_metadata(sb, datapageid, xml_file)
+
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+for xml_file in xmllist:
+    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+    data_item = upsert_metadata(sb, datapageid, xml_file)
+
+datapageid
+data_item = sb.get_item(datapageid)
+for file in data_item['files']:
+    print(file['contentType'])
+
+for k in data_item['files'][0].keys():
+    print(k)
+
+
+sb = log_in(useremail, password)
+valid_ids = sb.get_ancestor_ids(landing_id)
+page_id = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+page_id
 
 #%% Working with browse graphic population... Looking at section of for loop.
-new_values ={'child_id':'5c65dffde4b0fe48cb3907b2'}
-new_values['browse_file'] = '000'
-new_values.pop('browse_file', None) # remove value from past iteration
-new_values
-datadir = os.path.dirname(xml_file)
-imagelist = glob.glob(os.path.join(datadir,'*browse*.png'))
-imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.jpg')))
-imagelist.extend(glob.glob(os.path.join(datadir,'*browse*.gif')))
-# reldirpath = os.path.join(os.path.relpath(root, os.path.dirname(parentdir)), d)
-if len(imagelist) > 0:
-    new_values['browse_file'] = os.path.basename(imagelist[0])
-else:
-    print("Note: No browse graphic uploaded because no files matched the pattern.".format(data_title))
-
 xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
 update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 

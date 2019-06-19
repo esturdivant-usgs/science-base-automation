@@ -242,6 +242,26 @@ def replace_element_in_xml(in_metadata, new_elem, containertag='./distinfo'):
     else:
         return metadata_root
 
+def add_element_to_xml(in_metadata, new_elem, containertag='./idinfo'):
+    # Appends element 'new_elem' to 'containertag' in XML file. in_metadata accepts either xmlfile or root element of parsed metadata. new_elem accepts either lxml._Element or XML string
+    # Whether in_metadata is a filename or an element, get metadata_root
+    # FIXME: Check whether element already exists
+    metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
+    # If new element is still a string convert it to an XML element
+    if type(new_elem) is str:
+        new_elem = etree.fromstring(new_elem)
+    elif not type(new_elem) is etree._Element:
+        raise TypeError("'new_elem' takes either strings or elements.")
+    # Append new_elem to containertag element
+    elem = metadata_root.findall(containertag)[0]
+    elem.append(new_elem) # append new tag to container element
+    # Either overwrite XML file with new XML or return the updated metadata_root
+    if type(xml_file) is str:
+        tree.write(xml_file)
+        return(xml_file)
+    else:
+        return(metadata_root)
+
 def change_cei10_shoreline_xml(xml_file, valuesdf):
     # 1. <purpose> Change to: “This file consists of GeoTIFF raster data produced in reference to the shoreline polygon dataset (cei10_shoreline.shp) published within the larger work. The shoreline was not further checked for topological consistency. No further logical accuracy tests were conducted on the present dataset.”
     new_elem = """<purpose>The shoreline polygons (cei10_shoreline.shp) are a generalized delineation of the mean high water (MHW) position on the seaward face of the island and mean tidal level (MTL, average of MHW and mean low water) position on the inland face. They delineate the shoreline for the purposes of this study.  These polygons were used to measure distance to ocean and distance to foraging (see larger work). In addition, the inlet delineation polylines (cei10_inletLines.shp) use single straight line segments to roughly locate each side of tidal inlets for the barrier island study area. These lines were used to designate the transition between ocean-facing and land-facing sides of the barrier island. They were created manually to cross the MHW contour line on each side of a tidal inlet within the study area.</purpose>"""
@@ -302,8 +322,32 @@ def change_fiis14_shoreline_xml(xml_file):
 def change_rock14_SupClas_xml(xml_file):
     # Purpose
     fstr = """Raster files Rock14_SubType\.tif, Rock14_VegDen\.tif, Rock14_VegType\.tif were reclassified from the supervised classification raster with some manual modifications\. Rock14_SubType\.tif"""
-    rstr = """Raster files Rock14_SubType.tif, Rock14_VegDen.tif, Rock14_VegType.tif were reclassified from the supervised classification raster with some manual modifications. Specific to Rockaway 2014, the substrate type, vegetation type, and vegetation density layers were refined using a shapefile of landcover types digitized in-situ by H. Abouelezz of the National Park Service (Zeigler and others 2017). Rock14_SubType.tif"""
+    rstr = """Raster files Rock14_SubType.tif, Rock14_VegDen.tif, Rock14_VegType.tif were reclassified from the supervised classification raster with some manual modifications. Specific to Rockaway 2014, the substrate type, vegetation type, and vegetation density layers were refined using a shapefile of landcover types (see the process descriptions in the metadata). Rock14_SubType.tif"""
     replace_in_file(xml_file, fstr, rstr)
+    # Crossref
+    containertag = './idinfo'
+    new_crossref = """
+        <crossref>
+          <citeinfo>
+            <origin>Sara L. Zeigler</origin>
+            <origin>E. Robert Thieler</origin>
+            <origin>Benjamin T. Gutierrez</origin>
+            <origin>Nathaniel G. Plant</origin>
+            <origin>Megan Hines</origin>
+            <origin>James D. Fraser</origin>
+            <origin>Daniel H. Catlin</origin>
+            <origin>Sarah M. Karpanty</origin>
+            <pubdate>2017</pubdate>
+            <title>Smartphone technologies and Bayesian networks to assess shorebird habitat selection</title>
+            <serinfo>
+              <sername>Wildlife Society Bulletin</sername>
+              <issue>v. 41, p. 666-677</issue>
+            </serinfo>
+            <onlink>https://doi.org/10.1002/wsb.820</onlink>
+          </citeinfo>
+        </crossref>
+        """
+    add_element_to_xml(xml_file, new_crossref, containertag)
     # SubType
     fstr = """Not all values may be represented for this site\.\n\nWe made one manual change to the reclassification of the supervised classification to create the substrate type layer"""
     rstr = """Not all values may be represented for this site.\n\nWe further refined the substrate type layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for Substrate Type (i.e., Sand, Shell/Gravel/Cobble, Mud/Peat, Water, or Development) and converted the reclassified GNSS dataset to a raster. We overlaid this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the substrate type layer"""
@@ -316,7 +360,6 @@ def change_rock14_SupClas_xml(xml_file):
     fstr = """Not all values may be represented for this site\.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation type layer"""
     rstr = """Not all values may be represented for this site.\n\nWe further refined the vegetation type layer with a shapefile of landcover types made by H. Abouelezz in 2013 with a hand-held Global Navigation Satellite System receiver (hereafter, the “GNSS dataset”; Zeigler and others 2017). This dataset covered a small portion of our total study area. We reclassified polygons in the GNSS dataset to match categories considered for vegetation type (i.e., None, Herbaceous, Shrub, etc.) and converted the reclassified GNSS dataset to a raster. We overlaid this rasterized GNSS dataset onto the classification layer such that raster cells took on the value of the GNSS dataset. All remaining cells (i.e., those not covered by the GNSS dataset) retained their value from the reclassified supervised classification.\n\nWe made one manual change to the reclassification of the supervised classification to create the vegetation type layer"""
     replace_in_file(xml_file, fstr, rstr)
-    # return
     return(xml_file)
 
 #%%
