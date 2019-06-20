@@ -402,10 +402,9 @@ def update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True):
     for xml_file in xmllist:
         # Update XML
         # Get SB values
+        datapageid = get_pageid_from_xmlpath(xml_file, sb, dict_DIRtoID, parentdir=parentdir)
         datadir = os.path.dirname(xml_file)
         datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-        data_title = os.path.basename(datadir)
-        # data_item = find_or_create_child(sb, datapageid, data_title, verbose=verbose)
         data_item = sb.get_item(datapageid)
         # add SB UID to be updated in XML
         new_values['child_id'] = data_item['id']
@@ -571,7 +570,6 @@ def setup_subparents(sb, parentdir, landing_id, imagefile, verbose=True):
     landing_item = sb.get_item(landing_id)
     # Initialize dictionaries
     dict_DIRtoID = {os.path.basename(parentdir): landing_id} # Initialize [top dir/file: ID] entry to dict
-    dict_IDtoJSON = {landing_id: landing_item} # Initialize with landing page
     # List XML files
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
     for xml_file in xmllist:
@@ -588,13 +586,10 @@ def setup_subparents(sb, parentdir, landing_id, imagefile, verbose=True):
                 subpage = sb.upload_file_to_item(subpage, imagefile)
             # store values in dictionaries
             dict_DIRtoID[dirpath] = subpage['id']
-            dict_IDtoJSON[subpage['id']] = subpage
     # Save dictionaries
     with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
         json.dump(dict_DIRtoID, f)
-    with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-        json.dump(dict_IDtoJSON, f)
-    return(dict_DIRtoID, dict_IDtoJSON)
+    return(dict_DIRtoID)
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False, inherit_void=True):
     # Upsert inheritedfield from parent to child by retrieving parent_item based on child
@@ -636,16 +631,84 @@ def find_or_create_child(sb, parentid, child_title, verbose=False):
         time.sleep(1) # wait 1 sec to ensure that page is registered
     return child_item
 
+def get_file_upload_time(data_item, file_type='application/fgdc+xml'):
+    time_uploaded = None
+    if 'files' in data_item:
+        for fl_idx, fl_json in enumerate(data_item['files']):
+            if fl_json['contentType'] == file_type:
+                time_uploaded = fl_json['dateUploaded']
+                break
+    # If the browse graphic got included in a facet (or extension?)
+    if not time_uploaded and 'facets' in data_item:
+        for fc_idx, facet in enumerate(data_item['facets']):
+            for fl_idx, fl_json in enumerate(facet['files']):
+                if fl_json['contentType'] == file_type:
+                    time_uploaded = fl_json['dateUploaded']
+                    break
+            if time_uploaded:
+                break
+    if not time_uploaded:
+        print("No XML found.")
+    return(time_uploaded)
+
 def upsert_metadata(sb, id_or_item, xml_file):
     # Remove file with the originalMetadata flag. Then upload the xml file.
     data_item = flexibly_get_item(sb, id_or_item, output='item')
+    found_metadata = False
     if 'files' in data_item:
         for fidx, file in enumerate(data_item['files']):
             if file['originalMetadata']:
                 data_item['files'].pop(fidx)
+                found_metadata = True
+    if 'facets' in data_item:
+        for fc_idx, facet in enumerate(data_item['facets']):
+            for fl_idx, file in enumerate(facet['files']):
+                if file['originalMetadata']:
+                    data_item['facets'][fc_idx]['files'].pop(fl_idx)
+                    found_metadata = True
+    if found_metadata:
         data_item = sb.update_item(data_item)
     data_item = sb.upload_file_to_item(data_item, xml_file)
     return(data_item)
+
+#%% Update SB preview image from the uploaded files.
+def update_all_browse_graphics(parentdir, landing_id, useremail, password, verbose=False):
+    # Update SB preview image from the uploaded files.
+    # For every XML in the folder tree, match the XML values with the image file on the SB page. Update and upload the metadata file.
+    print("Updating browse graphic information...")
+    sb = log_in(useremail, password)
+    valid_ids = sb.get_ancestor_ids(landing_id)
+    xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+    for xml_file in xmllist:
+        # Get SB page ID from the XML (needs to be up-to-date)
+        datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+        # Run update_browse() to match the values between the XML and the SB page.
+        if update_browse(sb, xml_file, datapageid, verbose):
+            # if the XML was updated, replace the XML on the page.
+            data_item = upsert_metadata(sb, datapageid, xml_file)
+    return
+
+def upload_all_updated_xmls(sb, parentdir, valid_ids=None):
+    # Upload XMLs that have been updated since last upload to SB.
+    ct = 0
+    xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+    print("Searching {} XML files for changes since last upload...".format(len(xmllist)))
+    for xml_file in xmllist:
+        # Get SB JSON item for page
+        datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+        data_item = flexibly_get_item(sb, datapageid, output='item')
+        # Get upload time of XML as UTC datetime object
+        xml_uploaded = get_file_upload_time(data_item, file_type='application/fgdc+xml')
+        xml_uploaded = datetime.strptime(xml_uploaded, '%Y-%m-%dT%H:%M:%SZ')
+        # Get modified time of local XML as UTC datetime
+        xml_modified = datetime.utcfromtimestamp(os.path.getmtime(xml_file))
+        if xml_modified > xml_uploaded:
+            # Replace the metadata file
+            data_item = upsert_metadata(sb, data_item, xml_file)
+            # print('UPLOADED: {}'.format(os.path.basename(xml_file)))
+            ct += 1
+    print("Found and uploaded {} XML files.\n".format(ct))
+    return
 
 def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
     for root, dirs, files in os.walk(parentdir):
@@ -751,7 +814,7 @@ def find_browse_in_json(data_item, browse_desc=None, verbose=True):
     if 'files' in data_item:
         for fl_idx, fl_json in enumerate(data_item['files']):
             # Find the uploaded file that includes 'browse' and has an extension of png, gif, or jpg
-            # ALTERNATIVE: could also use the 'contentType' property to match 'image/png', 'image/jpg', or 'image/gif' 
+            # ALTERNATIVE: could also use the 'contentType' property to match 'image/png', 'image/jpg', or 'image/gif'. This is not more flexible to typos in extensions.
             match = re.fullmatch('^.*browse.*\.(png|gif|jpg|jpeg)$', fl_json['name'])
             if match:
                 # If it matches the pattern, set useForPreview to True and add the browse description from the XML as the title
@@ -776,10 +839,15 @@ def find_browse_in_json(data_item, browse_desc=None, verbose=True):
     if not browse_image:
         print('No browse image found in the uploaded files.')
     else:
-        print('browse filename: {}'.format(browse_image))
+        if verbose:
+            print('browse filename: {}'.format(browse_image))
     return(data_item, browse_image)
 
-def update_browse(sb, in_metadata, page_id, username=None, password=None, verbose=True):
+def update_browse(sb, in_metadata, page_id, verbose=True):
+    # Match the XML values with the image file on the SB page.
+    # 1. Parse the XML file and get the caption.
+    # 2. Find a *browse* image file in the SB page: set the 'useForPreview' to True and get the filename
+    # 3. Update the browse filename and browse type in the XML.
     # Get the caption from the metadata
     metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
     browse_desc = metadata_root.findall('./idinfo/browse/browsed')[0].text
@@ -788,7 +856,8 @@ def update_browse(sb, in_metadata, page_id, username=None, password=None, verbos
 
     # Set the browse image as previewImage and get the filename from SB
     data_item = sb.get_item(page_id)
-    print(data_item['title'])
+    if verbose:
+        print(data_item['title'])
     data_item, browse_image = find_browse_in_json(data_item, browse_desc, verbose)
     if not browse_image:
         # If the browse image wasn't found, there's no point continuing
@@ -898,7 +967,7 @@ def find_browse_file(datadir, searchterm='*browse*', extensions=('.png', '.jpg',
     print("Note: No {} image files found in the directory.".format(searchterm))
     return
 
-def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=False, verbose=False):
+def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, verbose=False):
     # Upload all image files to their respective pages.
     # 1. find all image files in folder tree
     # 2. for each image, try to upload it
@@ -919,10 +988,9 @@ def upload_all_previewImages(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=Fa
                 if verbose:
                     print('UPLOADING: preview image to "{}"...\n\n'.format(d))
                 item = sb.upload_file_to_item(item, f)
-                dict_IDtoJSON[item['id']] = item
-    return dict_IDtoJSON
+    return
 
-def upload_all_previewImages2(sb, parentdir, dict_DIRtoID=False, dict_IDtoJSON=False, verbose=False):
+def upload_all_previewImages2(sb, parentdir, dict_DIRtoID=False, verbose=False):
     # Possibly a better workflow than the original. Completely untested.
     # Upload all image files to their respective pages.
     # 1. find all image files in folder tree
@@ -1000,11 +1068,11 @@ def update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent
             pageid = item['id']
             parentid = item['parentId']
             item = inherit_SBfields(sb, item, subparent_inherits)
-        dict_IDtoJSON[pageid] = item
     #%% BOUNDING BOX
     bb_dict = set_parent_boundingBoxes(sb, dict_PARtoCHILDS)
     # Preview Images
-    dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
+    upload_all_previewImages(sb, parentdir, dict_DIRtoID)
+    return
 
 def remove_all_files(sb, pageid, verbose=False):
     # Remove all files (and facets) from child page
@@ -1025,10 +1093,7 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
     with open(os.path.join(parentdir,fname_par2childs), 'r') as f:
         dict_PARtoCHILDS = json.load(f)
         # Update SB fields
-    dict_IDtoJSON = update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent_inherits, dict_PARtoCHILDS)
-    # Update dictionary with JSON items
-    with open(os.path.join(parentdir,fname_id2json), 'w') as f:
-        json.dump(dict_IDtoJSON, f)
+    update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent_inherits, dict_PARtoCHILDS)
     print("Fields updated and values items stored in dictionary: {}".format(os.path.join(parentdir,fname_id2json)))
     return True
 
@@ -1041,6 +1106,7 @@ def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None
         elif parentdir:
             datadir = os.path.dirname(xml_file)
             page_id = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+
     if sb and not page_id: # If the folder name matches an SB page...
         title = os.path.basename(os.path.dirname(xml_file))
         matching_items = sb.find_items_by_title(title)['items']
@@ -1052,7 +1118,9 @@ def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None
         if len(link_elems) > 1:
             page_url = link_elems[1].text
             page_id = os.path.basename(page_url)
-    if sb and parentid and not valid_ids:
+    if not parentid and dict_DIRtoID and parentdir:
+        parentid = dict_DIRtoID[os.path.basename(parentdir)]
+    if sb and not valid_ids:
         valid_ids = sb.get_ancestor_ids(parentid)
     if valid_ids:
         if not page_id in valid_ids:

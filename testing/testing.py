@@ -23,7 +23,7 @@ import glob
 from lxml import etree
 import json
 import pickle
-import datetime
+from datetime import datetime
 import sys
 import re
 try:
@@ -112,17 +112,13 @@ if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json
     update_subpages = True
 
 if update_subpages:
-    dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, imagefile)
+    dict_DIRtoID = setup_subparents(sb, parentdir, landing_id, imagefile)
     # Save dictionaries
     with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
         json.dump(dict_DIRtoID, f)
-    with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-        json.dump(dict_IDtoJSON, f)
 else: # Import pre-created dictionaries if all SB pages exist
     with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
         dict_DIRtoID = json.load(f)
-    with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-        dict_IDtoJSON = json.load(f)
 
 #%% After trying to delete and getting the pages all confused...
 falsefolder_id = '5d013787e4b05cc71cad2520'
@@ -178,10 +174,55 @@ except:
     pass
 data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 dict_DIRtoID[xml_file] = data_item['id']
-dict_IDtoJSON[data_item['id']] = data_item
 # started: 3:37
 # completed:
 
+
+#%% For each XML file in each directory upload the data to the correct page
+# Upload data to ScienceBase
+if update_data:...
+
+def upload_data_in_XMLdirs(parentdir, start_xml_idx=0):
+    if verbose:
+        print('\n---\nWalking through XML files to upload the data...')
+    cnt = 0
+    xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+    xmllist = xmllist[start_xml_idx:]
+    for xml_file in xmllist:
+        cnt += 1
+        print("File {}: {}".format(cnt + start_xml_idx, xml_file))
+        # Get SB page ID from the XML
+        datapageid = get_pageid_from_xmlpath(xml_file, sb=sb, dict_DIRtoID=dict_DIRtoID, valid_ids=valid_ids, parentdir=parentdir)
+        # Log into SB if it's timed out
+        sb = log_in(useremail, password)
+        data_item = sb.get_item(datapageid)
+        # Update publication date in item
+        try:
+            # If pubdate in new_values, set it as the date for the SB page
+            data_item["dates"][0]["dateString"]= new_values['pubdate']
+            #FIXME add this to a function in a more generalized way?
+        except:
+            pass
+        # Upload all files in directory to the SB page
+        data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
+        # Record files that were not uploaded because they were above the max_MBsize threshold
+        if bigfiles1:
+            if not 'bigfiles' in locals():
+                bigfiles = []
+            bigfiles += bigfiles1
+        # Log in to SB if it's timed out
+        sb = log_in(useremail, password)
+        # Upload XML to ScienceBase
+        elif update_XML:
+            # If XML was updated, but data was not uploaded, replace only XML.
+            data_item = upsert_metadata(sb, data_item, xml_file)
+        if 'previewImage' in data_inherits and "imagefile" in locals():
+            data_item = sb.upload_file_to_item(data_item, imagefile)
+        if verbose:
+            now_str = datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+            print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
+        # store values in dictionaries
+        dict_DIRtoID[xml_file] = data_item['id']
 
 
 
@@ -190,26 +231,29 @@ xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b_4sb
 update_browse(sb, xml_file, page_id, useremail, password)
 parentdir
 landing_id
+
+
 #%% Update SB preview image from the uploaded files.
-print("Updating browse graphic information...")
-valid_ids = sb.get_ancestor_ids(landing_id)
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-for xml_file in xmllist:
-    # Get SB page ID from the XML (needs to be up-to-date)
-    sb = log_in(useremail, password)
-    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
-    update_browse(sb, xml_file, datapageid, useremail, password)
-    # data_item = upsert_metadata(sb, datapageid, xml_file)
+update_all_browse_graphics(parentdir, landing_id, useremail, password)
 
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-for xml_file in xmllist:
-    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
-    data_item = upsert_metadata(sb, datapageid, xml_file)
-
-datapageid
+datapageid = '5d016c77e4b05cc71cad2c2a'
+sb = log_in(useremail, password)
 data_item = sb.get_item(datapageid)
+t_uploaded = get_xml_upload_time(data_item)
+
 for file in data_item['files']:
     print(file['contentType'])
+    print(file['dateUploaded'])
+    print(file['originalMetadata'])
+for idx, facet in enumerate(data_item['facets']):
+    for file in facet['files']:
+        print(file['contentType'])
+        print(file['dateUploaded'])
+        print(file['originalMetadata'])
+
+for file in data_item['files']:
+    print(file['contentType'])
+    ftype = file['contentType']
 
 for k in data_item['files'][0].keys():
     print(k)
@@ -228,19 +272,15 @@ update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
 
 with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
     dict_DIRtoID = json.load(f)
-with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-    dict_IDtoJSON = json.load(f)
 # Preview Image
 # org_map['IDtoJSON'] = upload_all_previewImages(sb, parentdir, org_map['DIRtoID'], org_map['IDtoJSON'])
-dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
+
 
 # Save dictionaries
 # with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
 # 	json.dump(org_map, f)
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
     json.dump(dict_DIRtoID, f)
-with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-    json.dump(dict_IDtoJSON, f)
 
 
 

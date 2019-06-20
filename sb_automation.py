@@ -106,17 +106,13 @@ if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json
     update_subpages = True
 
 if update_subpages:
-    dict_DIRtoID, dict_IDtoJSON = setup_subparents(sb, parentdir, landing_id, imagefile)
+    dict_DIRtoID = setup_subparents(sb, parentdir, landing_id, imagefile)
     # Save dictionaries
     with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
         json.dump(dict_DIRtoID, f)
-    with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-        json.dump(dict_IDtoJSON, f)
 else: # Import pre-created dictionaries if all SB pages exist
     with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
         dict_DIRtoID = json.load(f)
-    with open(os.path.join(parentdir,'id_to_json.json'), 'r') as f:
-        dict_IDtoJSON = json.load(f)
 
 #%% Create and populate data pages
 """
@@ -126,6 +122,7 @@ For each XML file in each directory, create a data page, revise the XML, and upl
 """
 # Log into SB if it's timed out
 sb = log_in(useremail, password)
+valid_ids = sb.get_ancestor_ids(landing_id)
 
 #%%
 # Optionally remove original XML files.
@@ -155,14 +152,10 @@ xmllist = xmllist[start_xml_idx:]
 for xml_file in xmllist:
     cnt += 1
     print("File {}: {}".format(cnt + start_xml_idx, xml_file))
+    # Get SB page ID from the XML
+    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
     # Log into SB if it's timed out
     sb = log_in(useremail, password)
-    # 1. GET VALUES from XML
-    datadir = os.path.dirname(xml_file)
-    datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-    # Create (or find) data page based on directory name (should be the same as the XML title)
-    data_title = os.path.basename(datadir)
-    # data_item = find_or_create_child(sb, datapageid, data_title, verbose=verbose)
     data_item = sb.get_item(datapageid)
     # Upload data to ScienceBase
     if update_data:
@@ -193,9 +186,14 @@ for xml_file in xmllist:
         print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
     # store values in dictionaries
     dict_DIRtoID[xml_file] = data_item['id']
-    dict_IDtoJSON[data_item['id']] = data_item
 
 #%% Update SB preview image from the uploaded files.
+update_all_browse_graphics(parentdir, landing_id, useremail, password)
+
+#%% Check for and upload XMLs that have been modified since last upload.
+sb = log_in(useremail, password)
+valid_ids = sb.get_ancestor_ids(landing_id)
+upload_all_updated_xmls(sb, parentdir, valid_ids)
 
 #%% Pass down fields from parents to children
 print("\n---\nPassing down fields from parents to children...")
@@ -208,13 +206,11 @@ if update_extent:
 
 # Preview Image
 if add_preview_image_to_all:
-    dict_IDtoJSON = upload_all_previewImages(sb, parentdir, dict_DIRtoID, dict_IDtoJSON)
+    upload_all_previewImages(sb, parentdir, dict_DIRtoID)
 
 # Save dictionaries
 with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
     json.dump(dict_DIRtoID, f)
-with open(os.path.join(parentdir,'id_to_json.json'), 'w') as f:
-    json.dump(dict_IDtoJSON, f)
 
 #%% QA/QC
 if quality_check_pages:
