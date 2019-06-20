@@ -226,7 +226,8 @@ def upload_data_in_XMLdirs(parentdir, start_xml_idx=0):
 
 
 
-#%% For every file in the directory, check whether an older version exists in the SB page. Replace the file if the current version is not there.
+#%% 6/20/19
+# For every file in the directory, check whether an older version exists in the SB page. Replace the file if the current version is not there.
 datadir
 filelist = os.listdir(datadir)
 
@@ -252,7 +253,8 @@ print("Found and uploaded {} XML files.\n".format(ct))
     return
 
 
-#%% Update SB preview image from the uploaded files.
+#%% 6/18/19
+# Update SB preview image from the uploaded files.
 update_all_browse_graphics(parentdir, landing_id, useremail, password)
 
 datapageid = '5d016c77e4b05cc71cad2c2a'
@@ -277,32 +279,41 @@ for file in data_item['files']:
 for k in data_item['files'][0].keys():
     print(k)
 
+#%% 6/20/19
+# Remove ipynb mention from shoreline xmls in completed directory tree
+import io
+
+parentdir
+xmllist = glob.glob(os.path.join(parentdir, '**/*shore*.xml'), recursive=True)
+def replace_in_file(fname, fstr, rstr, fill='xxx'):
+    with io.open(fname, 'r', encoding='utf-8') as f:
+        s = f.read()
+    s, ct = re.subn(fstr, rstr, s)
+    print("Replaced values matching '{}': {}.".format(trunc(fstr), ct))
+    ct_fills = len(re.findall('(?i){}'.format(fill), s)) # Count remaining xxx values
+    if ct_fills > 0:
+        print("Found {} '{}' fills remaining.".format(ct_fills, fill))
+    with io.open(fname, 'w', encoding='utf-8') as f:
+        f.write(s)
+    return(fname)
+
+fstr = ' as well as the iPython notebook \(.*\.ipynb\) used for processing\.'
+rstr = '.'
+for xml_file in xmllist:
+    replace_in_file(xml_file, fstr, rstr, fill='xxx')
+
+sb = log_in(useremail, password)
+valid_ids = sb.get_ancestor_ids(landing_id)
+upload_all_updated_xmls(sb, parentdir, valid_ids=valid_ids)
+
+
+
+
 
 sb = log_in(useremail, password)
 valid_ids = sb.get_ancestor_ids(landing_id)
 page_id = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
 page_id
-
-#%% Working with browse graphic population... Looking at section of for loop.
-xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
-update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-
-
-
-with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
-    dict_DIRtoID = json.load(f)
-# Preview Image
-# org_map['IDtoJSON'] = upload_all_previewImages(sb, parentdir, org_map['DIRtoID'], org_map['IDtoJSON'])
-
-
-# Save dictionaries
-# with open(os.path.join(parentdir,'org_map.json'), 'w') as f:
-# 	json.dump(org_map, f)
-with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-    json.dump(dict_DIRtoID, f)
-
-
-
 
 #%% Change find_and_replace so that keys are searchstr and values are replacestr
 find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/***'],
@@ -338,48 +349,6 @@ if [len(glob.glob(os.path.join(datadir, '**/*.xml'), recursive=True)) == 1
 pageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
 # get subparent item that will become data page
 data_item = flexibly_get_item(sb, pageid)
-
-# Get title of data from XML and change title
-data_title = get_title_from_data(xml_file)
-data_item['title'] = data_title
-data_item = sb.update_item(data_item)
-
-#%% values that could be extracted from the SB item:
-page_url = data_item['link']['url']
-facets = [fi['name'] for fi in data_item['facets']]
-
-
-[print(key) for key in data_item.keys()]
-
-data_item['browseTypes']
-data_item['browseCategories']
-for fi in data_item['files']:
-    print(fi['name'])
-for fi in data_item['facets']:
-    print(fi['name'])
-
-
-for link in data_item['distributionLinks']:
-    print(link['title'])
-    print(link['uri'])
-
-data_item['distributionLinks'][1]['uri']
-
-
-
-wayne_item = flexibly_get_item(sb, '5a946742e4b069906068fb47')
-wayne_item['distributionLinks'][1]['uri']
-
-soduspt_item = flexibly_get_item(sb, '5b1ede6ce4b092d965254a3f')
-soduspt_item['distributionLinks'][0]['uri']
-
-sp_item_dist = sb.get_item('5b1ede6ce4b092d965254a3f', params={'fields':'distributionLinks'})
-sp_item_dist
-
-
-
-
-
 
 
 

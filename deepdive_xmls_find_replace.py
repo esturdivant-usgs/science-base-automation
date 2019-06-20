@@ -379,7 +379,7 @@ The code:
 3. Renames directories to the sycode in the template table that exactly matches the full name of Site, State, Year
 """
 # Initialize variables
-basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b"
+basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v5"
 backup_dir = os.path.join(basedir, "backup_xmls")
 template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/v3.1/templates"
 csvfname = "template_values.csv"
@@ -528,12 +528,3 @@ shutil.copytree(basedir, basedir+'_4sb', ignore=shutil.ignore_patterns('xxx_tras
 base_dir = r'/Users/esturdivant/Desktop/Rockaway Peninsula, NY, 2013–2014'
 shutil.make_archive(base_dir, 'zip',
     r'/Users/esturdivant/Desktop/', 'Rockaway Peninsula, NY, 2013–2014', dry_run=True)
-
-
-
-
-
-
-
-
-#%%

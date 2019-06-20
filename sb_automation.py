@@ -60,7 +60,7 @@ if "remove_fills" in locals():
 Work with landing page and XML
 """
 # Remove all child pages
-if delete_all_childpages:
+if delete_all_subpages:
     if not update_subpages:
         print('WARNING: You chose not to update subpages, but also to delete all child pages. Both are not possible so we will remove and create them.')
     print("Deleting all child pages of landing page...")

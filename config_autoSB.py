@@ -33,11 +33,11 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 # landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
-landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # Deep Dive volume I
+landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7cb" # Deep Dive volume I
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/test_dir' # OSX format
+parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v5_4sb' # OSX format
 # parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -73,21 +73,21 @@ data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 landing_fields_from_xml = []
 
 # qcfields_dict = {'contacts':3, 'webLinks':0, 'facets':1}
-
+qcfields_dict = {'contacts':8, 'webLinks':1, 'facets':1}
 #-------------------------------------------------------------------------------
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages     = False # False to save time if page structure is already established.
-delete_all_childpages    = False # True to delete all child pages before running. Not necessary.
+update_subpages     = True # False to save time if page structure is already established.
+delete_all_subpages = True # True to delete all child pages before running. Not necessary.
 update_XML          = True # False to save time if XML already has most up-to-date values.
-update_data         = False # False to save time if up-to-date data files have already been uploaded.
+update_data         = True # False to save time if up-to-date data files have already been uploaded.
 update_extent       = True
-quality_check_pages      = True # False to save time if you feel good/want to keep it simple
+quality_check_pages = True # False to save time if you feel good/want to keep it simple
 verbose             = True
 # page_per_filename   = False
 
-max_MBsize = 200 # 2000 mb is the suggested threshold above which to use the large file uploader.
+max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the large file uploader.
 start_xml_idx = 0 # 0 to perform for all XMLs. This is included in case a process does not complete.
 
 # Default False:
@@ -101,7 +101,7 @@ remove_original_xml      = False  # True to remove original files saved on the f
 
 # FIND AND REPLACE. {key='desired value': value=['list of','values','to replace']}
 find_and_replace = {'**dr_doi**': dr_doi,
-    'xxx-ofr doi-***': 'xxx-ofr doi-***',
+    'xxx-ofr doi-***': '10.3133/ofr20191071',
     # 'http:': 'https:',
     'dx.doi.org': 'doi.org'
     }
