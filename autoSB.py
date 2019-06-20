@@ -29,7 +29,7 @@ __all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
            'get_fields_from_xml', 'log_in', 'log_in2', 'flexibly_get_item',
            'get_DOI_from_item', 'fix_falsefolder', 'rename_dirs_from_xmls', 'setup_subparents', 'inherit_SBfields', 'find_or_create_child',
            'upsert_metadata', 'replace_files_by_ext', 'upload_files', 'upload_files_matching_xml',
-           'upload_shp', 'find_browse_in_json', 'update_browse', 'get_parent_bounds', 'get_idlist_bottomup',
+           'upload_shp', 'find_browse_in_json', 'update_browse', 'update_all_browse_graphics', 'upload_all_updated_xmls', 'get_parent_bounds', 'get_idlist_bottomup',
            'set_parent_extent', 'find_browse_file', 'upload_all_previewImages2', 'upload_all_previewImages', 'shp_to_new_child',
            'update_datapage', #'update_subpages_from_landing',
            'get_pageid_from_xmlpath',
@@ -397,18 +397,18 @@ def update_xml(xml_file, new_values, verbose=False):
         find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
     return(xml_file)
 
-def update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True):
+def update_all_xmls(parentdir, new_values, sb=None, dict_DIRtoID=None, verbose=True):
+    # Update every XML in the directory tree with new values (from config file and SB)
+    # Does not upload resulting XML to SB.
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
     for xml_file in xmllist:
         # Update XML
         # Get SB values
         datapageid = get_pageid_from_xmlpath(xml_file, sb, dict_DIRtoID, parentdir=parentdir)
-        datadir = os.path.dirname(xml_file)
-        datapageid = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-        data_item = sb.get_item(datapageid)
         # add SB UID to be updated in XML
-        new_values['child_id'] = data_item['id']
-        # Look for browse graphic
+        new_values['child_id'] = datapageid
+        # Look for browse graphic in directory with XML
+        datadir = os.path.dirname(xml_file)
         browse_file = find_browse_file(datadir)
         new_values.pop('browse_file', None) # remove value from past iteration
         if browse_file:
@@ -672,12 +672,10 @@ def upsert_metadata(sb, id_or_item, xml_file):
     return(data_item)
 
 #%% Update SB preview image from the uploaded files.
-def update_all_browse_graphics(parentdir, landing_id, useremail, password, verbose=False):
+def update_all_browse_graphics(sb, parentdir, landing_id, valid_ids=None, verbose=False):
     # Update SB preview image from the uploaded files.
     # For every XML in the folder tree, match the XML values with the image file on the SB page. Update and upload the metadata file.
     print("Updating browse graphic information...")
-    sb = log_in(useremail, password)
-    valid_ids = sb.get_ancestor_ids(landing_id)
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
     for xml_file in xmllist:
         # Get SB page ID from the XML (needs to be up-to-date)

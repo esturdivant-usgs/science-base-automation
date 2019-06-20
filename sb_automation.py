@@ -60,9 +60,9 @@ if "remove_fills" in locals():
 Work with landing page and XML
 """
 # Remove all child pages
-if replace_subpages:
+if delete_all_childpages:
     if not update_subpages:
-        print('WARNING: You chose not to update subpages, but also to replace them. Both are not possible so we will remove and create them.')
+        print('WARNING: You chose not to update subpages, but also to delete all child pages. Both are not possible so we will remove and create them.')
     print("Deleting all child pages of landing page...")
     print(delete_all_children(sb, landing_id))
     # Try new get_ancestor_ids() and delete_items() to remove all children
@@ -89,6 +89,7 @@ else:
 """
 Change folder name to match XML title
 """
+print('\n---\nRenaming folders to match XML title...')
 rename_dirs_from_xmls(parentdir)
 
 #%% Create SB page structure
@@ -101,11 +102,12 @@ This one should overwrite the entire data release (excluding the landing page).
 sb = log_in(useremail, password)
 
 # If there's no id_to_json.json file available, we need to create the subpage structure.
-if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json.json')):
-    print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
+if not update_subpages and not os.path.isfile(os.path.join(parentdir,'dir_to_id.json')):
+    print("dir_to_id.json file is not in parent directory, so we will perform update_subpages routine.")
     update_subpages = True
 
 if update_subpages:
+    print('\n---\nCreating sub-pages...')
     dict_DIRtoID = setup_subparents(sb, parentdir, landing_id, imagefile)
     # Save dictionaries
     with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
@@ -120,45 +122,47 @@ Create and populate data pages
 Inputs: parent directory, landing page ID, dictionary of new values (new_values)
 For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 """
+print('\n---\nWorking with XML files...')
 # Log into SB if it's timed out
 sb = log_in(useremail, password)
 valid_ids = sb.get_ancestor_ids(landing_id)
 
-#%%
-# Optionally remove original XML files.
+#%% Work with XMLs
+# Optionally remove or restore original XML files.
 if remove_original_xml:
     remove_files(parentdir, pattern='**/*.xml_orig')
-
-# Optionally restore original XML files.
-if restore_original_xml:
+elif restore_original_xml:
+    if not update_XML:
+        print('WARNING: You selected to restore original XMLs, but not to update XMLs. This may cause problems.')
     restore_original_xmls(parentdir)
 
 # add DOI to be updated in XML
 if 'dr_doi' in locals():
     new_values['doi'] = dr_doi
 else:
-    new_values['doi'] = get_DOI_from_item(flexibly_get_item(sb, datapageid))
+    new_values['doi'] = get_DOI_from_item(flexibly_get_item(sb, landing_id))
 
 # Optionally update all XML files from SB values
 if update_XML:
-    update_all_xmls(sb, parentdir, new_values, dict_DIRtoID, verbose=True)
+    update_all_xmls(parentdir, new_values, sb, dict_DIRtoID, verbose=True)
 
-# For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
-if verbose:
-    print('\n---\nWalking through XML files to upload the data...')
-cnt = 0
-xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
-xmllist = xmllist[start_xml_idx:]
-for xml_file in xmllist:
-    cnt += 1
-    print("File {}: {}".format(cnt + start_xml_idx, xml_file))
-    # Get SB page ID from the XML
-    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
-    # Log into SB if it's timed out
-    sb = log_in(useremail, password)
-    data_item = sb.get_item(datapageid)
-    # Upload data to ScienceBase
-    if update_data:
+#%% Upload data
+if update_data:
+    # For each XML file in each directory, upload the data to the new page
+    if verbose:
+        print('\n---\nWalking through XML files to upload the data...')
+    cnt = 0
+    xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+    xmllist = xmllist[start_xml_idx:]
+    for xml_file in xmllist:
+        cnt += 1
+        print("File {}: {}".format(cnt + start_xml_idx, xml_file))
+        # Get SB page ID from the XML
+        datapageid = get_pageid_from_xmlpath(xml_file, sb=sb, dict_DIRtoID=dict_DIRtoID, valid_ids=valid_ids, parentdir=parentdir)
+        # Log into SB if it's timed out
+        sb = log_in(useremail, password)
+        data_item = sb.get_item(datapageid)
+        # Upload data to ScienceBase
         # Update publication date in item
         try:
             # If pubdate in new_values, set it as the date for the SB page
@@ -166,33 +170,29 @@ for xml_file in xmllist:
         except:
             pass
         # Upload all files in directory to the SB page
-        # Record files that were not uploaded because they were above the max_MBsize threshold
-        # data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
         data_item, bigfiles1 = upload_files(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
+        # Record files that were not uploaded because they were above the max_MBsize threshold
         if bigfiles1:
             if not 'bigfiles' in locals():
                 bigfiles = []
             bigfiles += bigfiles1
         # Log into SB if it's timed out
         sb = log_in(useremail, password)
-    # Upload XML to ScienceBase
-    elif update_XML:
-        # If XML was updated, but data was not uploaded, replace only XML.
-        data_item = upsert_metadata(sb, data_item, xml_file)
-    if 'previewImage' in data_inherits and "imagefile" in locals():
-        data_item = sb.upload_file_to_item(data_item, imagefile)
-    if verbose:
-        now_str = datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-        print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
-    # store values in dictionaries
-    dict_DIRtoID[xml_file] = data_item['id']
+        if 'previewImage' in data_inherits and "imagefile" in locals():
+            data_item = sb.upload_file_to_item(data_item, imagefile)
+        if verbose:
+            now_str = datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
+            print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
+        # store values in dictionaries
+        dict_DIRtoID[xml_file] = data_item['id']
 
+print('\n---\nUpdating browse, uploading revised XMLs...')
 #%% Update SB preview image from the uploaded files.
-update_all_browse_graphics(parentdir, landing_id, useremail, password)
+sb = log_in(useremail, password)
+update_all_browse_graphics(sb, parentdir, landing_id, valid_ids)
 
 #%% Check for and upload XMLs that have been modified since last upload.
 sb = log_in(useremail, password)
-valid_ids = sb.get_ancestor_ids(landing_id)
 upload_all_updated_xmls(sb, parentdir, valid_ids)
 
 #%% Pass down fields from parents to children

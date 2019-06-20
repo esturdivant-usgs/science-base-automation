@@ -33,11 +33,11 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 # landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
-landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7cb" # Deep Dive volume I
+landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # Deep Dive volume I
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b_4sb' # OSX format
+parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/test_dir' # OSX format
 # parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -78,20 +78,20 @@ landing_fields_from_xml = []
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages = False # False to save time if page structure is already established.
-update_XML      = False # False to save time if XML already has most up-to-date values.
-update_data     = True # False to save time if up-to-date data files have already been uploaded.
-update_extent   = True
+update_subpages     = False # False to save time if page structure is already established.
+delete_all_childpages    = False # True to delete all child pages before running. Not necessary.
+update_XML          = True # False to save time if XML already has most up-to-date values.
+update_data         = False # False to save time if up-to-date data files have already been uploaded.
+update_extent       = True
 quality_check_pages      = True # False to save time if you feel good/want to keep it simple
-verbose         = True
+verbose             = True
 # page_per_filename   = False
 
-max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the large file uploader.
-start_xml_idx = 42 # 0 to perform for all XMLs. This is included in case a process does not complete.
+max_MBsize = 200 # 2000 mb is the suggested threshold above which to use the large file uploader.
+start_xml_idx = 0 # 0 to perform for all XMLs. This is included in case a process does not complete.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
-replace_subpages         = False # True to delete all child pages before running. Not necessary.
 restore_original_xml     = False # True to restore original files saved on the first run of the code. Not necessary.
 remove_original_xml      = False  # True to remove original files saved on the first run of the code.
 # ------------------------------------------------------------------------------

@@ -226,11 +226,30 @@ def upload_data_in_XMLdirs(parentdir, start_xml_idx=0):
 
 
 
-#%% Work with browse graphic...
-xml_file = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v4b_4sb/Cedar Island, VA, 2010–2011/DisMOSH, Cost, MOSHShoreline: Distance to foraging areas for piping plovers (foraging shoreline, cost mask, and least-cost path distance): Cedar Island, VA, 2010–2011/CeI10_DisMOSH_Cost_MOSHShoreline_meta.xml'
-update_browse(sb, xml_file, page_id, useremail, password)
-parentdir
-landing_id
+#%% For every file in the directory, check whether an older version exists in the SB page. Replace the file if the current version is not there.
+datadir
+filelist = os.listdir(datadir)
+
+# Upload XMLs that have been updated since last upload to SB.
+ct = 0
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+print("Searching {} XML files for changes since last upload...".format(len(xmllist)))
+for xml_file in xmllist:
+    # Get SB JSON item for page
+    datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+    data_item = flexibly_get_item(sb, datapageid, output='item')
+    # Get upload time of XML as UTC datetime object
+    xml_uploaded = get_file_upload_time(data_item, file_type='application/fgdc+xml')
+    xml_uploaded = datetime.strptime(xml_uploaded, '%Y-%m-%dT%H:%M:%SZ')
+    # Get modified time of local XML as UTC datetime
+    xml_modified = datetime.utcfromtimestamp(os.path.getmtime(xml_file))
+    if xml_modified > xml_uploaded:
+        # Replace the metadata file
+        data_item = upsert_metadata(sb, data_item, xml_file)
+        # print('UPLOADED: {}'.format(os.path.basename(xml_file)))
+        ct += 1
+print("Found and uploaded {} XML files.\n".format(ct))
+    return
 
 
 #%% Update SB preview image from the uploaded files.
