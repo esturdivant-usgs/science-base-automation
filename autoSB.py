@@ -21,7 +21,7 @@ import time
 import io
 import re
 
-__all__ = ['splitall', 'splitall2', 'remove_files', 'trunc',
+__all__ = ['splitall', 'splitall2', 'remove_files', 'trunc', 'replace_in_file',
            'get_title_from_data', 'get_root_flexibly', 'add_element_to_xml', 'fix_attrdomv_error',
            'remove_xml_element', 'replace_element_in_xml', 'map_newvals2xml',
            'find_and_replace_text', 'find_and_replace_from_dict',
@@ -88,6 +88,18 @@ def remove_files(parentdir, pattern='**/*.xml_orig'):
 def trunc(string, length=40):
     string = (string[:length-3] + '...') if len(string) > length else string
     return(string)
+
+def replace_in_file(fname, fstr, rstr, fill='xxx'):
+    with io.open(fname, 'r', encoding='utf-8') as f:
+        s = f.read()
+    s, ct = re.subn(fstr, rstr, s)
+    print("Replaced values matching '{}': {}.".format(trunc(fstr), ct))
+    ct_fills = len(re.findall('(?i){}'.format(fill), s)) # Count remaining xxx values
+    if ct_fills > 0:
+        print("Found {} '{}' fills remaining.".format(ct_fills, fill))
+    with io.open(fname, 'w', encoding='utf-8') as f:
+        f.write(s)
+    return(fname)
 
 def get_title_from_data(xml_file, metadata_root=False):
     try:
@@ -849,8 +861,7 @@ def update_browse(sb, in_metadata, page_id, verbose=True):
     # Get the caption from the metadata
     metadata_root, tree, xml_file = get_root_flexibly(in_metadata)
     browse_desc = metadata_root.findall('./idinfo/browse/browsed')[0].text
-    if len(browse_desc) > 80:
-        browse_desc = '{}...'.format(browse_desc[0:77])
+    browse_desc = trunc(browse_desc, 80)
 
     # Set the browse image as previewImage and get the filename from SB
     data_item = sb.get_item(page_id)

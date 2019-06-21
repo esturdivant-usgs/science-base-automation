@@ -284,21 +284,12 @@ for k in data_item['files'][0].keys():
 import io
 
 parentdir
-xmllist = glob.glob(os.path.join(parentdir, '**/*shore*.xml'), recursive=True)
-def replace_in_file(fname, fstr, rstr, fill='xxx'):
-    with io.open(fname, 'r', encoding='utf-8') as f:
-        s = f.read()
-    s, ct = re.subn(fstr, rstr, s)
-    print("Replaced values matching '{}': {}.".format(trunc(fstr), ct))
-    ct_fills = len(re.findall('(?i){}'.format(fill), s)) # Count remaining xxx values
-    if ct_fills > 0:
-        print("Found {} '{}' fills remaining.".format(ct_fills, fill))
-    with io.open(fname, 'w', encoding='utf-8') as f:
-        f.write(s)
-    return(fname)
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 
 fstr = ' as well as the iPython notebook \(.*\.ipynb\) used for processing\.'
 rstr = '.'
+fstr = 'Gutierrez, B\.T\., and Weber, K\.M\. 201[89]'
+rstr = 'Gutierrez, B.T., and Weber, K.M., 2019'
 for xml_file in xmllist:
     replace_in_file(xml_file, fstr, rstr, fill='xxx')
 
@@ -306,6 +297,11 @@ sb = log_in(useremail, password)
 valid_ids = sb.get_ancestor_ids(landing_id)
 upload_all_updated_xmls(sb, parentdir, valid_ids=valid_ids)
 
+#%% Pass down fields from parents to children
+print("\n---\nPassing down fields from parents to children...")
+subparent_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems', 'purpose']
+data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
+inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)
 
 
 
