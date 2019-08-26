@@ -33,15 +33,15 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 # landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
-landing_link = "https://www.sciencebase.gov/catalog/item/5be5c5bce4b0b3fc5cf8c7cb" # Deep Dive volume I
+landing_link = "https://www.sciencebase.gov/catalog/item/5d5ece47e4b01d82ce961e36" # Deep Dive volume I
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol1_v5_4sb' # OSX format
+parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/releasepackage3_4sb' # OSX format
 # parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
-dr_doi = "10.5066/P944FPA4" # DOI for Deep Dive volume I
+dr_doi = "10.5066/P9V7F6UX" # DOI for Deep Dive volume I
 
 # Year of publication, if it needs to updated. Used as the date in citation publication date and the calendar date in time period of content.
 pubdate = '2019'
@@ -72,8 +72,8 @@ data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 # Default: [].
 landing_fields_from_xml = []
 
-# qcfields_dict = {'contacts':3, 'webLinks':0, 'facets':1}
-qcfields_dict = {'contacts':8, 'webLinks':1, 'facets':1}
+# qcfields_dict = {'contacts':3, 'webLinks':0, 'facets':1} # Comment out to keep it simple and save time
+# qcfields_dict = {'contacts':9, 'webLinks':3, 'facets':1}
 #-------------------------------------------------------------------------------
 # Time-saving options
 #-------------------------------------------------------------------------------
@@ -83,7 +83,6 @@ delete_all_subpages = True # True to delete all child pages before running. Not 
 update_XML          = True # False to save time if XML already has most up-to-date values.
 update_data         = True # False to save time if up-to-date data files have already been uploaded.
 update_extent       = True
-quality_check_pages = True # False to save time if you feel good/want to keep it simple
 verbose             = True
 # page_per_filename   = False
 

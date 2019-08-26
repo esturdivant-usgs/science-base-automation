@@ -299,17 +299,32 @@ upload_all_updated_xmls(sb, parentdir, valid_ids=valid_ids)
 
 #%% Pass down fields from parents to children
 print("\n---\nPassing down fields from parents to children...")
-subparent_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems', 'purpose']
-data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
+subparent_inherits = ['webLinks']#['citation', 'contacts', 'body', 'webLinks', 'relatedItems', 'purpose']
+data_inherits = ['webLinks']#['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 inherit_topdown(sb, landing_id, subparent_inherits, data_inherits, verbose=verbose)
 
 
 
-
+#%% Get page ID corresponding to xml file.
 sb = log_in(useremail, password)
 valid_ids = sb.get_ancestor_ids(landing_id)
 page_id = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
 page_id
+
+#%% 6/21/2019
+# Zip all XMLs for IPDS
+import shutil
+
+root_dir = r'/Users/esturdivant/Desktop/xmls_testzip'
+archive_path = r'/Users/esturdivant/Desktop/xmls_testzip'
+if not os.path.exists(root_dir):
+    os.makedirs(root_dir)
+xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
+for xml_file in xmllist:
+    d = os.path.join(root_dir, os.path.basename(xml_file))
+    shutil.copy2(xml_file, d)
+shutil.make_archive(root_dir, 'zip', root_dir)
+
 
 #%% Change find_and_replace so that keys are searchstr and values are replacestr
 find_and_replace = {'https://doi.org/{}'.format(dr_doi): ['https://doi.org/10.5066/***'],

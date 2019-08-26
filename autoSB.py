@@ -685,14 +685,14 @@ def upsert_metadata(sb, id_or_item, xml_file):
 
 #%% Update SB preview image from the uploaded files.
 def update_all_browse_graphics(sb, parentdir, landing_id, valid_ids=None, verbose=False):
-    # Update SB preview image from the uploaded files.
-    # For every XML in the folder tree, match the XML values with the image file on the SB page. Update and upload the metadata file.
+    # Update SB preview image from the uploaded files and update filename and type in XML.
+    # For every XML in the parentdir (recursive)...
     print("Updating browse graphic information...")
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
     for xml_file in xmllist:
         # Get SB page ID from the XML (needs to be up-to-date)
         datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
-        # Run update_browse() to match the values between the XML and the SB page.
+        # Run update_browse() to match the XML values with the image file on the SB page. Get browse caption from the XML. Get name of *browse* image file on SB and set as preview. Update the filename and type in the XML.
         if update_browse(sb, xml_file, datapageid, verbose):
             # if the XML was updated, replace the XML on the page.
             data_item = upsert_metadata(sb, datapageid, xml_file)
@@ -700,11 +700,12 @@ def update_all_browse_graphics(sb, parentdir, landing_id, valid_ids=None, verbos
 
 def upload_all_updated_xmls(sb, parentdir, valid_ids=None):
     # Upload XMLs that have been updated since last upload to SB.
+    # Iterates through local XMLs rather than starting on SB
     ct = 0
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
     print("Searching {} XML files for changes since last upload...".format(len(xmllist)))
     for xml_file in xmllist:
-        # Get SB JSON item for page
+        # Get SB JSON item that corresponds to XML file (try matching folder name to SB or get second link in XML citeinfo) # Get page_id from the SB title or the SB citation in the XML file.
         datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
         data_item = flexibly_get_item(sb, datapageid, output='item')
         # Get upload time of XML as UTC datetime object
@@ -712,12 +713,15 @@ def upload_all_updated_xmls(sb, parentdir, valid_ids=None):
         xml_uploaded = datetime.strptime(xml_uploaded, '%Y-%m-%dT%H:%M:%SZ')
         # Get modified time of local XML as UTC datetime
         xml_modified = datetime.utcfromtimestamp(os.path.getmtime(xml_file))
+        # Replace the metadata file if the modified time is greater than the uploaded time
         if xml_modified > xml_uploaded:
-            # Replace the metadata file
             data_item = upsert_metadata(sb, data_item, xml_file)
             # print('UPLOADED: {}'.format(os.path.basename(xml_file)))
             ct += 1
-    print("Found and uploaded {} XML files.\n".format(ct))
+    if ct > 0:
+        print("Found and uploaded {} XML files.\n".format(ct))
+    else:
+        print("No XMLs have been updated since last upload.\n")
     return
 
 def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose=True):
@@ -1108,28 +1112,36 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
 
 def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None, parentid=None, parentdir=None):
     # Flexibly get page_id based on XML file, either from the directory:ID dict, the SB title, or the SB citation in the XML file.
-    page_id = None
+    page_id = None # Initialize page_id as None
+    # First try: try the directory:ID dictionary if provided
     if dict_DIRtoID and not page_id:
         if xml_file in dict_DIRtoID:
             page_id = dict_DIRtoID[xml_file]
         elif parentdir:
             datadir = os.path.dirname(xml_file)
             page_id = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
-
-    if sb and not page_id: # If the folder name matches an SB page...
+    # Next try: if we have an SB session look for SB page matching the folder name
+    if sb and not page_id:
         title = os.path.basename(os.path.dirname(xml_file))
         matching_items = sb.find_items_by_title(title)['items']
         if matching_items:
             page_id = matching_items[0]['id']
+    # Next try: get the second URL in the XML citeinfo, which should always be the SB page
     if not page_id:
         metadata_root, tree, xml_file = get_root_flexibly(xml_file)
         link_elems = metadata_root.findall('./idinfo/citation/citeinfo/onlink')
         if len(link_elems) > 1:
             page_url = link_elems[1].text
             page_id = os.path.basename(page_url)
+    if not page_id:
+        print("Could not find page matching XML file. Possible causes: a folder name or page URL may have changed.")
+        return(page_id)
+    # Check the page_id against the IDs descended from page matching parentdir.
     if not parentid and dict_DIRtoID and parentdir:
+        # Get the parentid from the directory:ID dictionary
         parentid = dict_DIRtoID[os.path.basename(parentdir)]
-    if sb and not valid_ids:
+    if sb and parentid and not valid_ids:
+        # List IDs descended from the parentdir
         valid_ids = sb.get_ancestor_ids(parentid)
     if valid_ids:
         if not page_id in valid_ids:

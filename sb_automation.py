@@ -213,7 +213,7 @@ with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
     json.dump(dict_DIRtoID, f)
 
 #%% QA/QC
-if quality_check_pages:
+if 'qcfields_dict' in locals():
     qcfields_dict = {'contacts':7, 'webLinks':0, 'facets':1}
     print('Checking that each page has: \n{}'.format(qcfields_dict))
     pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
