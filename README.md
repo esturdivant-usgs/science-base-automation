@@ -11,7 +11,7 @@ __Automatically create and populate ScienceBase pages with metadata and data fil
 ### Limitations
 (besides soon-to-be-discovered bugs)
 
-- The metadata population routine is hard-coded to the FGDC CSDGM structure.
+- The metadata population routine is hard-coded to the [FGDC CSDGM](https://www.fgdc.gov/metadata/csdgm-standard) structure.
 - It does not change the XML files within zipped files nor recreate the zip file with the updated XML. You will need to do this afterward to make sure that the XML is in the zip file is updated.
 - It does not add networkr links to individual files on the data page.
 
