@@ -34,6 +34,27 @@ except:
 sys.path.append(sb_auto_dir) # Add the script location to the system path just to make sure this works.
 from autoSB import *
 from config_autoSB import * # Input sciencebase password
+import shutil
+
+
+#%% Log into SB if it's timed out
+sb = log_in(useremail, password)
+
+#%%
+print('Removing all .xml_orig files from {}.'.format(os.path.basename(parentdir)))
+remove_files(parentdir, pattern='**/*.xml_orig')
+
+
+#%% Backup the XMLs resulting from SB upload
+today = datetime.now().strftime("%Y%m%d")
+xmlstash = os.path.join(stash_dir, 'output_xmls_{}'.format(today))
+os.makedirs((xmlstash), exist_ok=True)
+xmllist = glob.glob(os.path.join(parentdir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
+for fp in xmllist:
+    shutil.copy(fp, xmlstash)
+shutil.make_archive(xmlstash, 'zip', xmlstash)
+
+
 
 # from Tkinter import *
 import getpass
@@ -85,6 +106,22 @@ elif "previewImage" in locals():
         print("{} does not exist.".format(previewImage))
 else:
     imagefile = False
+
+#%%
+valid_ids = sb.get_ancestor_ids(landing_id)
+get_pageid_from_xmlpath(xml_file, sb=sb, dict_DIRtoID=dict_DIRtoID, valid_ids=valid_ids, parentdir=parentdir)
+xml_file = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/releasepackage3_4sb/Massachusetts: Coast Guard Beach, Cape Cod NS/DisMOSH, Cost, MOSH_Shoreline: Distance to foraging areas for piping plovers (foraging shoreline, cost mask, and least-cost path distance): Coast Guard Beach, MA, 2013-2014/CG13_DisMOSH_Cost_MOSHShoreline_meta.xml"
+title = os.path.basename(os.path.dirname(xml_file))
+matching_items = sb.find_items_by_title(title)['items']
+matching_items
+page_id = matching_items[0]['id']
+page_id
+page_id in valid_ids
+
+sb = log_in(useremail, password)
+update_all_browse_graphics(sb, parentdir, landing_id, valid_ids)
+
+
 
 #%% Change folder name to match XML title
 """

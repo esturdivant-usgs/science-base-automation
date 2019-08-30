@@ -100,9 +100,11 @@ This one should overwrite the entire data release (excluding the landing page).
 """
 # Log into SB if it's timed out
 sb = log_in(useremail, password)
+mapfile_dir2id = os.path.join(stash_dir, 'dir_to_id.json')
+os.makedirs(os.path.dirname(mapfile_dir2id), exist_ok=True)
 
 # If there's no id_to_json.json file available, we need to create the subpage structure.
-if not update_subpages and not os.path.isfile(os.path.join(parentdir,'dir_to_id.json')):
+if not update_subpages and not os.path.isfile(mapfile_dir2id):
     print("dir_to_id.json file is not in parent directory, so we will perform update_subpages routine.")
     update_subpages = True
 
@@ -110,10 +112,10 @@ if update_subpages:
     print('\n---\nCreating sub-pages...')
     dict_DIRtoID = setup_subparents(sb, parentdir, landing_id, imagefile)
     # Save dictionaries
-    with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+    with open(mapfile_dir2id, 'w') as f:
         json.dump(dict_DIRtoID, f)
 else: # Import pre-created dictionaries if all SB pages exist
-    with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
+    with open(mapfile_dir2id, 'r') as f:
         dict_DIRtoID = json.load(f)
 
 #%% Create and populate data pages
@@ -130,11 +132,13 @@ valid_ids = sb.get_ancestor_ids(landing_id)
 #%% Work with XMLs
 # Optionally remove or restore original XML files.
 if remove_original_xml:
+    print('Removing all .xml_orig files in {} tree.'.format(os.path.basename(parentdir)))
     remove_files(parentdir, pattern='**/*.xml_orig')
 elif restore_original_xml:
     if not update_XML:
         print('WARNING: You selected to restore original XMLs, but not to update XMLs. This may cause problems.')
     restore_original_xmls(parentdir)
+    print('Restored .xml_orig files in {} tree.'.format(os.path.basename(parentdir)))
 
 # add DOI to be updated in XML
 if 'dr_doi' in locals():
@@ -158,7 +162,7 @@ if update_data:
         cnt += 1
         print("File {}: {}".format(cnt + start_xml_idx, xml_file))
         # Get SB page ID from the XML
-        datapageid = get_pageid_from_xmlpath(xml_file, sb=sb, dict_DIRtoID=dict_DIRtoID, valid_ids=valid_ids, parentdir=parentdir)
+        datapageid = get_pageid_from_xmlpath(xml_file, sb=sb, dict_DIRtoID=dict_DIRtoID, valid_ids=valid_ids, parentdir=parentdir, verbose=False)
         # Log into SB if it's timed out
         sb = log_in(useremail, password)
         data_item = sb.get_item(datapageid)
@@ -186,10 +190,12 @@ if update_data:
         # store values in dictionaries
         dict_DIRtoID[xml_file] = data_item['id']
 
-print('\n---\nUpdating browse, uploading revised XMLs...')
+print("\n---\nRunning universal updates (browse graphics and udpated XMls)...")
+
 #%% Update SB preview image from the uploaded files.
-sb = log_in(useremail, password)
-update_all_browse_graphics(sb, parentdir, landing_id, valid_ids)
+if update_XML:
+    sb = log_in(useremail, password)
+    update_all_browse_graphics(sb, parentdir, landing_id, valid_ids)
 
 #%% Check for and upload XMLs that have been modified since last upload.
 sb = log_in(useremail, password)
@@ -209,7 +215,7 @@ if add_preview_image_to_all:
     upload_all_previewImages(sb, parentdir, dict_DIRtoID)
 
 # Save dictionaries
-with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
+with open(mapfile_dir2id, 'w') as f:
     json.dump(dict_DIRtoID, f)
 
 #%% QA/QC
@@ -225,3 +231,12 @@ if 'bigfiles' in locals():
     if len(bigfiles) > 0:
         print("These files were too large to upload so you'll need to use the large file uploader:")
         print(*bigfiles, sep = "\n")
+
+#%% Backup the XMLs resulting from SB upload
+today = datetime.now().strftime("%Y%m%d")
+xmlstash = os.path.join(stash_dir, 'output_xmls_{}'.format(today))
+os.makedirs((xmlstash), exist_ok=True)
+print('Saving output XMLs to {}'.format(xmlstash))
+for fp in glob.glob(os.path.join(parentdir, '[!x]*/**/*.[xX][mM][lL]')):
+    shutil.copy(fp, xmlstash)
+shutil.make_archive(xmlstash, 'zip', xmlstash)

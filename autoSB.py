@@ -416,7 +416,7 @@ def update_all_xmls(parentdir, new_values, sb=None, dict_DIRtoID=None, verbose=T
     for xml_file in xmllist:
         # Update XML
         # Get SB values
-        datapageid = get_pageid_from_xmlpath(xml_file, sb, dict_DIRtoID, parentdir=parentdir)
+        datapageid = get_pageid_from_xmlpath(xml_file, sb, dict_DIRtoID, parentdir=parentdir, verbose=False)
         # add SB UID to be updated in XML
         new_values['child_id'] = datapageid
         # Look for browse graphic in directory with XML
@@ -544,6 +544,7 @@ def rename_dirs_from_xmls(parentdir, rename_intermediates=True):
     Notes:
     - I have run this on OSX with colons in the titles without issue. The renamed directories have backslash instead of colon, but the ScienceBase page titles have colons even though they are copied from the directory names.
     - Use rename_intermediates to specify whether directory must not contain sub-directories.
+    - Although colons don't seem to be a problem on Mac, parentheses might be. Don't include parentheses in titles.
     """
     # List characters that are invalid pathnames in OSX (:) or Windows (the rest).
     invalid_chars = r'< > : " / \ | ? *'.split(' ')
@@ -598,9 +599,6 @@ def setup_subparents(sb, parentdir, landing_id, imagefile, verbose=True):
                 subpage = sb.upload_file_to_item(subpage, imagefile)
             # store values in dictionaries
             dict_DIRtoID[dirpath] = subpage['id']
-    # Save dictionaries
-    with open(os.path.join(parentdir,'dir_to_id.json'), 'w') as f:
-        json.dump(dict_DIRtoID, f)
     return(dict_DIRtoID)
 
 def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False, inherit_void=True):
@@ -691,7 +689,7 @@ def update_all_browse_graphics(sb, parentdir, landing_id, valid_ids=None, verbos
     xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
     for xml_file in xmllist:
         # Get SB page ID from the XML (needs to be up-to-date)
-        datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+        datapageid = get_pageid_from_xmlpath(xml_file, sb, valid_ids=valid_ids, parentdir=parentdir, verbose=verbose)
         # Run update_browse() to match the XML values with the image file on the SB page. Get browse caption from the XML. Get name of *browse* image file on SB and set as preview. Update the filename and type in the XML.
         if update_browse(sb, xml_file, datapageid, verbose):
             # if the XML was updated, replace the XML on the page.
@@ -706,7 +704,7 @@ def upload_all_updated_xmls(sb, parentdir, valid_ids=None):
     print("Searching {} XML files for changes since last upload...".format(len(xmllist)))
     for xml_file in xmllist:
         # Get SB JSON item that corresponds to XML file (try matching folder name to SB or get second link in XML citeinfo) # Get page_id from the SB title or the SB citation in the XML file.
-        datapageid = get_pageid_from_xmlpath(xml_file, valid_ids=valid_ids)
+        datapageid = get_pageid_from_xmlpath(xml_file, sb, valid_ids=valid_ids, parentdir=parentdir)
         data_item = flexibly_get_item(sb, datapageid, output='item')
         # Get upload time of XML as UTC datetime object
         xml_uploaded = get_file_upload_time(data_item, file_type='application/fgdc+xml')
@@ -1101,16 +1099,16 @@ def update_existing_fields(sb, parentdir, data_inherits, subparent_inherits, fna
     # Populate pages if SB page structure already exists.
     # read data
     # NOT USED 12/10/18
-    with open(os.path.join(parentdir,fname_dir2id), 'r') as f:
+    with open(fname_dir2id, 'r') as f:
         dict_DIRtoID = json.load(f)
-    with open(os.path.join(parentdir,fname_par2childs), 'r') as f:
+    with open(fname_id2json, 'r') as f:
         dict_PARtoCHILDS = json.load(f)
         # Update SB fields
     update_pages_from_XML_and_landing(sb, dict_DIRtoID, data_inherits, subparent_inherits, dict_PARtoCHILDS)
-    print("Fields updated and values items stored in dictionary: {}".format(os.path.join(parentdir,fname_id2json)))
+    print("Fields updated and values items stored in dictionary: {}".format(fname_id2json))
     return True
 
-def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None, parentid=None, parentdir=None):
+def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None, parentid=None, parentdir=None, verbose=False):
     # Flexibly get page_id based on XML file, either from the directory:ID dict, the SB title, or the SB citation in the XML file.
     page_id = None # Initialize page_id as None
     # First try: try the directory:ID dictionary if provided
@@ -1118,14 +1116,20 @@ def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None
         if xml_file in dict_DIRtoID:
             page_id = dict_DIRtoID[xml_file]
         elif parentdir:
-            datadir = os.path.dirname(xml_file)
-            page_id = dict_DIRtoID[os.path.relpath(datadir, os.path.dirname(parentdir))]
+            relpath = os.path.relpath(os.path.dirname(xml_file), os.path.dirname(parentdir))
+            if relpath in dict_DIRtoID:
+                page_id = dict_DIRtoID[relpath]
     # Next try: if we have an SB session look for SB page matching the folder name
-    if sb and not page_id:
+    if not page_id and sb:
         title = os.path.basename(os.path.dirname(xml_file))
         matching_items = sb.find_items_by_title(title)['items']
         if matching_items:
             page_id = matching_items[0]['id']
+            if verbose:
+                print("Found page ID by searching SB for XML title. Result: {}: {}".format(page_id, title))
+        else:
+            print("get_pageid_from_xmlpath: Couldn't find page matching title {}".format(title))
+            # TODO: search for matching XML?
     # Next try: get the second URL in the XML citeinfo, which should always be the SB page
     if not page_id:
         metadata_root, tree, xml_file = get_root_flexibly(xml_file)
@@ -1133,21 +1137,26 @@ def get_pageid_from_xmlpath(xml_file, sb=None, dict_DIRtoID=None, valid_ids=None
         if len(link_elems) > 1:
             page_url = link_elems[1].text
             page_id = os.path.basename(page_url)
+            if verbose:
+                print("Extracted page ID from the XML file. Result: {}: {}".format(page_id, title))
     if not page_id:
         print("Could not find page matching XML file. Possible causes: a folder name or page URL may have changed.")
         return(page_id)
     # Check the page_id against the IDs descended from page matching parentdir.
     if not parentid and dict_DIRtoID and parentdir:
         # Get the parentid from the directory:ID dictionary
-        parentid = dict_DIRtoID[os.path.basename(parentdir)]
+        if os.path.basename(parentdir) in dict_DIRtoID:
+            parentid = dict_DIRtoID[os.path.basename(parentdir)]
     if sb and parentid and not valid_ids:
         # List IDs descended from the parentdir
         valid_ids = sb.get_ancestor_ids(parentid)
+        if verbose:
+            print("...got list of IDs descended from {}.".format(parentid))
     if valid_ids:
         if not page_id in valid_ids:
-            print('ALERT: ID returned by get_pageid_from_xmlpath() does not match existing pages.')
+            print('ALERT: ID ({}) is not in valid ID list. -- get_pageid_from_xmlpath()'.format(page_id))
     else:
-        print('WARNING: ID returned by get_pageid_from_xmlpath() could not be cross-checked.')
+        print('WARNING: No list of valid IDs so ID {} could not be cross-checked.'.format(page_id))
     return(page_id)
 
 ###################################################

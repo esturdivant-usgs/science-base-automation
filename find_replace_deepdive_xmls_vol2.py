@@ -275,7 +275,7 @@ def change_asis14_xmls(basedir):
     rstr = "<attrdomv><edom><edomv>12</edomv><edomvd>Virginia</edomvd><edomvds>Producer defined</edomvds></edom> </attrdomv><attrdomv><edom><edomv>13</edomv><edomvd>Maryland</edomvd><edomvds>Producer defined</edomvds></edom> </attrdomv>"
     replace_in_file(xml_file, fstr, rstr)
     # All XMLs
-    fstr = "<placekey>MD/VA</placekey>"
+    fstr = "<placekey>MD &#x26; VA</placekey>"
     rstr = "<placekey>MD</placekey><placekey>VA</placekey><placekey>Virginia</placekey><placekey>Chincoteague National Wildlife Refuge</placekey>"
     xmllist = glob.glob(os.path.join(basedir, sycode, '**.xml'), recursive=True)
     [replace_in_file(xml_file, fstr, rstr) for xml_file in xmllist]
@@ -301,7 +301,9 @@ def change_assa14_xmls(basedir):
 def change_NC_xmls(basedir):
     # North Carolina sites
     # Replace srcinfo, crossref, and in-line references for NASC transects
-    fstr_rstr = {"""<srcinfo>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</srcinfo>""": """<srcinfo><srccite><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>U.S. Geological Survey data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></srccite><typesrc>digital data</typesrc><srctime><timeinfo><sngdate><caldate>2017</caldate></sngdate></timeinfo><srccurr>publication date</srccurr></srctime><srccitea>NASC transects</srccitea><srccontr>Shore-normal transects with long term shoreline change rates from the National Assessment of Shoreline Change (NASC) (NCnorth_transects_rates_LT.shp, NCcentral_transects_rates_LT.shp, NCsouth_transects_rates_LT.shp). The data are distributed as an Esri polyline shapefile referenced to World Geodetic System 1984 (WGS84). They were downloaded in 2018.</srccontr></srcinfo>""", """<crossref>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</crossref>""": """<crossref><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>U.S. Geological Survey data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></crossref>""", "Himmelstoss and others \(2010\)": "Kratzmann and others (2017)"}
+    fstr_rstr = {"""<srcinfo>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</srcinfo>""": """<srcinfo><srccite><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>U.S. Geological Survey data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></srccite><typesrc>digital data</typesrc><srctime><timeinfo><sngdate><caldate>2017</caldate></sngdate></timeinfo><srccurr>publication date</srccurr></srctime><srccitea>NASC transects</srccitea><srccontr>Shore-normal transects with long term shoreline change rates from the National Assessment of Shoreline Change (NASC) (NCnorth_transects_rates_LT.shp, NCcentral_transects_rates_LT.shp, NCsouth_transects_rates_LT.shp). The data are distributed as an Esri polyline shapefile referenced to World Geodetic System 1984 (WGS84). They were downloaded in 2018.</srccontr></srcinfo>""",
+     # """<crossref>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</crossref>""": """<crossref><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>U.S. Geological Survey data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></crossref>""",
+    "Himmelstoss and others \(2010\)": "Kratzmann and others (2017)"}
     sycode = 'caha14'
     xml_file = os.path.join(basedir, sycode, sycode+'_pts_trans_ubw_meta.xml')
     [replace_in_file(xml_file, fstr, rstr) for fstr, rstr in fstr_rstr.items()]
@@ -378,6 +380,14 @@ def change_mon14_xmls(basedir):
 def change_ri14_xmls(basedir):
     # Rhode Island
     sycode = 'ri14'
+    # Apply to all RI files
+    fstr = "Rhode Island, RI" # Make sure this is case-sensitive
+    rstr = "Rhode Island National Wildlife Refuge, RI"
+    replace_in_filelist(os.path.join(basedir, sycode, '**.xml'), fstr, rstr)
+    fstr = "<placekey>Rhode Island</placekey>\s*<placekey>RI"
+    rstr = "<placekey>RI"
+    replace_in_filelist(os.path.join(basedir, sycode, '**.xml'), fstr, rstr)
+
     # morph points
     xml_file = os.path.join(basedir, sycode, sycode+'_DC_DT_SLpts_meta.xml')
     fstr = "The NAVD88 elevation of MHW is xxx 0.22, 0.29, 0.36 m  for the region encompassing Rhode Island \(Weber and others, 2005\)."
@@ -392,10 +402,10 @@ def change_ri14_xmls(basedir):
 
     # pts_trans
     xml_file = os.path.join(basedir, sycode, sycode+'_pts_trans_ubw_meta.xml')
-    fstr = "were shortened\.</"
-    rstr = "were shortened.\n\nThe Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects 118 to 725); and 0.36 m NAVD88 (transects 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the transects (ri_trans.shp) indicates the MHW offset along the given transect.</"
+    fstr = "calculated by Weber and others \(2005\) for the area\."
+    rstr = "calculated by Weber and others (2005).\n\nThe Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects 118 to 725); and 0.36 m NAVD88 (transects 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the transects (ri_trans.shp) indicates the MHW offset along the given transect."
     replace_in_file(xml_file, fstr, rstr)
-    fstr = """Pro 2\.0\.\s*ri14_pts\.csv"""
+    fstr = """Pro 2\.0\.\s*ri14_pts\.csv, part 1"""
     rstr = "Pro 2.0.\n\nMHW datum for Rhode Island study sites: The Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects 118 to 725); and 0.36 m NAVD88 (transects 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the transects (ri_trans.shp) indicates the MHW offset along the given transect.\n\nri14_pts.csv"
     replace_in_file(xml_file, fstr, rstr)
     fstr = "\(xxx 0\.22, 0\.29, 0\.36 m based on Weber and others, 2005\)"
@@ -423,9 +433,8 @@ def change_cg14_xmls(basedir):
     # Shoreline
     xml_file = os.path.join(basedir, sycode, sycode+'_shoreline_inletLines_meta.xml')
     fstr = "The dataset contains \d* polygons\.\s*</procdesc>"
-    rstr = "The dataset contains 4 polygons.\n\nSome portions of the Coast Guard site are located on the mainland, which prevents the data from representing a back-barrier shoreline. To address this, the so-called back-barrier shoreline was clipped to a straight line roughly parallel and about 250 m from the shore polygons. If an inland waterbody occured about 250 m from the shore, then the back-barrier shoreline was clipped to run through the waterbody.</procdesc>"
+    rstr = "The dataset contains 4 polygons.\n\nSome portions of the Coast Guard site are located on the mainland, which prevents the data from representing a back-barrier shoreline. To address this, the so-called back-barrier shoreline was clipped to a straight line roughly parallel to and about 250 m from the shore polygons. If an inland waterbody occured about 250 m from the shore, then the back-barrier shoreline was clipped to run through the waterbody.</procdesc>"
     replace_in_file(xml_file, fstr, rstr)
-
     return
 
 #%%
@@ -447,10 +456,11 @@ The code:
 # Initialize variables
 basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/releasepackage3"
 backup_dir = os.path.join(basedir, "xxx_backup_xmls")
-template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/vol2_v0/templates"
+template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/vol2_v1/templates"
 csvfname = "metadata values - DD vol2 - Sheet1.csv"
 csvfpath = os.path.join(basedir, csvfname)
 browsedir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/browse'
+sb_dir = basedir+'_4sb'
 
 #%% Save copy of csv file (templating spreadsheet) in backup dir
 backup_prerun = os.path.join(backup_dir, '{}_prerun'.format(datetime.datetime.now().strftime("%Y%m%d")))
@@ -495,7 +505,6 @@ change_mon14_xmls(basedir) # Monomoy
 change_ri14_xmls(basedir) # Rhode Island
 change_cg14_xmls(basedir) # Coast Guard
 
-
 #%% Remove all xmls from data folders
 for sycode in valuesdf.columns:
     par = os.path.join(basedir, sycode)
@@ -532,11 +541,13 @@ for sycode in valuesdf.columns:
 
 #%% Check remaining XMLs for xxx fill values
 remaining_fills = pd.DataFrame(columns=['file', 'fill_count'])
+ct = 0
 for sycode in valuesdf.columns:
     # List xmls
     xmllist = glob.glob(os.path.join(basedir, sycode, '*', '**.xml'), recursive=True)
-    #% Run find and replace to apply to all xml files in list
+    # Check all XML files for fills
     for infile in xmllist:
+        ct += 1
         relpath = os.path.relpath(infile, basedir)
         # Read file
         with io.open(infile, 'r', encoding='utf-8') as f:
@@ -548,7 +559,7 @@ for sycode in valuesdf.columns:
 if len(remaining_fills) > 0:
     print(remaining_fills)
 else:
-    print("No 'xxx' fills remaining.")
+    print("{} files checked; no 'xxx' fills remaining.".format(ct))
 
 #%% Change the directory names (back-and-forth between code and full name)
 # Map the sycodes to the full names
@@ -556,8 +567,6 @@ rename_sycode_dirs(basedir, valuesdf)
 
 #%% Duplicate set of browse graphics into site directories
 # Delete all PNGs in the basedir file tree
-# base1 = basedir
-# basedir = basedir+'_4sb'
 pnglist = glob.glob(os.path.join(basedir, '**/*.[pP][nN][gG]'), recursive=True)
 for fp in pnglist:
     os.remove(fp)
@@ -571,25 +580,56 @@ for fpath in browselist:
     print("Copying {} into {} folders matching '{}'".format(fname, len(matchdirs), searchstr))
     for matchdir in matchdirs:
         shutil.copy(fpath, matchdir)
-# basedir = base1
 
-#%% Duplicate the dataset for ScienceBase upload
-try:
-    shutil.rmtree(basedir+'_4sb', ignore_errors=True)
-except:
-    pass
-shutil.copytree(basedir, basedir+'_4sb', ignore=shutil.ignore_patterns('xxx_*', '*Sheet1.csv'))
-
-# If the sub-parent page structure is already created, and you don't want to
-# re-create it, you'll need to copy the dict files from the last parent upload
-# folder into the new one.
 
 #%% Backup the resulting XMLs
 backup_postrun = os.path.join(backup_dir, '{}_postrun'.format(datetime.datetime.now().strftime("%Y%m%d")))
 os.makedirs((backup_postrun), exist_ok=True)
-xmllist = glob.glob(os.path.join(basedir, '**/*.[xX][mM][lL]'), recursive=True)
+xmllist = glob.glob(os.path.join(basedir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
 for fp in xmllist:
     shutil.copy(fp, backup_postrun)
 
 #%% Save postrun backup of XMLs to zip file
 shutil.make_archive(r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/archive/xmls_{}'.format(os.path.basename(backup_postrun)), 'zip', backup_postrun)
+
+#%% Either replace XML files in SB dir or create new SB dir
+ct = 0
+if os.path.exists(sb_dir):
+    # Overwrite XML files in the SB dir with the updated XMLs
+    print("Replacing XML files in directory {}...".format(os.path.basename(sb_dir)))
+    xmllist = glob.glob(os.path.join(basedir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
+    for xml in xmllist:
+        new_path = glob.glob(os.path.join(sb_dir, '**', os.path.basename(xml)), recursive=True)
+        if new_path:
+            shutil.copy(xml, new_path[0])
+            ct += 1
+    for xml_file in glob.glob(os.path.join(sb_dir, '**/*.xml_orig'), recursive=True):
+        os.remove(xml_file)
+    print('Replaced {} files.'.format(ct))
+else:
+    print("Directory {} doesn't exist so duplicating release package...".format(os.path.basename(sb_dir)))
+    # Duplicate the dataset for ScienceBase upload
+    try:
+        shutil.rmtree(sb_dir, ignore_errors=True)
+    except:
+        pass
+    shutil.copytree(basedir, sb_dir, ignore=shutil.ignore_patterns('xxx_*', '*Sheet1.csv'))
+    print("Created duplicate of release package for upload to ScienceBase.")
+    # If the sub-parent page structure is already created, and you don't want to
+    # re-create it, you'll need to copy the dict files from the last parent upload
+    # folder into the new one.
+
+#%% delete directories in SB dirtree that match the names of directories in the original
+# xmllist = glob.glob(os.path.join(basedir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
+# for xml in xmllist:
+#     orig_dirname = os.path.basename(os.path.dirname(xml))
+#     for d in glob.glob(os.path.join(basedir+'_4sb', '**', orig_dirname), recursive=True):
+#         shutil.rmtree(d, ignore_errors=True)
+
+#%% Backup the XMLs resulting from SB upload
+# backup_postSB = os.path.join(backup_dir, '{}_postSB'.format(datetime.datetime.now().strftime("%Y%m%d")))
+# os.makedirs((backup_postSB), exist_ok=True)
+# xmllist = glob.glob(os.path.join(sb_dir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
+# for fp in xmllist:
+#     shutil.copy(fp, backup_postSB)
+# shutil.make_archive(r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/archive/xmls_{}'.format(os.path.basename(backup_postSB)), 'zip', backup_postSB)

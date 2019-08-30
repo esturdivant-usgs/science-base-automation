@@ -78,11 +78,11 @@ landing_fields_from_xml = []
 # Time-saving options
 #-------------------------------------------------------------------------------
 # Default True:
-update_subpages     = True # False to save time if page structure is already established.
-delete_all_subpages = True # True to delete all child pages before running. Not necessary.
+update_subpages     = False # False to save time if page structure is already established.
+delete_all_subpages = False # True to delete all child pages before running. Not necessary.
 update_XML          = True # False to save time if XML already has most up-to-date values.
-update_data         = True # False to save time if up-to-date data files have already been uploaded.
-update_extent       = True
+update_data         = False # False to save time if up-to-date data files have already been uploaded.
+update_extent       = False
 verbose             = True
 # page_per_filename   = False
 
@@ -92,7 +92,7 @@ start_xml_idx = 0 # 0 to perform for all XMLs. This is included in case a proces
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
 restore_original_xml     = False # True to restore original files saved on the first run of the code. Not necessary.
-remove_original_xml      = False  # True to remove original files saved on the first run of the code.
+remove_original_xml      = True  # True to remove original files saved on the first run of the code.
 # ------------------------------------------------------------------------------
 #   OPTIONAL - XML changes
 # ------------------------------------------------------------------------------
@@ -164,6 +164,8 @@ Initialize
 #%% Initialize SB session
 password = getpass.getpass("ScienceBase password: ")
 sb = log_in(useremail, password)
+
+stash_dir = os.path.join(parentdir, '.assistants')
 
 #%% Find landing page
 if not "landing_id" in locals():
