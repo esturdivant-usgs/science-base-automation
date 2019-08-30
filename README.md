@@ -140,7 +140,7 @@ Each directory will become a ScienceBase page within your data release. The dire
 	- NCcentral_baseline.sbn - 1st data file
 	- NCcentral_baseline.shp - 1st data file
 	- NCcentral_baseline.shp.xml - metadata for 1st data file
-	
+
 	excerpt of title element from within metadata file
 
 			<idinfo><citation><citeinfo><title>Coastal baseline for North Carolina…</title></citeinfo></citation></idinfo> - excerpt of title element from within metadata file
@@ -154,8 +154,8 @@ Each directory will become a ScienceBase page within your data release. The dire
 	- NCcentral_shorelines.shp.xml - metadata for 2nd data file
 
 	excerpt of title element from within metadata file
-	
-			<idinfo><citation><citeinfo><title>Shorelines of North Carolina…</title></citeinfo></citation></idinfo> 
+
+			<idinfo><citation><citeinfo><title>Shorelines of North Carolina…</title></citeinfo></citation></idinfo>
 	- NCcentral_shorelines.shx - 2nd data file
 
 ##### ScienceBase page: Shorelines of U.S. Atlantic - landing page
@@ -184,7 +184,7 @@ Each directory will become a ScienceBase page within your data release. The dire
 	- NCcentral_shorelines_baseline_meta.xml - metadata for both NCcentral_shorelines and NCcentral_baseline
 
 	excerpt of title element from within metadata file
-		
+
 			<idinfo><citation><citeinfo><title>Shorelines of North Carolina with baseline file…</title></citeinfo></citation></idinfo>
 	- NCcentral_shorelines.shx - 2nd data file
 
@@ -220,6 +220,7 @@ If a facet was created, a URL for direct download of the all files in the facets
 
 Assorted functions for certain tasks:
 
+Propagate fields from parent to all child pages
 
 ```python
 # Propagate fields from parent to all child pages
@@ -227,5 +228,45 @@ sb = log_in(useremail, password)
 landing_id = 'sb_id'
 subparent_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
 data_inherits = ['citation', 'contacts', 'body', 'webLinks', 'relatedItems']
+
 inherit_topdown(sb, landing_id, subparent_inherits, data_inherits)
+```
+
+Delete original XMLs
+
+```python
+# Delete original XMLs
+parentdir = r'path/to/parent'
+
+remove_files(parentdir, pattern='**/*.xml_orig')
+```
+
+Check for and upload XMLs that have been modified since last upload.
+
+```python
+sb = log_in(useremail, password)
+parentdir = r'path/to/parent'
+
+# Check for and upload XMLs that have been modified since last upload.
+upload_all_updated_xmls(sb, parentdir)
+```
+
+Update all browse graphics
+
+```python
+sb = log_in(useremail, password)
+parentdir = r'path/to/parent'
+landing_id = 'sb_id'
+
+# Update SB preview image from the uploaded files and update filename and type in XML.
+update_all_browse_graphics(sb, parentdir, landing_id)
+```
+
+Change all folder names to match XML titles
+
+```python
+parentdir = r'path/to/parent'
+
+# Change all folder names to match XML titles
+rename_dirs_from_xmls(parentdir)
 ```

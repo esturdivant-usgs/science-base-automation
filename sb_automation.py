@@ -192,6 +192,10 @@ if update_data:
 
 print("\n---\nRunning universal updates (browse graphics and udpated XMls)...")
 
+# Preview Image
+if add_preview_image_to_all:
+    upload_all_previewImages(sb, parentdir, dict_DIRtoID)
+
 #%% Update SB preview image from the uploaded files.
 if update_XML:
     sb = log_in(useremail, password)
@@ -210,10 +214,6 @@ if update_extent:
     print("\nGetting extent of child data for parent pages...")
     set_parent_extent(sb, landing_id, verbose=verbose)
 
-# Preview Image
-if add_preview_image_to_all:
-    upload_all_previewImages(sb, parentdir, dict_DIRtoID)
-
 # Save dictionaries
 with open(mapfile_dir2id, 'w') as f:
     json.dump(dict_DIRtoID, f)
@@ -223,7 +223,6 @@ if 'qcfields_dict' in locals():
     qcfields_dict = {'contacts':7, 'webLinks':0, 'facets':1}
     print('Checking that each page has: \n{}'.format(qcfields_dict))
     pagelist = check_fields2_topdown(sb, landing_id, qcfields_dict, verbose=False)
-
 
 now_str = datetime.now().strftime("%H:%M:%S on %m/%d/%Y")
 print('\n{}\nAll done! View the result at {}'.format(now_str, landing_link))
