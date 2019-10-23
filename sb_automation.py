@@ -186,7 +186,7 @@ if update_data:
             data_item = sb.upload_file_to_item(data_item, imagefile)
         if verbose:
             now_str = datetime.now().strftime("%H:%M:%S on %Y-%m-%d")
-            print('Completed {} out of {} total xml files at {}.\n'.format(cnt, len(xmllist), now_str))
+            print('Completed {} out of {} total xml files at {}.\n'.format(start_xml_idx+cnt, start_xml_idx+len(xmllist), now_str))
         # store values in dictionaries
         dict_DIRtoID[xml_file] = data_item['id']
 

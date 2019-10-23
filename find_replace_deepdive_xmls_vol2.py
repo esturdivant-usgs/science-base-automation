@@ -7,7 +7,7 @@ import pandas as pd
 import shutil
 import io
 import glob
-import datetime
+from datetime import datetime
 import re
 import sys
 from lxml import etree
@@ -25,10 +25,10 @@ def replace_in_file(fname, fstr, rstr, fill='xxx'):
     with io.open(fname, 'r', encoding='utf-8') as f:
         s = f.read()
     s, ct = re.subn(fstr, rstr, s)
-    print("Replaced values matching '{}': {}.".format(trunc(fstr), ct))
+    print("{}: {} value(s) replaced matching '{}'".format(os.path.basename(fname), ct, trunc(fstr)))
     ct_fills = len(re.findall('(?i){}'.format(fill), s)) # Count remaining xxx values
     if ct_fills > 0:
-        print("Found {} '{}' fills remaining.".format(ct_fills, fill))
+        print("{}: {} '{}' fills remaining.".format(os.path.basename(fname), ct_fills, fill))
     with io.open(fname, 'w', encoding='utf-8') as f:
         f.write(s)
     return(fname)
@@ -51,7 +51,7 @@ def find_replace_dfvalues(fname, df, sycode, temp_field='templated_value', verbo
             s, ct2 = re.subn(fstr, rstr, s)
             ct += ct2
     # 2.b. Replace metadata date
-    nowstr = datetime.datetime.now().strftime("%Y%m%d")
+    nowstr = datetime.now().strftime("%Y%m%d")
     s, ct2 = re.subn("<metd>.*</metd>", "<metd>{}</metd>".format(nowstr), s)
     ct += ct2
     # 2.c. Count remaining xxx values
@@ -76,6 +76,7 @@ def replace_in_filelist(searchpath, findstr, replacestr):
     replace_in_filelist(searchpath, findstr, replacestr)
     """
     xmllist = glob.glob(searchpath)
+    print("Searching for '{}'".format(trunc(findstr, 60)))
     for fp in xmllist:
         ct = 0
         # 1. Read input file
@@ -172,6 +173,37 @@ def rename_sycode_dirs(basedir, valuesdf, code2name=True):
                 os.rename(os.path.join(basedir, row.syname), os.path.join(basedir, i))
             except:
                 pass
+
+def copy_modified_files(src, dest, searchstr='**/*.xml', override_limit=False):
+    # To search for specific files... searchstr = '**/*SLpts.dbf'
+    ct = 0
+    flist = glob.glob(os.path.join(src, searchstr), recursive=True)
+    for fpath in flist:
+        fname = os.path.basename(fpath)
+        print(fname+'...')
+        destmatchlist = glob.glob(os.path.join(dest, '**/{}'.format(fname)), recursive=True)
+        if not destmatchlist:
+            print('No matching files.')
+            continue
+        elif len(destmatchlist) == 1:
+            fpath2 = destmatchlist[0]
+            modtime1 = datetime.utcfromtimestamp(os.path.getmtime(fpath))
+            modtime2 = datetime.utcfromtimestamp(os.path.getmtime(fpath2))
+            # Replace the file if the modified time in the source directory is greater than the that in the destination
+            if modtime1 > modtime2:
+                shutil.copy(fpath, fpath2)
+                print('Copied {} to {}'.format(fpath, fpath2))
+                ct += 1
+        elif override_limit:
+            for fpath2 in destmatchlist:
+                shutil.copy(fpath, fpath2)
+                ct += 1
+        else:
+            print('More than one match.')
+            continue
+    if ct > 0:
+        print("Copied {} files.\n".format(ct))
+    return
 
 # Copied from autoSB.py
 def remove_xml_element(in_metadata, path='./', fill_text=['AUTHOR']):
@@ -301,8 +333,9 @@ def change_assa14_xmls(basedir):
 def change_NC_xmls(basedir):
     # North Carolina sites
     # Replace srcinfo, crossref, and in-line references for NASC transects
-    fstr_rstr = {"""<srcinfo>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</srcinfo>""": """<srcinfo><srccite><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>U.S. Geological Survey data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></srccite><typesrc>digital data</typesrc><srctime><timeinfo><sngdate><caldate>2017</caldate></sngdate></timeinfo><srccurr>publication date</srccurr></srctime><srccitea>NASC transects</srccitea><srccontr>Shore-normal transects with long term shoreline change rates from the National Assessment of Shoreline Change (NASC) (NCnorth_transects_rates_LT.shp, NCcentral_transects_rates_LT.shp, NCsouth_transects_rates_LT.shp). The data are distributed as an Esri polyline shapefile referenced to World Geodetic System 1984 (WGS84). They were downloaded in 2018.</srccontr></srcinfo>""",
-     # """<crossref>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</crossref>""": """<crossref><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>U.S. Geological Survey data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></crossref>""",
+    fstr_rstr = {"""<srccite>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*They were downloaded in 2017\.</srccontr>""":
+    """<srccite><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></srccite><typesrc>digital data</typesrc><srctime><timeinfo><sngdate><caldate>2017</caldate></sngdate></timeinfo><srccurr>publication date</srccurr></srctime><srccitea>NASC transects</srccitea><srccontr>Shore-normal transects with long term shoreline change rates from the National Assessment of Shoreline Change (NASC) (NCnorth_transects_rates_LT.shp, NCcentral_transects_rates_LT.shp, NCsouth_transects_rates_LT.shp for both North Carolina sites). The data are distributed as an Esri polyline shapefile referenced to World Geodetic System 1984 (WGS84). They were downloaded in 2018.</srccontr>""",
+     # """<crossref>[\s\S]*New England and Mid-Atlantic Coasts[\s\S]*</crossref>""": """<crossref><citeinfo><origin>Meredith G. Kratzmann</origin><origin>Emily A. Himmelstoss</origin><origin>E. Robert Thieler</origin><pubdate>2017</pubdate><title>National assessment of shoreline change – A GIS compilation of updated vector shorelines and associated shoreline change data for the Southeast Atlantic Coast</title><serinfo><sername>data release</sername><issue>DOI:10.5066/F74X55X7</issue></serinfo><pubinfo><pubplace>Reston, VA</pubplace><publish>U.S. Geological Survey</publish></pubinfo><onlink>https://doi.org/10.5066/F74X55X7</onlink></citeinfo></crossref>""",
     "Himmelstoss and others \(2010\)": "Kratzmann and others (2017)"}
     sycode = 'caha14'
     xml_file = os.path.join(basedir, sycode, sycode+'_pts_trans_ubw_meta.xml')
@@ -350,7 +383,7 @@ def change_mon14_xmls(basedir):
     fstr = "the inland side"
     rstr = "the western side"
     replace_in_file(xml_file, fstr, rstr)
-    fstr = "back-barrier and seaward shorelines"
+    fstr = "back-barrier and oceanside shorelines"
     rstr = "easternmost and westernmost shorelines"
     replace_in_file(xml_file, fstr, rstr)
     fstr = "only the most seaward portion"
@@ -359,9 +392,12 @@ def change_mon14_xmls(basedir):
     fstr = "most seaward"
     rstr = "segment adjacent to the Atlantic Ocean."
     replace_in_file(xml_file, fstr, rstr)
+    fstr = "less than or equal to 2\.5 m"
+    rstr = "less than or equal to 3 m"
+    replace_in_file(xml_file, fstr, rstr)
 
     # DisOcean used both front and back shorelines
-    xml_file = os.path.join(basedir, sycode, 'Mon13_DisOcean.tif.xml')
+    xml_file = os.path.join(basedir, sycode, 'Mon14_DisOcean.tif.xml')
     fstr = "to the ocean, with the ocean boundary being the mean high water \(MHW\) ocean shoreline, according to lidar captured in 2014."
     rstr = "to the outermost shoreline of the island. The island shoreline was derived from lidar captured in 2014 at the mean high water (MHW) adjacent to the Atlantic Ocean and the mean tidal level (MTL) adjacent to Nantucket Sound (see mon14_shoreline.shp in larger work)."
     replace_in_file(xml_file, fstr, rstr)
@@ -391,7 +427,7 @@ def change_ri14_xmls(basedir):
     # morph points
     xml_file = os.path.join(basedir, sycode, sycode+'_DC_DT_SLpts_meta.xml')
     fstr = "The NAVD88 elevation of MHW is xxx 0.22, 0.29, 0.36 m  for the region encompassing Rhode Island \(Weber and others, 2005\)."
-    rstr = "The Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects 118 to 725); and 0.36 m NAVD88 (transects 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the shoreline points (ri14_SLpts) indicates the MHW offset used to position the given point along the processing transect."
+    rstr = "The Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects with sort_ID from 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects with sort_ID from 118 to 725); and 0.36 m NAVD88 (transects with sort_ID from 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the shoreline points (ri14_SLpts) indicates the MHW offset used to position the given point along the processing transect."
     replace_in_file(xml_file, fstr, rstr)
 
     # Elevation
@@ -403,17 +439,17 @@ def change_ri14_xmls(basedir):
     # pts_trans
     xml_file = os.path.join(basedir, sycode, sycode+'_pts_trans_ubw_meta.xml')
     fstr = "calculated by Weber and others \(2005\) for the area\."
-    rstr = "calculated by Weber and others (2005).\n\nThe Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects 118 to 725); and 0.36 m NAVD88 (transects 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the transects (ri_trans.shp) indicates the MHW offset along the given transect."
+    rstr = "calculated by Weber and others (2005).\n\nThe Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects with sort_ID from 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects with sort_ID from 118 to 725); and 0.36 m NAVD88 (transects with sort_ID from 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005)."
     replace_in_file(xml_file, fstr, rstr)
-    fstr = """Pro 2\.0\.\s*ri14_pts\.csv, part 1"""
-    rstr = "Pro 2.0.\n\nMHW datum for Rhode Island study sites: The Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects 118 to 725); and 0.36 m NAVD88 (transects 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the transects (ri_trans.shp) indicates the MHW offset along the given transect.\n\nri14_pts.csv"
+    fstr = """ri14_pts\.csv, part 1"""
+    rstr = "MHW datum for Rhode Island study sites: The Rhode Island coast is separated into three zones with different MHW elevations as follows: 0.29 m NAVD88 from Connecticut to Napatree Point (transects with sort_ID from 1 to 117); 0.22 m NAVD88 from Napatree Point to Point Judith (transects with sort_ID from 118 to 725); and 0.36 m NAVD88 (transects with sort_ID from 726 to 824) from Point Judith to Massacchusetts (Weber and others, 2005). The field 'MHW' in the transects (ri_trans.shp) indicates the MHW offset along the given transect.\n\nri14_pts.csv, part 1"
     replace_in_file(xml_file, fstr, rstr)
     fstr = "\(xxx 0\.22, 0\.29, 0\.36 m based on Weber and others, 2005\)"
     rstr = "(see note on MHW datum above)"
     replace_in_file(xml_file, fstr, rstr)
     # uBW in _pts_trans_ubw_meta
     fstr = "respectively\.\s*Distance to inlet:"
-    rstr = """respectively.\n\nTransects 56–70 were assigned fill values (-99999) for uBW and uBH because the configuration of the shoreline caused them to incorrectly be associated with morphology points along a different shoreline.\n\nDistance to inlet:"""
+    rstr = """respectively.\n\nTransects 56–70 were assigned fill values (-99999) for uBW and uBH because the configuration of the oceanside shoreline caused them to incorrectly be associated with morphology points along a different shoreline.\n\nDistance to inlet:"""
     replace_in_file(xml_file, fstr, rstr)
 
     # Shoreline
@@ -422,7 +458,7 @@ def change_ri14_xmls(basedir):
     rstr = "Sturdivant, 2019). Although the Rhode Island study area included three MHW elevation values (Weber and others, 2005), the median value (0.29 m) was used as the MWH elevation for the full site when creating the shoreline polygon. This was counteracted in subsequent steps by snapping the polygon to the shoreline points."
     replace_in_file(xml_file, fstr, rstr)
     fstr = "The dataset contains \d* polygons.\s*</procdesc>"
-    rstr = "The dataset contains 10 polygons.\n\nSome portions of the Rhode Island site are located on the mainland, which prevents the data from representing a back-barrier shoreline. To address this, the so-called back-barrier shoreline was clipped to a straight line roughly parallel and about 250 m from the shore polygons. If an inland waterbody occured about 250 m from the shore, then the back-barrier shoreline was clipped to run through the waterbody.</procdesc>"
+    rstr = "The dataset contains 10 polygons.\n\nSome portions of the Rhode Island site are located on the mainland, which prevents the data from representing a back-barrier shoreline. To address this, the so-called back-barrier shoreline was clipped to a straight line roughly parallel and about 250 m from the shore polygons. If an inland waterbody occurred about 250 m from the shore, then the back-barrier shoreline was clipped to run through the waterbody.</procdesc>"
     replace_in_file(xml_file, fstr, rstr)
 
     return
@@ -433,7 +469,37 @@ def change_cg14_xmls(basedir):
     # Shoreline
     xml_file = os.path.join(basedir, sycode, sycode+'_shoreline_inletLines_meta.xml')
     fstr = "The dataset contains \d* polygons\.\s*</procdesc>"
-    rstr = "The dataset contains 4 polygons.\n\nSome portions of the Coast Guard site are located on the mainland, which prevents the data from representing a back-barrier shoreline. To address this, the so-called back-barrier shoreline was clipped to a straight line roughly parallel to and about 250 m from the shore polygons. If an inland waterbody occured about 250 m from the shore, then the back-barrier shoreline was clipped to run through the waterbody.</procdesc>"
+    rstr = "The dataset contains 4 polygons.\n\nSome portions of the Coast Guard site are located on the mainland, which prevents the data from representing a back-barrier shoreline. To address this, the so-called back-barrier shoreline was clipped to a straight line roughly parallel to and about 250 m from the shore polygons. If an inland waterbody occurred about 250 m from the shore, then the back-barrier shoreline was clipped to run through the waterbody.</procdesc>"
+    replace_in_file(xml_file, fstr, rstr)
+    return
+
+def change_smi14_xmls(basedir):
+    # smi14 - sort_ID values are out of order
+    sycode = 'smi14'
+    xml_file = os.path.join(basedir, sycode, sycode+'_pts_trans_ubw_meta.xml')
+    # Find and replace
+    fstr = "using the ArcGIS Spatial Sort tool in spatial increments\."
+    rstr = "using the ArcGIS Spatial Sort tool in spatial increments. At Smith Island, these sort_ID values are not all consecutive along the shoreline."
+    replace_in_file(xml_file, fstr, rstr)
+    fstr = ",' which orders transects sequentially \(from south to north\) along the shoreline\. Transects are spaced alongshore"
+    rstr = ".' At Smith Island, these sort_ID values are not ordered sequentially along the shore, unlike at other sites. Transects are spaced alongshore"
+    replace_in_file(xml_file, fstr, rstr)
+    fstr = "dentifier that orders transects sequentially along the shoreline"
+    rstr = "dentifier"
+    replace_in_file(xml_file, fstr, rstr)
+    return
+
+def change_wre14_xmls(basedir):
+    # Wreck
+    sycode = 'wre14'
+    # Shoreline
+    xml_file = os.path.join(basedir, sycode, sycode+'_pts_trans_ubw_meta.xml')
+    fstr = "Transects are the base features for wre14_pts\.csv and wre14_ubw\.tif\."
+    rstr = "Transects are the base features for wre14_pts.csv and wre14_ubw.tif. Transects have an unusual distribution at Wreck Island. The southern end of the island is bifurcated, with shoreline points present on both the shoreline adjacent to the ocean and the more inland eastward shoreline. To retain as much information as possible, transects were added orthogonal to the inland shoreline section."
+    replace_in_file(xml_file, fstr, rstr)
+
+    fstr = "back to the NASC transects\. ID"
+    rstr = "back to the NASC transects. Transects have an unusual distribution at Wreck Island. The southern end of the island is bifurcated, with shoreline points present on both the shoreline adjacent to the ocean and the more inland westward shoreline. To retain as much information as possible, transects were added orthogonal to the inland shoreline section. ID"
     replace_in_file(xml_file, fstr, rstr)
     return
 
@@ -454,16 +520,16 @@ The code:
 3. Renames directories to the sycode in the template table that exactly matches the full name of Site, State, Year
 """
 # Initialize variables
-basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/releasepackage3"
+basedir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/release_v4"
 backup_dir = os.path.join(basedir, "xxx_backup_xmls")
 template_dir = r"/Volumes/stor/Projects/DeepDive/5_datarelease_packages/template_development/vol2_v1/templates"
 csvfname = "metadata values - DD vol2 - Sheet1.csv"
 csvfpath = os.path.join(basedir, csvfname)
 browsedir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/browse'
-sb_dir = basedir+'_4sb'
+sb_dir = basedir+'_forSB'
 
 #%% Save copy of csv file (templating spreadsheet) in backup dir
-backup_prerun = os.path.join(backup_dir, '{}_prerun'.format(datetime.datetime.now().strftime("%Y%m%d")))
+backup_prerun = os.path.join(backup_dir, '{}_prerun'.format(datetime.now().strftime("%Y%m%d")))
 os.makedirs((backup_prerun), exist_ok=True)
 shutil.copy2(csvfpath, backup_prerun)
 
@@ -504,6 +570,32 @@ change_pr14_xmls(basedir) # Parker River
 change_mon14_xmls(basedir) # Monomoy
 change_ri14_xmls(basedir) # Rhode Island
 change_cg14_xmls(basedir) # Coast Guard
+change_wre14_xmls(basedir)
+change_smi14_xmls(basedir)
+
+# CHECK THIS
+searchpath = os.path.join(basedir, '**/**_pts_trans_ubw_meta.xml')
+# pts
+# Change Bslope definition to match Doran? Explain negative value.
+fstr = "Slope of foreshore at the shoreline point nearest to the transects within 25 m"
+rstr = "Beach slope calculated between dune toe and shoreline (NAVD88) at the shoreline point nearest to the transect. A negative value indicates decreasing elevation from dune toe to shoreline"
+replace_in_filelist(searchpath, fstr, rstr)
+
+# Explain negative value in uBW and uBH (rare circumstance where the elevation of dune toe or armoring is lower than MHW; rare circumstance where dune toe or armoring was found seaward of the MHW shoreline)
+fstr = "where beach width cannot be calculated because input values are missing or the calculation criteria are not met\."
+rstr = "where beach width cannot be calculated because input values are missing or the calculation criteria are not met. A negative value indicates that the elevation of the identified top of beach feature is below the MHW elevation."
+replace_in_filelist(searchpath, fstr, rstr)
+
+# pts
+fstr = "where beach height cannot be calculated because input values are missing or the calculation criteria are not met\."
+rstr = "where beach height cannot be calculated because input values are missing or the calculation criteria are not met. A negative value indicates that the identified top of beach feature is seaward of the MHW shoreline."
+replace_in_filelist(searchpath, fstr, rstr)
+
+# Transects
+fstr = "<attrlabl>Shape_Length</attrlabl>"
+rstr = "<attrlabl>Shape_Leng</attrlabl>"
+replace_in_filelist(searchpath, fstr, rstr)
+
 
 #%% Remove all xmls from data folders
 for sycode in valuesdf.columns:
@@ -561,10 +653,6 @@ if len(remaining_fills) > 0:
 else:
     print("{} files checked; no 'xxx' fills remaining.".format(ct))
 
-#%% Change the directory names (back-and-forth between code and full name)
-# Map the sycodes to the full names
-rename_sycode_dirs(basedir, valuesdf)
-
 #%% Duplicate set of browse graphics into site directories
 # Delete all PNGs in the basedir file tree
 pnglist = glob.glob(os.path.join(basedir, '**/*.[pP][nN][gG]'), recursive=True)
@@ -581,9 +669,8 @@ for fpath in browselist:
     for matchdir in matchdirs:
         shutil.copy(fpath, matchdir)
 
-
 #%% Backup the resulting XMLs
-backup_postrun = os.path.join(backup_dir, '{}_postrun'.format(datetime.datetime.now().strftime("%Y%m%d")))
+backup_postrun = os.path.join(backup_dir, '{}_postrun'.format(datetime.now().strftime("%Y%m%d")))
 os.makedirs((backup_postrun), exist_ok=True)
 xmllist = glob.glob(os.path.join(basedir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
 for fp in xmllist:
@@ -591,6 +678,15 @@ for fp in xmllist:
 
 #%% Save postrun backup of XMLs to zip file
 shutil.make_archive(r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/archive/xmls_{}'.format(os.path.basename(backup_postrun)), 'zip', backup_postrun)
+
+#%% Change the directory names (back-and-forth between code and full name)
+# Map the sycodes to the full names
+rename_sycode_dirs(basedir, valuesdf)
+
+#%% Replace the DBF files for the shorelines after I deleted the Shape_Leng attribute
+copy_modified_files(basedir, sb_dir, searchstr='**/*shoreline.dbf')
+copy_modified_files(basedir, sb_dir, searchstr='**/*browse.png', override_limit=True)
+# copy_modified_files(basedir, sb_dir, searchstr='**/*.xml')
 
 #%% Either replace XML files in SB dir or create new SB dir
 ct = 0
@@ -619,6 +715,7 @@ else:
     # re-create it, you'll need to copy the dict files from the last parent upload
     # folder into the new one.
 
+
 #%% delete directories in SB dirtree that match the names of directories in the original
 # xmllist = glob.glob(os.path.join(basedir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
 # for xml in xmllist:
@@ -627,7 +724,7 @@ else:
 #         shutil.rmtree(d, ignore_errors=True)
 
 #%% Backup the XMLs resulting from SB upload
-# backup_postSB = os.path.join(backup_dir, '{}_postSB'.format(datetime.datetime.now().strftime("%Y%m%d")))
+# backup_postSB = os.path.join(backup_dir, '{}_postSB'.format(datetime.now().strftime("%Y%m%d")))
 # os.makedirs((backup_postSB), exist_ok=True)
 # xmllist = glob.glob(os.path.join(sb_dir, '[!x]*/**/*.[xX][mM][lL]'))#, recursive=True)
 # for fp in xmllist:

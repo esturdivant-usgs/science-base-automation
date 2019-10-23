@@ -33,11 +33,11 @@ useremail = 'esturdivant@usgs.gov'
 
 # URL of data release landing page (e.g. 'https://www.sciencebase.gov/catalog/item/__item_ID__'):
 # landing_link = "https://www.sciencebase.gov/catalog/item/5a54fbc3e4b01e7be242b917" # testing page
-landing_link = "https://www.sciencebase.gov/catalog/item/5d5ece47e4b01d82ce961e36" # Deep Dive volume I
+landing_link = "https://www.sciencebase.gov/catalog/item/5d5ece47e4b01d82ce961e36" # Deep Dive volume II
 
 # Path to local top-level directory of data release (equivalent to landing page):
 # OSX: If this is a server mounted and visible in your Volumes: r'/Volumes/[directory on server]'
-parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/releasepackage3_4sb' # OSX format
+parentdir = r'/Volumes/stor/Projects/DeepDive/5_datarelease_packages/vol2/release_v4_forSB' # OSX format
 # parentdir = r"D:\DeepDive\5_datarelease_packages\vol1\sb_upload_test" # WINDOWS format
 
 # DOI of data release (e.g. '10.5066/F78P5XNK'):
@@ -87,7 +87,7 @@ verbose             = True
 # page_per_filename   = False
 
 max_MBsize = 2000 # 2000 mb is the suggested threshold above which to use the large file uploader.
-start_xml_idx = 0 # 0 to perform for all XMLs. This is included in case a process does not complete.
+start_xml_idx = 0 # 0 to perform for all XMLs. This is included in case a process does not complete. '25' to start upload at file 26.
 
 # Default False:
 add_preview_image_to_all = False # True to put first image file encountered in a directory on its corresponding page
