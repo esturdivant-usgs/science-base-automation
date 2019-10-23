@@ -216,6 +216,8 @@ If a facet was created, a URL for direct download of the all files in the facets
 
 - Although not necessary, you can use find_and_replace variable in config_autoSB.py to replace text in the XML based on placeholder values. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's.
 
+- Don't include parentheses in titles. Although it works, it seems to mess up the process for matching the title to the SB page ID in the cases when the page is already created and we need to match the XML to a page (e.g. upload_all_updated_xmls)
+
 ## Functions
 
 Assorted functions for certain tasks:
